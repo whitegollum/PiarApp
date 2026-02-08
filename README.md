@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # PIAR - Sistema de Gestión de Clubs de Aeromodelismo 🚁
 
 **MVP (Minimum Viable Product) - Phase 7 Actualizado**
@@ -453,3 +454,7 @@ Licensed under the MIT License - ver archivo LICENSE para detalles.
 
 **Desarrollado con ❤️ por el equipo PIAR**
 
+=======
+# PiarApp
+Gestion de club de aeromodelismo y drones Cerdos Voladores
+>>>>>>> d914008bde716b97d8806259f6b86ad22da86676

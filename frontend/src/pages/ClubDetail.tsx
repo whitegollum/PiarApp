@@ -35,6 +35,11 @@ interface Noticia {
   titulo: string
   contenido: string
   fecha_creacion: string
+  autor?: {
+    id: number
+    email: string
+    nombre_completo: string
+  }
 }
 
 export default function ClubDetail() {
@@ -280,13 +285,18 @@ export default function ClubDetail() {
               <div className="tab-content">
                 {noticias.length > 0 ? (
                   <div className="noticias-list">
-                    {noticias.slice(0, 5).map(noticia => (
+                    {noticias.map(noticia => (
                       <div key={noticia.id} className="noticia-item">
                         <h3>{noticia.titulo}</h3>
                         <p className="noticia-content">{noticia.contenido}</p>
-                        <small className="text-muted">
-                          {new Date(noticia.fecha_creacion).toLocaleDateString('es-ES')}
-                        </small>
+                        <div className="noticia-meta">
+                          <span>
+                            Por: {noticia.autor?.nombre_completo || noticia.autor?.email || 'Autor desconocido'}
+                          </span>
+                          <span>
+                            {new Date(noticia.fecha_creacion).toLocaleDateString('es-ES')}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>

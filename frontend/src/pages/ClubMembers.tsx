@@ -36,6 +36,7 @@ export default function ClubMembers() {
   const [invitacionEmail, setInvitacionEmail] = useState('')
   const [enviandoInvitacion, setEnviandoInvitacion] = useState(false)
   const [roleUpdatingId, setRoleUpdatingId] = useState<number | null>(null)
+  const [roleSelections, setRoleSelections] = useState<Record<number, Miembro['rol']>>({})
 
   useEffect(() => {
     if (clubId) {
@@ -53,6 +54,12 @@ export default function ClubMembers() {
       ])
       setClub(clubData)
       setMiembros(miembrosData)
+      setRoleSelections(
+        miembrosData.reduce<Record<number, Miembro['rol']>>((acc, miembro) => {
+          acc[miembro.usuario_id] = miembro.rol
+          return acc
+        }, {})
+      )
     } catch (err) {
       setError('Error al cargar los datos del club')
       console.error(err)
@@ -99,27 +106,31 @@ export default function ClubMembers() {
       setSuccess('Miembro removido exitosamente')
       setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
-    const handleChangeRole = async (usuarioId: number, newRole: Miembro['rol']) => {
-      try {
-        setError(null)
-        setRoleUpdatingId(usuarioId)
-        await APIService.put(`/clubes/${clubId}/miembros/${usuarioId}/rol`, {
-          rol: newRole
-        })
-        setMiembros(prev => prev.map(m => (
-          m.usuario_id === usuarioId ? { ...m, rol: newRole } : m
-        )))
-        setSuccess('Rol actualizado exitosamente')
-        setTimeout(() => setSuccess(null), 3000)
-      } catch (err) {
-        setError('Error al actualizar el rol')
-        console.error(err)
-      } finally {
-        setRoleUpdatingId(null)
-      }
-    }
       setError('Error al remover el miembro')
       console.error(err)
+    }
+  }
+
+  const handleChangeRole = async (usuarioId: number, newRole: Miembro['rol']) => {
+    if (usuarioId === usuario?.id) {
+      return
+    }
+    try {
+      setError(null)
+      setRoleUpdatingId(usuarioId)
+      await APIService.put(`/clubes/${clubId}/miembros/${usuarioId}/rol`, {
+        rol: newRole
+      })
+      setMiembros(prev => prev.map(m => (
+        m.usuario_id === usuarioId ? { ...m, rol: newRole } : m
+      )))
+      setSuccess('Rol actualizado exitosamente')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err) {
+      setError('Error al actualizar el rol')
+      console.error(err)
+    } finally {
+      setRoleUpdatingId(null)
     }
   }
 
@@ -211,11 +222,38 @@ export default function ClubMembers() {
                         {miembro.fecha_aprobacion && <small>Aprobado: {new Date(miembro.fecha_aprobacion).toLocaleDateString('es-ES')}</small>}
                       </div>
                     </div>
-                    {isAdmin && miembro.usuario_id !== usuario?.id && (
+                    {isAdmin && (
                       <div className="member-actions">
+                        {miembro.usuario_id !== usuario?.id && (
+                          <>
+                            <select
+                              className="role-select"
+                              value={roleSelections[miembro.usuario_id] || miembro.rol}
+                              onChange={(e) =>
+                                setRoleSelections(prev => ({
+                                  ...prev,
+                                  [miembro.usuario_id]: e.target.value as Miembro['rol']
+                                }))
+                              }
+                              disabled={roleUpdatingId === miembro.usuario_id}
+                            >
+                              <option value="administrador">Administrador</option>
+                              <option value="miembro">Miembro</option>
+                            </select>
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => handleChangeRole(miembro.usuario_id, roleSelections[miembro.usuario_id] || miembro.rol)}
+                              disabled={roleUpdatingId === miembro.usuario_id}
+                            >
+                              🔁 Cambiar rol
+                            </button>
+                          </>
+                        )}
                         <button
                           className="btn btn-danger btn-sm"
-                          onClick={() => handleRemoveMember(miembro.id)}
+                          onClick={() => handleRemoveMember(miembro.usuario_id)}
+                          disabled={miembro.usuario_id === usuario?.id}
+                          title={miembro.usuario_id === usuario?.id ? 'No puedes removerte a ti mismo' : 'Remover miembro'}
                         >
                           🗑️ Remover
                         </button>

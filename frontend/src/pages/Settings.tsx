@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
 import Navbar from '../components/Navbar'
 import '../styles/Settings.css'
 
@@ -13,7 +12,6 @@ interface UserPreferences {
 
 export default function Settings() {
   const navigate = useNavigate()
-  const { usuario } = useAuth()
   const [preferences, setPreferences] = useState<UserPreferences>({
     notifications_enabled: true,
     email_digest: 'weekly',
@@ -150,31 +148,6 @@ export default function Settings() {
                 <input type="checkbox" defaultChecked={true} />
                 <span className="slider"></span>
               </label>
-            </div>
-          </section>
-
-          {/* Sección de Cuenta */}
-          <section className="settings-section">
-            <h2>👤 Cuenta</h2>
-            <div className="setting-item">
-              <div className="setting-content">
-                <h3>Email Verificado</h3>
-                <p>{usuario?.email}</p>
-              </div>
-              <span className="badge badge-success">✓ Verificado</span>
-            </div>
-
-            <div className="setting-item">
-              <div className="setting-content">
-                <h3>Cambiar Contraseña</h3>
-                <p>Actualiza tu contraseña de forma segura</p>
-              </div>
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => navigate('/perfil')}
-              >
-                Cambiar →
-              </button>
             </div>
           </section>
 

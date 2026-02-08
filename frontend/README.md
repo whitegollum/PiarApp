@@ -1,11 +1,11 @@
-# PIAR Frontend - PWA
+# PiarAPP Frontend - PWA
 
-Frontend Progressive Web App de PIAR usando React + TypeScript + Vite.
+Frontend Progressive Web App de PiarAPP usando React + TypeScript + Vite.
 
 ## Requisitos
 
 - Node.js 18+
-- npm или yarn
+- npm o yarn
 
 ## Instalación
 
@@ -34,14 +34,14 @@ npm run build
 
 Esto generará los archivos optimizados en la carpeta `dist/`
 
-## Características PWA
+## Caracteristicas PWA
 
-- ✅ Instalable en dispositivos (home screen)
-- ✅ Funcionamiento offline
-- ✅ Sincronización en background
-- ✅ Service Worker automático
-- ✅ Manifest.json configurado
-- ✅ Responsive mobile-first
+- Instalable en dispositivos (home screen)
+- Funcionamiento offline
+- Sincronizacion en background
+- Service Worker automatico
+- Manifest.json configurado
+- Responsive mobile-first
 
 ## Estructura del Proyecto
 
@@ -68,20 +68,24 @@ frontend/
 └── .env.example
 ```
 
-## Próximos Pasos
+## Estado actual
 
-1. Crear componentes de autenticación
-2. Implementar gestión de estado (Redux)
-3. Crear servicios API
-4. Implementar IndexedDB para datos offline
-5. Crear componentes de club, noticias, eventos
-6. Agregar tests
+- Autenticacion completa (login/registro y sesiones).
+- Modulos de clubes, miembros y noticias visibles en UI.
+- Perfil con edicion de datos y cambio de contrasena.
+- Configuracion con preferencias basicas.
+
+## Proximos pasos
+
+1. Completar callback de Google OAuth en frontend.
+2. Mejorar offline y sincronizacion.
+3. Agregar tests (unitarios y E2E).
 
 ## Variables de Entorno
 
 ```
 VITE_API_URL=http://localhost:8000/api
-VITE_APP_NAME=PIAR
+VITE_APP_NAME=PiarAPP
 VITE_APP_VERSION=0.1.0
 ```
 

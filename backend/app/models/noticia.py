@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.db import Base
 
@@ -18,6 +19,8 @@ class Noticia(Base):
     # Autor y estado
     autor_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     estado = Column(String(20), default="borrador")  # borrador, publicada, archivada
+
+    autor = relationship("Usuario", foreign_keys=[autor_id])
     
     # Visibilidad
     visible_para = Column(String(20), default="socios")  # publico, socios

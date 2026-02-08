@@ -530,9 +530,9 @@ Cada caso de uso incluye:
 - ✅ Muestra clubs a los que pertenece
 - ✅ Botones: Editar perfil, Cambiar contraseña
 
-**Status:** ⏳ Pendiente  
-**Resultado Actual:** [Usuario reporta aquí]
-**Notas:** 
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Backend y frontend OK (perfil, clubes, fecha y cuenta visibles)
+**Notas:** Backend-only OK: `/auth/usuarios/me` y `/clubes`. Frontend OK: fecha de creacion, clubes y seccion cuenta visibles; edicion solo tras "Editar Perfil".
 
 ---
 
@@ -576,9 +576,9 @@ Cada caso de uso incluye:
 - ✅ Mensaje de éxito
 - ✅ Cambios persisten tras recargar
 
-**Status:** ⏳ Pendiente  
-**Resultado Actual:** [Usuario reporta aquí]
-**Notas:** 
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Backend y frontend OK: nombre actualizado y visible en UI
+**Notas:** Backend OK y frontend OK (edicion con boton "Editar Perfil").
 
 ---
 
@@ -627,9 +627,9 @@ Cada caso de uso incluye:
 - ✅ Mensaje: "Contraseña actualizada"
 - ✅ Usuario puede loguearse con nueva contraseña
 
-**Status:** ⏳ Pendiente  
-**Resultado Actual:** [Usuario reporta aquí]
-**Notas:** 
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Backend y frontend OK: cambio de contraseña con validaciones
+**Notas:** Frontend OK; requiere recargar para actualizar todo el estado.
 
 ---
 
@@ -673,9 +673,9 @@ Cada caso de uso incluye:
 - ✅ Muestra título, fecha, autor
 - ✅ Click abre detalle de la noticia
 
-**Status:** ⏳ Pendiente  
-**Resultado Actual:** [Usuario reporta aquí]
-**Notas:** 
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Backend y frontend OK: noticias visibles en club 5
+**Notas:** Validado con maria@example.com; 5 noticias de prueba visibles en UI.
 
 ---
 
@@ -720,9 +720,9 @@ Cada caso de uso incluye:
 - ✅ Se muestra con autor y fecha
 - ✅ Otros miembros pueden verla
 
-**Status:** ⏳ Pendiente  
-**Resultado Actual:** [Usuario reporta aquí]
-**Notas:** 
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Backend y frontend OK: noticia creada y visible en UI
+**Notas:** Validado en club 5.
 
 ---
 
@@ -757,9 +757,9 @@ Cada caso de uso incluye:
 - ✅ No se congela la UI
 - ✅ Usuario puede reintentar
 
-**Status:** ⏳ Pendiente  
-**Resultado Actual:** [Usuario reporta aquí]
-**Notas:** 
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Backend y frontend OK: error de conexion mostrado
+**Notas:** UI muestra mensaje de error y no se congela.
 
 ---
 
@@ -788,9 +788,9 @@ Cada caso de uso incluye:
 - ✅ Resalta campos requeridos
 - ✅ No permite submit vacío
 
-**Status:** ⏳ Pendiente  
-**Resultado Actual:** [Usuario reporta aquí]
-**Notas:** 
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Backend y frontend OK: validacion de campos vacios
+**Notas:** UI muestra errores y resalta campos requeridos.
 
 ---
 
@@ -819,9 +819,9 @@ Cada caso de uso incluye:
 - ✅ Mensaje: "Email ya registrado"
 - ✅ No crea cuenta duplicada
 
-**Status:** ⏳ Pendiente  
-**Resultado Actual:** [Usuario reporta aquí]
-**Notas:** 
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Backend y frontend OK: email duplicado bloqueado.
+**Notas:** UI muestra error y no permite crear duplicado.
 
 ---
 
@@ -888,14 +888,14 @@ Cada caso de uso incluye:
 | CU-011 | Listar miembros | 🟢 | OK |
 | CU-012 | Remover miembro | 🟢 | OK |
 | CU-013 | Ver rol en club | 🟢 | OK |
-| CU-014 | Ver perfil | ⏳ | [Por completar] |
-| CU-015 | Editar perfil | ⏳ | [Por completar] |
-| CU-016 | Cambiar contraseña | ⏳ | [Por completar] |
-| CU-017 | Ver noticias | ⏳ | [Por completar] |
-| CU-018 | Crear noticia | ⏳ | [Por completar] |
-| CU-019 | Error conexión | ⏳ | [Por completar] |
-| CU-020 | Validación vacíos | ⏳ | [Por completar] |
-| CU-021 | Email duplicado | ⏳ | [Por completar] |
+| CU-014 | Ver perfil | 🟢 | OK |
+| CU-015 | Editar perfil | 🟢 | OK |
+| CU-016 | Cambiar contraseña | 🟢 | OK |
+| CU-017 | Ver noticias | 🟢 | OK |
+| CU-018 | Crear noticia | 🟢 | OK |
+| CU-019 | Error conexión | 🟢 | OK |
+| CU-020 | Validación vacíos | 🟢 | OK |
+| CU-021 | Email duplicado | 🟢 | OK |
 | CU-022 | Token expirado | ⏳ | [Por completar] |
 
 **Total:** 22 casos de uso

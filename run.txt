@@ -14,7 +14,7 @@ npm run dev
 # - API Docs: http://localhost:8000/docs
 # - ReDoc: http://localhost:8000/redoc
 
-
+1. whitegollum@gmail.com / 12345678
 1. test@example.com / Password123
 2. admin@piar.com / Admin123456
 3. juan@example.com / Juan123456

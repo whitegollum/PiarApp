@@ -7,6 +7,7 @@ interface Usuario {
   google_id?: string
   fecha_creacion: string
   ultimo_login?: string
+  email_verificado?: boolean
 }
 
 interface AuthContextType {

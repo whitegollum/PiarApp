@@ -422,6 +422,6 @@ async def listar_noticias_club(
     # Obtener noticias del club
     noticias = db.query(Noticia).filter(
         Noticia.club_id == club_id
-    ).offset(skip).limit(limit).all()
+    ).order_by(Noticia.fecha_creacion.desc()).offset(skip).limit(limit).all()
     
     return [NoticiaResponse.from_orm(noticia) for noticia in noticias]

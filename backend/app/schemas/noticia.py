@@ -2,6 +2,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
+from app.schemas.club import UsuarioBasicoResponse
 
 
 class NoticiaCreate(BaseModel):
@@ -23,6 +24,7 @@ class NoticiaResponse(BaseModel):
     titulo: str
     contenido: str
     autor_id: int
+    autor: Optional[UsuarioBasicoResponse] = None
     fecha_creacion: datetime
     fecha_actualizacion: Optional[datetime] = None
 

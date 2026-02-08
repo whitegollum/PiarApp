@@ -1,11 +1,11 @@
-# PIAR Backend
+# PiarAPP Backend
 
-Backend de la aplicación de Gestión de Clubs de Aeromodelismo usando FastAPI.
+Backend de la aplicacion de gestion de clubes de aeromodelismo usando FastAPI.
 
 ## Requisitos
 
 - Python 3.10+
-- pip или poetry
+- pip o poetry
 
 ## Configuración
 
@@ -50,14 +50,18 @@ backend/
 └── .env.example         # Variables de entorno ejemplo
 ```
 
-## Próximos Pasos
+## Estado actual
 
-1. Implementar autenticación con JWT
-2. Implementar Google OAuth 2.0
-3. Implementar sistema de invitaciones
-4. Crear servicios para cada módulo
-5. Implementar validaciones
-6. Agregar tests
+- Autenticacion JWT y refresh token.
+- Google OAuth backend listo.
+- Modulos de clubes, miembros, noticias, eventos e invitaciones.
+- Perfil de usuario con ver y editar datos, cambio de contrasena.
+
+## Proximos pasos
+
+1. Agregar tests unitarios e integracion.
+2. Mejorar cobertura de validaciones y errores.
+3. Preparar migraciones y despliegue.
 
 ## Variables de Entorno
 

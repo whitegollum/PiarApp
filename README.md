@@ -1,68 +1,57 @@
-<<<<<<< HEAD
-# PIAR - Sistema de Gestión de Clubs de Aeromodelismo 🚁
+# PiarAPP - Sistema de Gestion de Clubes de Aeromodelismo
 
-**MVP (Minimum Viable Product) - Phase 7 Actualizado**
+MVP (Phase 7) - Version 0.7.0
+Estado: En progreso
 
-Una plataforma web moderna y completa para la gestión de clubs de aeromodelismo con autenticación segura, multitenancy, y gestión de membresías.
-
----
-
-## ✨ Estado Actual (Phase 7)
-
-### ✅ Completado
-- **Backend**: 27+ endpoints, 8 modelos, autenticación JWT, invitaciones por email
-- **Frontend**: 9 páginas React, 8 CSS stylesheets, contexto de autenticación
-- **Autenticación**: Email/Contraseña + Google OAuth listo
-- **Perfil de Usuario**: Editar datos, cambiar contraseña
-- **Gestión de Clubs**: Crear, ver, editar clubs
-- **Gestión de Miembros**: Invitar, remover, ver lista completa
-- **Configuración**: Preferencias de notificaciones, idioma, tema
-- **Dashboard**: Panel principal con estadísticas
-- **Navbar**: Navegación completa con menú dropdown
-
-### 🔧 En Progreso
-- Google OAuth callback (backend ready, frontend pendiente)
-- Tests (pytest, Jest, E2E)
-- Deployment (Docker, CI/CD)
+Plataforma web para la gestion de clubes de aeromodelismo con autenticacion segura, multitenancy y gestion de membresias.
 
 ---
 
-## 🎯 Características Principales
+## Estado actual (Phase 7)
 
-### 🔐 Autenticación & Seguridad
-- ✅ Email/Contraseña (8+ caracteres)
-- ✅ Google OAuth 2.0 (listo para integración)
-- ✅ JWT con refresh automático
-- ✅ Contraseñas hasheadas con bcrypt
-- ✅ Invitaciones por email con tokens criptográficos
-- ✅ Protección de rutas con ProtectedRoute
+### Completado
+- Backend con autenticacion JWT, refresh token, invitaciones y modulos de clubes, noticias y eventos.
+- Frontend con login/registro, dashboard, clubes, miembros, perfil y configuracion.
+- Perfil de usuario con edicion de datos y cambio de contrasena.
+- Gestion de clubes con roles, invitaciones y manejo de miembros.
 
-### 🏢 Gestión de Clubs
-- ✅ Crear/Ver/Editar clubs
-- ✅ Gestión de miembros
-- ✅ Sistema de roles (administrador/miembro)
-- ✅ Invitar usuarios por email
-- ✅ Remover miembros
-
-### 👤 Perfil de Usuario
-- ✅ Ver/Editar información personal
-- ✅ Cambiar contraseña
-- ✅ Preferencias de notificaciones
-- ✅ Seleccionar idioma y tema
-- ✅ Descargar datos personales
-
-### 📢 Contenido del Club
-- ✅ Noticias/Anuncios (CRUD)
-- ✅ Eventos (CRUD)
-- ✅ Invitaciones (management)
-- 🔄 Votaciones (endpoints listos)
-- 🔄 Socios (endpoints listos)
+### En progreso
+- Google OAuth callback en frontend (backend listo).
+- Testing (pytest, React tests, E2E).
+- Deployment (Docker, CI/CD).
 
 ---
 
-## 🚀 Instalación Rápida
+## Caracteristicas principales
 
-### 1. Backend
+### Autenticacion y seguridad
+- Email/Contrasena (8+ caracteres).
+- Google OAuth 2.0 (backend listo para integracion).
+- JWT con refresh token.
+- Contrasenas con bcrypt.
+- Invitaciones por email con tokens.
+- Rutas protegidas con ProtectedRoute.
+
+### Gestion de clubes
+- Crear, ver y editar clubes.
+- Gestion de miembros y roles.
+- Invitaciones por email.
+
+### Perfil de usuario
+- Ver y editar informacion personal.
+- Cambiar contrasena.
+- Preferencias basicas en configuracion.
+
+### Contenido del club
+- Noticias y anuncios (CRUD).
+- Eventos (CRUD).
+- Votaciones y socios con endpoints listos.
+
+---
+
+## Instalacion rapida
+
+### Backend
 ```bash
 cd backend
 python -m venv venv
@@ -73,358 +62,240 @@ pip install -r requirements.txt
 python run.py
 ```
 
-**Backend en:** `http://localhost:8000`
+Backend en: http://localhost:8000
 
-### 2. Frontend
+### Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-**Frontend en:** `http://localhost:5173`
+Frontend en: http://localhost:5173
 
 ---
 
-## 📁 Estructura del Proyecto
+## Estructura del proyecto
 
 ```
-piar/
-├── backend/                    # FastAPI Python
+piarApp/
+├── backend/
 │   ├── app/
-│   │   ├── main.py            # FastAPI app
-│   │   ├── config.py          # Config
-│   │   ├── models/            # SQLAlchemy models (8)
-│   │   ├── schemas/           # Pydantic schemas
-│   │   ├── services/          # Business logic
-│   │   │   ├── auth_service.py
-│   │   │   ├── google_oauth_service.py
-│   │   │   ├── invitacion_service.py
-│   │   │   └── email_service.py
-│   │   ├── routes/            # API endpoints (4 módulos)
-│   │   │   ├── auth.py        (9 endpoints)
-│   │   │   ├── clubes.py      (8 endpoints)
-│   │   │   ├── noticias.py    (5 endpoints)
-│   │   │   └── eventos.py     (5 endpoints)
-│   │   └── utils/
-│   ├── requirements.txt        # Dependencies
-│   ├── run.py                  # Startup script
-│   └── piar.db                 # SQLite DB
-│
-├── frontend/                   # React + TypeScript
-│   ├── src/
-│   │   ├── pages/              # 9 React pages
-│   │   │   ├── Login.tsx
-│   │   │   ├── Register.tsx
-│   │   │   ├── AcceptInvitation.tsx
-│   │   │   ├── Dashboard.tsx
-│   │   │   ├── ClubDetail.tsx
-│   │   │   ├── CreateClub.tsx
-│   │   │   ├── ClubMembers.tsx  (NEW Phase 7)
-│   │   │   ├── Profile.tsx      (NEW Phase 7)
-│   │   │   └── Settings.tsx     (NEW Phase 7)
-│   │   ├── components/
-│   │   │   ├── Navbar.tsx      (NEW Phase 7)
-│   │   │   └── ProtectedRoute.tsx
-│   │   ├── contexts/
-│   │   │   └── AuthContext.tsx
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── routes/
 │   │   ├── services/
-│   │   │   └── api.ts           (APIService)
-│   │   ├── styles/              # 8 CSS files
-│   │   │   ├── Auth.css
-│   │   │   ├── Navbar.css
-│   │   │   ├── Dashboard.css
-│   │   │   ├── ClubDetail.css
-│   │   │   ├── Forms.css
-│   │   │   ├── Profile.css       (NEW Phase 7)
-│   │   │   ├── Settings.css      (NEW Phase 7)
-│   │   │   └── ClubMembers.css   (NEW Phase 7)
-│   │   └── App.tsx              # Router
+│   │   └── utils/
+│   ├── requirements.txt
+│   └── run.py
+├── frontend/
+│   ├── src/
+│   │   ├── pages/
+│   │   ├── components/
+│   │   ├── contexts/
+│   │   ├── services/
+│   │   └── styles/
 │   ├── package.json
-│   ├── vite.config.ts
-│   └── index.html
-│
-├── docs/
-│   ├── README.md                (este archivo)
-│   ├── PHASE_7_STATUS.md        (Estado Phase 7)
-│   ├── CARACTERÍSTICAS_FUNCIONALES.md
-│   └── REQUISITOS_TÉCNICOS.md
-│
-└── .env files (git-ignored)
+│   └── vite.config.ts
+├── PRUEBAS_FUNCIONALES.md
+├── PHASE_7_STATUS.md
+└── REQUISITOS_TÉCNICOS.md
 ```
 
 ---
 
-## 🛠️ Stack Tecnológico
+## Stack tecnologico
 
 ### Backend
 ```
-FastAPI 0.104.1        - Web framework
-SQLAlchemy 2.0.23      - ORM
-Pydantic 2.5.0         - Validation
-bcrypt 4.1.1           - Password hashing
-python-jose 3.3.0      - JWT
-PyJWT 2.11.0           - JWT support
-python-multipart       - File uploads
+FastAPI 0.104.1
+SQLAlchemy 2.0.23
+Pydantic 2.5.0
+bcrypt 4.1.1
+python-jose 3.3.0
+PyJWT 2.11.0
+python-multipart
 ```
 
 ### Frontend
 ```
-React 18.2.0           - UI framework
-TypeScript 5.3.3       - Type safety
-React Router 6.20.1    - SPA routing
-Vite 5.4.21            - Build tool
-Axios (via APIService) - HTTP client
+React 18.2.0
+TypeScript 5.3.3
+React Router 6.20.1
+Vite 5.4.21
+Axios (via APIService)
 ```
 
 ### Database
 ```
-SQLite (desarrollo)    - Local DB
-PostgreSQL             - Production ready
+SQLite (desarrollo)
+PostgreSQL (produccion)
 ```
 
 ---
 
-## 📡 API Endpoints (27+ total)
+## API endpoints (principales)
 
-### Autenticación (9)
+Base URL: /api
+
+### Autenticacion
 ```
 POST   /auth/login
 POST   /auth/registro
 POST   /auth/registrarse-desde-invitacion
 POST   /auth/google-login
 POST   /auth/refresh-token
-GET    /usuarios/perfil
-PUT    /usuarios/perfil
-POST   /usuarios/cambiar-contrasena
-POST   /usuarios/descargar-datos
+POST   /auth/logout
+GET    /auth/invitaciones/pendientes
+POST   /auth/invitaciones/aceptar/{token}
+POST   /auth/invitaciones/rechazar/{token}
+GET    /auth/usuarios/me
+PUT    /auth/usuarios/me
+POST   /auth/usuarios/cambiar-contraseña
 ```
 
-### Clubs (8)
+### Clubes
 ```
-POST   /clubes                          # Crear club
-GET    /clubes                          # Listar mis clubs
-GET    /clubes/{id}                     # Ver club
-PUT    /clubes/{id}                     # Editar club
-DELETE /clubes/{id}                     # Eliminar club
-GET    /clubes/{id}/miembros            # Listar miembros
-POST   /clubes/{id}/miembros/invitar    # Invitar miembro
-PUT    /clubes/{id}/miembros/{usuario}/rol # Cambiar rol
-DELETE /clubes/{id}/miembros/{usuario} # Remover
-```
-
-### Noticias (5)
-```
-POST   /clubes/{id}/noticias            # Crear
-GET    /clubes/{id}/noticias            # Listar
-GET    /noticias/{id}                   # Ver
-PUT    /noticias/{id}                   # Editar
-DELETE /noticias/{id}                   # Eliminar
+POST   /clubes
+GET    /clubes
+GET    /clubes/{id}
+PUT    /clubes/{id}
+DELETE /clubes/{id}
+GET    /clubes/{id}/miembros
+POST   /clubes/{id}/miembros/invitar
+PUT    /clubes/{id}/miembros/{usuario}/rol
+DELETE /clubes/{id}/miembros/{usuario}
 ```
 
-### Eventos (5)
+### Noticias
 ```
-POST   /clubes/{id}/eventos             # Crear
-GET    /clubes/{id}/eventos             # Listar
-GET    /eventos/{id}                    # Ver
-PUT    /eventos/{id}                    # Editar
-DELETE /eventos/{id}                    # Eliminar
+POST   /clubes/{id}/noticias
+GET    /clubes/{id}/noticias
+GET    /noticias/{id}
+PUT    /noticias/{id}
+DELETE /noticias/{id}
+```
+
+### Eventos
+```
+POST   /clubes/{id}/eventos
+GET    /clubes/{id}/eventos
+GET    /eventos/{id}
+PUT    /eventos/{id}
+DELETE /eventos/{id}
 ```
 
 ---
 
-## 🔐 Seguridad Implementada
+## Seguridad implementada
 
-| Aspecto | Implementación |
+| Aspecto | Implementacion |
 |--------|----------------|
-| **Contraseñas** | bcrypt + salt automático |
-| **Access Token** | JWT 15 minutos |
-| **Refresh Token** | JWT 7 días |
-| **Almacenamiento** | localStorage (frontend) |
-| **CORS** | Configurado localhost:5173 |
-| **Invitaciones** | Tokens criptográficos únicos |
-| **Roles** | Administrador / Miembro |
-| **Email Validation** | Verificación requerida |
+| Contrasenas | bcrypt + salt automatico |
+| Access token | JWT 15 minutos |
+| Refresh token | JWT 7 dias |
+| Almacenamiento | localStorage (frontend) |
+| CORS | Configurado para localhost:5173 |
+| Invitaciones | Tokens criptograficos unicos |
+| Roles | Administrador / Miembro |
 
 ---
 
-## 📱 Flujos de Usuario Principales
+## Flujos de usuario principales
 
-### 1. Registro
+### Registro
 ```mermaid
 graph LR
-    A[Registro] -> B[Email/Contraseña] -> C[Confirmar] -> D[Login] -> E[Dashboard]
+    A[Registro] -> B[Email/Contrasena] -> C[Confirmar] -> D[Login] -> E[Dashboard]
 ```
 
-### 2. Crear Club
+### Crear club
 ```mermaid
 graph LR
-    A[Dashboard] -> B[Crear Club] -> C[Form] -> D[Club Creado] -> E[Admin Automático]
+    A[Dashboard] -> B[Crear club] -> C[Formulario] -> D[Club creado] -> E[Admin automatico]
 ```
 
-### 3. Invitar Miembros
+### Invitar miembros
 ```mermaid
 graph LR
-    A[Club] -> B[Miembros] -> C[Invitar] -> D[Email] -> E[Usuario Acepta] -> F[Unido]
+    A[Club] -> B[Miembros] -> C[Invitar] -> D[Email] -> E[Usuario acepta] -> F[Unido]
 ```
 
-### 4. Perfil de Usuario
+### Perfil de usuario
 ```mermaid
 graph LR
-    A[Navbar] -> B[Mi Perfil] -> C[Editar Datos/Contraseña] -> D[Guardado]
+    A[Navbar] -> B[Mi perfil] -> C[Editar datos o contrasena] -> D[Guardado]
 ```
 
 ---
 
-## 🎯 Cambios Phase 7 (+1200 líneas)
-
-### Nuevas Páginas
-| Archivo | Líneas | Descripción |
-|---------|--------|------------|
-| Profile.tsx | 250 | Editar perfil, cambiar contraseña |
-| ClubMembers.tsx | 250 | Gestión completa de miembros |
-| Settings.tsx | 280 | Preferencias y configuración |
-
-### Nuevos Estilos
-| Archivo | Líneas | Descripción |
-|---------|--------|------------|
-| Profile.css | 280 | Formularios y seguridad |
-| ClubMembers.css | 350 | Lista de miembros, avatares |
-| Settings.css | 350 | Toggle switches, preferencias |
-
-### Componentes Actualizados
-| Cambio | Detalles |
-|--------|---------|
-| Navbar.tsx | Ahora usa useAuth() hook, sin props |
-| App.tsx | +3 rutas nuevas (/perfil, /configuracion, /clubes/:id/miembros) |
-| ClubDetail.tsx | Botones para administrar miembros |
-
----
-
-## 🧪 Testing (Próximamente)
+## Testing
 
 ```bash
-# Backend
 cd backend
 pytest tests/
 
-# Frontend
 cd frontend
 npm test
-
-# E2E
-npm run cypress
 ```
 
 ---
 
-## 🚀 Despliegue
+## Despliegue
 
-### Docker
 ```bash
 docker-compose build
 docker-compose up
 ```
 
-### Heroku
-```bash
-heroku create mi-app
-git push heroku main
-heroku config:set SECRET_KEY=xxx
-```
-
-### AWS / DigitalOcean
-Ver guía de deployment en docs/
-
 ---
 
-## 🐛 Solucionar Problemas
+## Solucionar problemas
 
 ### Backend no inicia
 ```bash
-# Verificar Python 3.10+
 python --version
-
-# Verificar dependencias
 pip install -r requirements.txt
-
-# Ejecutar
-python run.py  # NO uvicorn directo
+python run.py
 ```
 
 ### Frontend no se conecta
-1. ¿Backend corre en 8000? `netstat -an | grep 8000`
-2. ¿CORS configurado? Ver app/main.py
-3. ¿.env correcto? Ver frontend/.env
-
-### Port en uso
-```bash
-# Cambiar puerto
-python run.py --port 8001  # Backend
-npm run dev -- --port 5174  # Frontend
-```
+1. Backend corriendo en 8000.
+2. CORS configurado en app/main.py.
+3. .env correcto en frontend/.env.
 
 ---
 
-## 📊 Métricas de Progreso
+## Documentacion adicional
 
-```
-Autenticación:     ████████████████████ 100% ✅
-Backend API:       ████████████████████ 100% ✅
-Frontend Páginas:  ███████████████████░ 95% ⏳
-Admin Features:    ███████████████░░░░░ 80% ⏳
-Google OAuth:      ██████████░░░░░░░░░░ 50% 🔄
-Testing:           ░░░░░░░░░░░░░░░░░░░░ 0% ❌
-Deployment:        ░░░░░░░░░░░░░░░░░░░░ 0% ❌
-
-TOTAL MVP:         █████████████████░░░ 85% ✅
-```
+- [PHASE_7_STATUS.md](PHASE_7_STATUS.md)
+- [CARACTERÍSTICAS_FUNCIONALES.md](CARACTERÍSTICAS_FUNCIONALES.md)
+- [REQUISITOS_TÉCNICOS.md](REQUISITOS_TÉCNICOS.md)
+- [PRUEBAS_FUNCIONALES.md](PRUEBAS_FUNCIONALES.md)
 
 ---
 
-## 📚 Documentación Adicional
-
-- [PHASE_7_STATUS.md](./PHASE_7_STATUS.md) - Estado actual detallado
-- [CARACTERÍSTICAS_FUNCIONALES.md](./CARACTERÍSTICAS_FUNCIONALES.md) - Especificación
-- [REQUISITOS_TÉCNICOS.md](./REQUISITOS_TÉCNICOS.md) - Detalles técnicos
-
----
-
-## 🔗 Links Útiles
+## Links utiles
 
 | Link | URL |
 |------|-----|
-| **Frontend Dev** | http://localhost:5173 |
-| **Backend API** | http://localhost:8000 |
-| **API Docs (Swagger)** | http://localhost:8000/docs |
-| **API Docs (ReDoc)** | http://localhost:8000/redoc |
-| **OpenAPI Spec** | http://localhost:8000/openapi.json |
+| Frontend dev | http://localhost:5173 |
+| Backend API | http://localhost:8000 |
+| API Docs (Swagger) | http://localhost:8000/docs |
+| API Docs (ReDoc) | http://localhost:8000/redoc |
+| OpenAPI Spec | http://localhost:8000/openapi.json |
 
 ---
 
-## 💡 Próximos Pasos
+## Proximos pasos
 
-### Phase 8 (Próxima)
-- [ ] Completar Google OAuth callback
-- [ ] Noticias & Eventos UI completo
-- [ ] Tests básicos (pytest)
-
-### Phase 9
-- [ ] Tests React (Jest, React Testing Library)
-- [ ] Cypress E2E tests
-- [ ] Coverage > 80%
-
-### Phase 10
-- [ ] Docker containerization
-- [ ] GitHub Actions CI/CD
-- [ ] Deploy a staging
-- [ ] Deploy a producción
+- Completar callback de Google OAuth en frontend.
+- Agregar tests basicos en backend y frontend.
+- Preparar pipeline de CI/CD y despliegue.
 
 ---
 
-## 🤝 Contribuir
-
-Este es un proyecto en desarrollo. Las contribuciones son bienvenidas:
+## Contribuir
 
 1. Fork el proyecto
 2. Crea rama: `git checkout -b feature/AmazingFeature`
@@ -434,27 +305,23 @@ Este es un proyecto en desarrollo. Las contribuciones son bienvenidas:
 
 ---
 
-## 📄 Licencia
+## Licencia
 
 Licensed under the MIT License - ver archivo LICENSE para detalles.
 
 ---
 
-## 📞 Soporte
+## Soporte
 
-- 🐛 **Bugs**: Abrir issue en GitHub
-- 💡 **Sugerencias**: Discussions en GitHub
-- 📧 **Email**: contacto@piar.app
+- Bugs: abrir issue en GitHub
+- Sugerencias: Discussions en GitHub
+- Email: contacto@piar.app
 
 ---
 
-**Última actualización:** 2024 - Phase 7  
-**Versión:** 0.7.0 - MVP Core Features  
-**Estado:** ✅ Production Ready (sin tests/deployment)
+Ultima actualizacion: 2026 - Phase 7
+Version: 0.7.0 - MVP Core Features
+Estado: MVP funcional en validacion
 
-**Desarrollado con ❤️ por el equipo PIAR**
+Desarrollado por el equipo PiarAPP
 
-=======
-# PiarApp
-Gestion de club de aeromodelismo y drones Cerdos Voladores
->>>>>>> d914008bde716b97d8806259f6b86ad22da86676

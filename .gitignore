@@ -1,2 +1,10 @@
+# Python
+**/__pycache__/
+*.pyc
+
+# Node
 **/node_modules/
+
+# Local DB
 *.db
+backend/piar.db

@@ -1,0 +1,22 @@
+# Backend
+cd backend && pip install -r requirements.txt
+python run.py
+# Servidor en: http://localhost:8000
+
+# Frontend (en otra terminal)
+cd frontend && npm install
+npm run dev
+# Servidor en: http://localhost:5173 (o 5174 si está en uso)
+
+# URLs importantes:
+# - Frontend: http://localhost:5174
+# - Backend API: http://localhost:8000
+# - API Docs: http://localhost:8000/docs
+# - ReDoc: http://localhost:8000/redoc
+
+
+1. test@example.com / Password123
+2. admin@piar.com / Admin123456
+3. juan@example.com / Juan123456
+4. maria@example.com / Maria123456
+5. carlos@example.com / Carlos123456

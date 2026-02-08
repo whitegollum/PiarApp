@@ -1,0 +1,45 @@
+{
+  "name": "PIAR - Gestión de Clubs de Aeromodelismo",
+  "short_name": "PIAR",
+  "description": "Aplicación PWA para gestión de clubs de aeromodelismo",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#FF6B35",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/splash-screens/splash-640x1136.png",
+      "sizes": "640x1136",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/splash-screens/splash-750x1334.png",
+      "sizes": "750x1334",
+      "form_factor": "narrow"
+    }
+  ],
+  "categories": ["productivity"],
+  "screenshots_dark": []
+}

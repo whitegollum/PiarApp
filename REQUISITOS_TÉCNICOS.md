@@ -1,0 +1,1177 @@
+# Requisitos Técnicos - Sistema de Gestión de Clubs de Aeromodelismo
+
+## 1. Stack Tecnológico
+
+### Lenguaje de Programación
+- **Lenguaje Principal**: Python 3.10+
+- **Justificación**: Desarrollo rápido, excelentes frameworks web, buena comunidad
+
+### Backend
+- **Framework**: FastAPI o Flask (decisión pendiente según velocidad requerida)
+  - **FastAPI**: Más moderno, mejor rendimiento, validación automática con Pydantic
+  - **Flask**: Más simple, menos dependencias, curva de aprendizaje menor
+- **ASGI Server**: Uvicorn (para FastAPI) o Gunicorn (para Flask)
+
+### Frontend (PWA - Progressive Web App)
+- **Arquitectura**: Progressive Web App (PWA) con capacidades de aplicación nativa
+- **Framework**: React 18+ ou Vue.js 3+ con TypeScript
+  - **React**: mejor ecosistema, más librerías, mejor rendimiento
+  - **Vue.js**: más ligero, más fácil de aprender, buena experiencia
+- **Styling**: Tailwind CSS + componentes personalizados
+- **Estado Global**: Redux Toolkit (React) o Pinia (Vue)
+- **PWA Features**:
+  - Service Worker para funcionamiento offline
+  - Web App Manifest (install en home screen)
+  - HTTPS obligatorio
+  - Responsive design (móvil-first)
+  - Cache-first strategy para assets estáticos
+  - IndexedDB para almacenamiento local de datos
+- **Herramientas**:
+  - Build: Vite o Next.js (mejor rendimiento que Create React App)
+  - PWA: workbox-webpack-plugin (integración service worker)
+  - Testing: Jest + React Testing Library
+- **Nota**: API REST consumida desde PWA y futuros clientes móviles (iOS/Android)
+
+### Base de Datos (Versión 1 - Ágil / Versión 2 - Definitiva)
+
+#### Fase Actual - Backend Ágil (MVP)
+- **Almacenamiento**: JSON Files / SQLite
+- **ORM**: SQLAlchemy (flexible, preparado para migración)
+- **Ventajas**:
+  - Sin instalación de servidor DB
+  - Rápido para desarrollo
+  - Fácil de testear
+  - Portabilidad
+
+#### Fase 2 - Base de Datos Relacional
+- **Opciones**:
+  - PostgreSQL (recomendado - mejor para escalabilidad)
+  - MySQL 8.0+
+- **Razones**:
+  - Mejor rendimiento con muchos datos
+  - Escalabilidad
+  - Seguridad mejorada
+  - Transacciones ACID
+
+### Otros Componentes
+- **Autenticación**: JWT (JSON Web Tokens) ou sesiones seguras
+- **OAuth 2.0**: Google Login integrado
+- **Hash de contraseñas**: Bcrypt o Argon2
+- **Validación**: Pydantic (automático en FastAPI)
+- **Logging**: Python logging module / Serilog
+- **Testing**: Pytest para tests unitarios e integración
+- **API Documentation**: Swagger/OpenAPI (automático en FastAPI)
+- **Multitenancy**: Tenant isolation, context per request
+- **PWA Libraries**:
+  - workbox-core, workbox-precaching (Service Worker)
+  - pwa-asset-generator (iconos y splash screens)
+  - IndexedDB wrapper (dexie.js para almacenamiento offline)
+
+---
+
+## 2. Arquitectura de la Aplicación
+
+### Estructura de Carpetas - Sistema Recomendado
+
+```
+piarApp/
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py                 # Punto de entrada
+│   │   ├── config.py               # Configuración
+│   │   ├── models/
+│   │   │   ├── __init__.py
+│   │   │   ├── usuario.py          # Modelo Usuario global
+│   │   │   ├── club.py             # Modelo Club
+│   │   │   ├── miembro_club.py     # Modelo relación Usuario-Club
+│   │   │   ├── invitacion.py       # Modelo Invitación a Club
+│   │   │   ├── socio.py            # Modelo Socio (específico por club)
+│   │   │   ├── noticia.py          # Modelo Noticia
+│   │   │   ├── votacion.py         # Modelo Votación
+│   │   │   ├── contraseña_instalaciones.py  # Contraseña de acceso
+│   │   │   ├── declaracion_documentacion.py # Declaración de carnet y seguro
+│   │   │   ├── evento.py           # Modelo Evento
+│   │   │   ├── participante_evento.py # Participantes en eventos
+│   │   │   └── producto.py         # Modelo Producto
+│   │   ├── schemas/
+│   │   │   ├── __init__.py
+│   │   │   ├── socio_schema.py     # Validación de Socio
+│   │   │   ├── noticia_schema.py   # Validación de Noticia
+│   │   │   └── votacion_schema.py  # Validación de Votación
+│   │   ├── routes/
+│   │   │   ├── __init__.py
+│   │   │   ├── auth.py             # Rutas de autenticación (local, Google, invitaciones)
+│   │   │   ├── clubes.py           # Rutas de gestión de clubes
+│   │   │   ├── invitaciones.py     # Rutas de invitaciones a clubes
+│   │   │   ├── socios.py           # Rutas de socios (incluye foto)
+│   │   │   ├── noticias.py         # Rutas de noticias
+│   │   │   ├── votaciones.py       # Rutas de votaciones
+│   │   │   ├── usuarios.py         # Rutas de usuarios
+│   │   │   ├── instalaciones.py    # Rutas de contraseña de instalaciones
+│   │   │   ├── documentacion.py    # Rutas de declaración de documentación
+│   │   │   ├── eventos.py          # Rutas de eventos
+│   │   │   └── productos.py        # Rutas de tienda y productos
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   ├── auth_service.py     # Lógica de autenticación (local y OAuth)
+│   │   │   ├── google_oauth_service.py # Integración con Google OAuth
+│   │   │   ├── invitacion_service.py # Lógica de invitaciones a clubes
+│   │   │   ├── club_service.py     # Lógica de clubes
+│   │   │   ├── socio_service.py    # Lógica de socios
+│   │   │   ├── noticia_service.py  # Lógica de noticias
+│   │   │   ├── votacion_service.py # Lógica de votaciones
+│   │   │   ├── file_service.py     # Manejo de archivos (fotos)
+│   │   │   ├── evento_service.py   # Lógica de eventos
+│   │   │   └── producto_service.py # Lógica de productos
+│   │   ├── database/
+│   │   │   ├── __init__.py
+│   │   │   └── db.py               # Configuración DB
+│   │   └── middleware/
+│   │       ├── __init__.py
+│   │       └── auth_middleware.py  # Middleware de autenticación
+│   ├── uploads/
+│   │   └── carnet_photos/          # Carpeta para fotos de carnet
+│   ├── tests/
+│   │   ├── test_socios.py
+│   │   ├── test_noticias.py
+│   │   └── test_votaciones.py
+│   ├── requirements.txt            # Dependencias Python
+│   ├── .env.example                # Variables de entorno ejemplo
+│   └── README.md
+├── frontend/
+│   ├── public/
+│   │   ├── index.html              # Index HTML principal
+│   │   ├── manifest.json           # PWA Manifest
+│   │   ├── service-worker.js       # Service Worker
+│   │   ├── icons/
+│   │   │   ├── icon-192x192.png
+│   │   │   ├── icon-512x512.png
+│   │   │   ├── icon-maskable.png
+│   │   │   └── apple-touch-icon.png
+│   │   ├── splash-screens/         # Splash screens para PWA
+│   │   │   ├── splash-640x1136.png
+│   │   │   └── splash-750x1334.png
+│   │   └── robots.txt
+│   ├── src/
+│   │   ├── index.tsx               # Punto de entrada (React)
+│   │   ├── App.tsx                 # Componente raíz
+│   │   ├── App.css
+│   │   ├── components/
+│   │   │   ├── auth/
+│   │   │   │   ├── LoginForm.tsx
+│   │   │   │   ├── RegisterForm.tsx
+│   │   │   │   └── GoogleAuthButton.tsx
+│   │   │   ├── club/
+│   │   │   │   ├── ClubCard.tsx
+│   │   │   │   ├── ClubProfile.tsx
+│   │   │   │   └── ClubCustomization.tsx
+│   │   │   ├── socios/
+│   │   │   │   ├── ProfileForm.tsx
+│   │   │   │   ├── PhotoCarnetUpload.tsx
+│   │   │   │   └── DocumentationForm.tsx
+│   │   │   ├── noticias/
+│   │   │   │   ├── NoticiaList.tsx
+│   │   │   │   ├── NoticiaCard.tsx
+│   │   │   │   └── NoticiaDetail.tsx
+│   │   │   ├── eventos/
+│   │   │   │   ├── EventCalendar.tsx
+│   │   │   │   ├── EventCard.tsx
+│   │   │   │   └── EventRegistration.tsx
+│   │   │   ├── votaciones/
+│   │   │   │   ├── VotacionCard.tsx
+│   │   │   │   └── VotacionResults.tsx
+│   │   │   ├── productos/
+│   │   │   │   ├── ProductList.tsx
+│   │   │   │   ├── ProductCard.tsx
+│   │   │   │   └── IngresesDashboard.tsx
+│   │   │   ├── common/
+│   │   │   │   ├── Header.tsx
+│   │   │   │   ├── Footer.tsx
+│   │   │   │   ├── Navigation.tsx
+│   │   │   │   └── Loading.tsx
+│   │   │   └── layout/
+│   │   │       ├── MainLayout.tsx
+│   │   │       └── AuthLayout.tsx
+│   │   ├── pages/
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── Login.tsx
+│   │   │   ├── Register.tsx
+│   │   │   ├── ClubList.tsx
+│   │   │   ├── ClubDetail.tsx
+│   │   │   ├── Profile.tsx
+│   │   │   ├── Noticias.tsx
+│   │   │   ├── Eventos.tsx
+│   │   │   ├── Votaciones.tsx
+│   │   │   ├── Tienda.tsx
+│   │   │   ├── Help.tsx
+│   │   │   └── NotFound.tsx
+│   │   ├── services/
+│   │   │   ├── api.ts              # Instancia de Axios/Fetch
+│   │   │   ├── auth.service.ts     # Servicio de autenticación
+│   │   │   ├── club.service.ts     # Servicio de clubes
+│   │   │   ├── socio.service.ts    # Servicio de socios
+│   │   │   ├── noticia.service.ts
+│   │   │   ├── evento.service.ts
+│   │   │   ├── votacion.service.ts
+│   │   │   ├── producto.service.ts
+│   │   │   └── storage.service.ts  # Servicio de IndexedDB (offline)
+│   │   ├── store/                  # Redux/Pinia store
+│   │   │   ├── auth/
+│   │   │   │   ├── authSlice.ts
+│   │   │   │   └── authThunks.ts
+│   │   │   ├── club/
+│   │   │   │   ├── clubSlice.ts
+│   │   │   │   └── clubThunks.ts
+│   │   │   ├── ui/
+│   │   │   │   └── uiSlice.ts
+│   │   │   └── store.ts
+│   │   ├── hooks/
+│   │   │   ├── useAuth.ts
+│   │   │   ├── useClub.ts
+│   │   │   └── useOffline.ts       # Hook para detectar offline
+│   │   ├── utils/
+│   │   │   ├── constants.ts
+│   │   │   ├── validators.ts
+│   │   │   ├── formatters.ts
+│   │   │   └── pwa.ts              # Utilidades PWA
+│   │   ├── types/
+│   │   │   ├── api.ts
+│   │   │   ├── auth.ts
+│   │   │   ├── club.ts
+│   │   │   └── entities.ts
+│   │   ├── styles/
+│   │   │   ├── globals.css
+│   │   │   ├── variables.css       # CSS variables por club
+│   │   │   └── responsive.css
+│   │   └── registerServiceWorker.ts # Registro de Service Worker
+│   ├── workbox-config.js           # Configuración Workbox (offline)
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── vite.config.ts              # Configuración Vite con PWA plugin
+│   ├── .env.example
+│   └── README.md
+├── docs/
+│   ├── CARACTERÍSTICAS_FUNCIONALES.md
+│   ├── REQUISITOS_TÉCNICOS.md
+│   ├── ARQUITECTURA_DB.md
+│   └── API_ENDPOINTS.md
+└── docker-compose.yml              # Orquestación de contenedores (futuro)
+```
+
+### Patrones de Diseño
+- **MVC (Model-View-Controller)**: Para estructura clara
+- **Repository Pattern**: Para acceso a datos (facilita migración a BD)
+- **Service Layer**: Lógica de negocio separada
+- **Dependency Injection**: Para testabilidad
+
+---
+
+## 3. Base de Datos - Diseño Preliminar
+
+### Fase 1 - Ágil (SQLite / JSON)
+
+**Tablas/Colecciones principales**:
+
+#### Tablas Globales (para toda la plataforma)
+
+```
+USUARIOS
+├── id (PK)
+├── email (UNIQUE)
+├── nombre_completo
+├── contraseña (hash - nullable si solo OAuth)
+├── foto_perfil_url
+├── google_id (para Google OAuth)
+├── google_email
+├── google_photo_url
+├── 2fa_habilitado (boolean)
+├── 2fa_secret (encriptado)
+├── email_verificado (boolean)
+├── fecha_creación
+├── último_login
+└── activo (boolean)
+
+CLUBES
+├── id (PK)
+├── nombre
+├── slug (único - URL-safe identifier)
+├── descripción
+├── logo_url
+├── color_primario (HEX - ej: #FF6B35)
+├── color_secundario (HEX)
+├── color_acento (HEX)
+├── pais
+├── region
+├── email_contacto
+├── teléfono
+├── sitio_web
+├── redes_sociales (JSON - facebook, instagram, etc.)
+├── creador_id (FK a USUARIOS)
+├── es_público (boolean)
+├── requiere_aprobación (boolean)
+├── permite_autoregistro (boolean)
+├── zona_horaria
+├── idioma_por_defecto
+├── estado (activo/inactivo/suspendido)
+├── fecha_creación
+├── última_actualización
+├── settings (JSON - configuración adicional)
+└── favicon_url
+
+MIEMBRO_CLUB
+├── id (PK)
+├── usuario_id (FK a USUARIOS)
+├── club_id (FK a CLUBES)
+├── rol (propietario/admin/editor/moderador/gestor_eventos/tesorero/socio/visitante)
+├── estado (activo/pendiente/suspendido)
+├── fecha_inscripción
+├── fecha_aprobación
+├── aprobado_por_id (FK a USUARIOS)
+└── fecha_último_acceso
+
+TOKEN_GOOGLE
+├── id (PK)
+├── usuario_id (FK a USUARIOS)
+├── access_token (encriptado)
+├── refresh_token (encriptado)
+├── expires_at (timestamp)
+├── scope
+├── token_type
+└── fecha_actualización
+
+INVITACIONES
+├── id (PK)
+├── club_id (FK a CLUBES)
+├── email (string - email invitado)
+├── usuario_id (FK a USUARIOS - nullable si aún no se registra)
+├── rol (socio/editor/moderador/admin)
+├── token (string único - para validación de enlace de invitación)
+├── estado (pendiente/aceptada/rechazada/expirada)
+├── creado_por_id (FK a USUARIOS - quién hizo la invitación)
+├── fecha_creación
+├── fecha_vencimiento (30 días después de creación)
+├── fecha_aceptación (null si aún no acepta)
+└── nombre_completo (opcional - propuesto por admin)
+
+### Tablas Específicas del Club
+
+SOCIOS
+├── id (PK)
+├── club_id (FK a CLUBES - tenant isolation)
+├── usuario_id (FK a USUARIOS)
+├── nombre
+├── email
+├── teléfono
+├── fecha_nacimiento
+├── dirección
+├── fecha_alta
+├── estado (activo/inactivo)
+├── especialidades (JSON array)
+├── foto_carnet_path (URL/path a foto)
+├── foto_carnet_fecha_subida (fecha)
+````
+
+NOTIFICACIONES
+├── id (PK)
+├── club_id (FK a CLUBES)
+├── socio_id (FK a SOCIOS)
+├── tipo (noticia/votación/comentario/evento/producto)
+├── mensaje
+├── leída (boolean)
+└── fecha_creación
+
+NOTICIAS
+├── id (PK)
+├── título
+├── contenido
+├── categoría
+├── autor_id (FK a USUARIOS)
+├── fecha_publicación
+├── fecha_creación
+├── estado (borrador/publicada/archivada)
+├── imagen_url
+├── visible_para (público/socios)
+└── archivada_fecha
+
+COMENTARIOS_NOTICIA
+├── id (PK)
+├── noticia_id (FK)
+├── autor_id (FK a USUARIOS)
+├── contenido
+├── fecha_creación
+└── moderado
+
+VOTACIONES
+├── id (PK)
+├── título
+├── descripción
+├── tipo (simple/múltiple)
+├── creador_id (FK a USUARIOS)
+├── fecha_inicio
+├── fecha_fin
+├── estado (abierta/cerrada)
+├── visible (true/false)
+└── fecha_creación
+
+OPCIONES_VOTACION
+├── id (PK)
+├── votacion_id (FK)
+├── texto_opción
+├── orden
+└── votos_count
+
+VOTOS
+├── id (PK)
+├── votacion_id (FK)
+├── socio_id (FK)
+├── opcion_id (FK)
+└── fecha_voto
+
+NOTIFICACIONES
+├── id (PK)
+├── club_id (FK a CLUBES)
+├── socio_id (FK a SOCIOS)
+├── tipo (noticia/votación/comentario/evento/producto)
+├── mensaje
+├── leída (boolean)
+└── fecha_creación
+
+AUDITORÍA
+├── id (PK)
+├── club_id (FK a CLUBES)
+├── usuario_id (FK a USUARIOS)
+├── acción
+├── tabla_afectada
+├── registro_id (ID del registro afectado)
+├── valores_anteriores (JSON)
+├── valores_nuevos (JSON)
+├── fecha
+└── ip_origen
+
+CONTRASEÑA_INSTALACIONES
+├── id (PK)
+├── club_id (FK a CLUBES)
+├── contraseña_actual (hash/encriptada)
+├── fecha_cambio (timestamp)
+├── administrador_id (FK a USUARIOS)
+├── motivo_descripción (texto)
+├── ip_administrador
+├── activa (booleano)
+└── fecha_próximo_cambio_programado (opcional)
+
+HISTORIAL_CONTRASEÑA_INSTALACIONES
+├── id (PK)
+├── contraseña (hash/encriptada)
+├── fecha_cambio
+├── fecha_vencimiento (cuando dejó de ser válida)
+├── administrador_id (FK)
+└── detalles (JSON)
+
+DECLARACION_DOCUMENTACION
+├── id (PK)
+├── socio_id (FK a SOCIOS)
+├── tiene_seguro_rc (boolean)
+├── fecha_vencimiento_seguro
+├── aseguradora (string, opcional)
+├── tiene_carnet_piloto (boolean)
+├── tipo_carnet (string - básico/avanzado/profesional)
+├── numero_carnet (string, opcional)
+├── fecha_vencimiento_carnet
+├── fecha_declaracion (timestamp)
+├── aceptacion_responsabilidad (boolean)
+├── última_actualización
+└── fecha_próxima_revisión_30dias
+
+EVENTOS
+├── id (PK)
+├── nombre
+├── descripción
+├── tipo (volar_grupo/competición/formación/social/otro)
+├── fecha_inicio
+├── fecha_fin
+├── hora_inicio
+├── hora_fin
+├── ubicación
+├── imagen_url
+├── requisitos (JSON - carnet_vigente, seguro, etc.)
+├── aforo_máximo (integer, nullable)
+├── contacto_responsable_id (FK a USUARIOS)
+├── estado (no_iniciado/en_curso/finalizado/cancelado)
+├── fecha_creación
+├── permite_comentarios (boolean)
+└── última_actualización
+
+PARTICIPANTES_EVENTO
+├── id (PK)
+├── evento_id (FK a EVENTOS)
+├── socio_id (FK a SOCIOS)
+├── fecha_inscripción
+├── estado (inscrito/confirmado/rechazado/asistió/no_asistió)
+├── confirmado_por_admin (boolean)
+├── presente (boolean)
+└── observaciones
+
+PRODUCTOS
+├── id (PK)
+├── nombre
+├── descripción
+├── imagen_url
+├── plataforma (Amazon/AliExpress/otra)
+├── codigo_referencia (string - el link afiliado)
+├── precio_aproximado (decimal)
+├── categoría (accesorios/repuestos/herramientas/otro)
+├── por_que_recomendado (text)
+├── estado (borrador/publicado/archivado)
+├── creado_por_id (FK a USUARIOS)
+├── fecha_creación
+├── clicks_generados (counter)
+├── última_actualización
+└── activo (boolean)
+
+INGRESOS_AFILIACION
+├── id (PK)
+├── producto_id (FK a PRODUCTOS)
+├── plataforma (Amazon/AliExpress)
+├── fecha_transacción
+├── monto_ingreso (decimal)
+├── referencia_transacción (string, opcional)
+├── estado (registrado/confirmado/pagado)
+└── notas (text, opcional)
+
+ARCHIVOS_EVENTO
+├── id (PK)
+├── evento_id (FK a EVENTOS)
+├── tipo (pdf/video/imagen/documento)
+├── nombre_archivo
+├── ruta_archivo
+├── fecha_subida
+└── subido_por_id (FK a USUARIOS)
+
+JUNTAS
+├── id (PK)
+├── club_id (FK a CLUBES - tenant isolation)
+├── titulo (string)
+├── descripcion (text - orden del día)
+├── convocatoria_archivo (ruta a PDF/documento)
+├── fecha_programada (datetime)
+├── ubicacion (string)
+├── tipo (presencial/virtual/hibrida)
+├── enlace_videoconferencia (URL, opcional)
+├── quorum_minimo (integer - porcentaje)
+├── mayoria_requerida (integer - porcentaje para aprobación)
+├── plazo_minimo_convocatoria (integer - días)
+├── estado (convocada/en_curso/finalizada/suspendida/cancelada)
+├── fecha_cancelacion (timestamp, opcional)
+├── motivo_cancelacion (text, opcional)
+├── creada_por_id (FK a USUARIOS)
+├── fecha_creacion (timestamp)
+└── ultima_actualizacion (timestamp)
+
+CONVOCATORIA_PENDIENTE
+├── id (PK)
+├── junta_id (FK a JUNTAS)
+├── socio_id (FK a SOCIOS)
+├── email_enviado (boolean)
+├── confirmacion_asistencia (boolean, nullable)
+├── fecha_confirmacion (timestamp, nullable)
+└── notificacion_enviada (boolean)
+
+ACTA_JUNTA
+├── id (PK)
+├── junta_id (FK a JUNTAS - única)
+├── documento_path (ruta a PDF generado)
+├── fecha_realizacion (timestamp)
+├── asistentes_count (integer)
+├── ausentes_justificados_count (integer)
+├── ausentes_injustificados_count (integer)
+├── quorum_alcanzado (boolean)
+├── porcentaje_asistencia (decimal)
+├── orden_del_dia_tratado (text)
+├── decisiones (text)
+├── proxima_junta_fecha (date, opcional)
+├── estado (borrador/aprobada/archivada)
+├── generada_por_id (FK a USUARIOS)
+├── fecha_generacion (timestamp)
+├── aprobada_en_junta_id (FK a JUNTAS, opcional - junta donde se aprobó el acta)
+├── aprobada_por_id (FK a USUARIOS, opcional)
+└── fecha_aprobacion (timestamp, opcional)
+
+VOTACION_JUNTA
+├── id (PK)
+├── junta_id (FK a JUNTAS)
+├── titulo (string)
+├── descripcion (text)
+├── tipo (si_no/multiple)
+├── quorum_requerido (integer - número de votos)
+├── mayoria_requerida (integer - porcentaje)
+├── estado (abierta/cerrada)
+├── anonima (boolean)
+├── fecha_inicio (timestamp)
+├── fecha_cierre (timestamp, nullable)
+└── creada_por_id (FK a USUARIOS)
+
+OPCIONES_VOTACION_JUNTA
+├── id (PK)
+├── votacion_junta_id (FK a VOTACION_JUNTA)
+├── texto_opcion (string)
+├── orden (integer)
+└── votos_count (integer)
+
+VOTOS_JUNTA
+├── id (PK)
+├── votacion_junta_id (FK)
+├── socio_id (FK a SOCIOS)
+├── opcion_id (FK a OPCIONES_VOTACION_JUNTA)
+└── fecha_voto (timestamp)
+
+DOCUMENTOS_JUNTA
+├── id (PK)
+├── junta_id (FK a JUNTAS)
+├── tipo (convocatoria/acta/otro)
+├── nombre_archivo
+├── ruta_archivo
+├── fecha_subida
+├── descripcion (text, opcional)
+└── subido_por_id (FK a USUARIOS)
+```
+
+### Fase 2 - Producción (PostgreSQL)
+- Misma estructura relacional
+- Índices en campos frecuentemente consultados
+- Constraints más estrictos
+- Vistas para reportes complejos
+- Trigger para auditoría automática
+- Función para calcular ingresos totales
+- Vista para eventos próximos
+
+---
+
+## 3.5 Endpoints de API Principales (Referencia)
+
+### Autenticación y Usuarios
+- `POST /api/auth/registro` - Registrarse con email y contraseña
+  - Body: email, password, nombre
+  - Retorna: mensaje de confirmación
+- `POST /api/auth/login` - Login con email y contraseña
+  - Body: email, password
+  - Retorna: access_token, refresh_token, usuario
+- `POST /api/auth/google-login` - Google OAuth callback
+  - Body: google_token (token de Google)
+  - Retorna: access_token, refresh_token, usuario
+- `POST /api/auth/google-callback` - Callback de Google (si es necesario)
+- `POST /api/auth/registrarse-desde-invitacion` - Registrarse con token de invitación
+  - Body: email, password, nombre, invitacion_token
+  - Retorna: usuario creado, access_token, automaticamente vinculado a membresía
+  - Validación: email debe coincidir con el de la invitación
+- `POST /api/auth/invitaciones/aceptar/{token}` - Aceptar invitación a club
+  - Body: (vacío si usuario ya está autenticado)
+  - Retorna: confirmación, datos del club
+  - Funcionalidad: Valida token, agrega usuario a MIEMBRO_CLUB, marca invitación como aceptada
+- `GET /api/auth/invitaciones/pendientes` - Ver invitaciones pendientes del usuario
+  - Retorna: lista de invitaciones con club_id, clubname, rol, estado
+- `POST /api/auth/logout` - Cerrar sesión
+- `POST /api/auth/refresh-token` - Refrescar token expirado
+- `POST /api/auth/cambiar-contraseña` - Cambiar contraseña (requiere auth)
+- `POST /api/auth/recuperar-contraseña` - Solicitar reset de contraseña
+- `POST /api/auth/resetear-contraseña` - Resetear contraseña con token
+- `GET /api/usuarios/me` - Obtener datos del usuario actual
+- `PUT /api/usuarios/me` - Actualizar perfil del usuario actual
+- `POST /api/usuarios/vincular-google` - Vincular Google a cuenta existente
+- `DELETE /api/usuarios/desvincular-google` - Desvincular Google
+
+### Gestión de Clubes
+- `POST /api/clubes` - Crear nuevo club (admin)
+- `GET /api/clubes/{club_id}` - Obtener detalles del club
+- `PUT /api/clubes/{club_id}` - Actualizar club (admin de club)
+- `POST /api/clubes/{club_id}/personalización` - Actualizar logo/colores/tema (admin)
+- `GET /api/clubes/{club_id}/miembros` - Listar miembros del club
+- `POST /api/clubes/{club_id}/miembros/invitar` - Invitar usuario por email (admin)
+  - Body: email, rol (socio/editor/moderador/admin), nombre (opcional)
+  - Funcionalidad: Si email registrado → invitación directa. Si no → email con link de registro
+  - Retorna: invitación con ID, token, estado
+- `GET /api/clubes/{club_id}/miembros/invitaciones` - Ver invitaciones pendientes (admin)
+  - Query params: estado (pendiente/aceptada/expirada), ordenar_por
+  - Retorna: lista de invitaciones con estados
+- `POST /api/clubes/{club_id}/miembros/invitaciones/{invitacion_id}/reenviar` - Reenviar invitación
+- `DELETE /api/clubes/{club_id}/miembros/{usuario_id}` - Remover miembro
+- `PUT /api/clubes/{club_id}/miembros/{usuario_id}/rol` - Cambiar rol de miembro
+
+### Socios
+- `POST /api/socios/registro` - Registrar socio en club (después de autenticación)
+- `GET /api/socios/{id}` - Obtener perfil de socio
+- `PUT /api/socios/{id}` - Actualizar perfil de socio
+- `POST /api/socios/{id}/foto-carnet` - Subir foto de carnet
+- `GET /api/socios/{id}/foto-carnet` - Descargar foto de carnet
+
+### Documentación / Seguro y Carnet
+- `GET /api/documentacion/ayuda` - Ver guías
+- `POST /api/documentacion/declarar` - Hacer declaración
+- `GET /api/documentacion/declaracion/{socio_id}` - Ver declaración
+- `PUT /api/documentacion/declaracion/{socio_id}` - Actualizar declaración
+
+### Contraseña de Instalaciones
+- `GET /api/instalaciones/contraseña` - Ver contraseña actual
+- `POST /api/instalaciones/contraseña` - Cambiar contraseña (admin)
+- `GET /api/instalaciones/contraseña/historial` - Ver historial (admin)
+
+### Eventos
+- `POST /api/eventos` - Crear evento (admin)
+- `GET /api/eventos` - Listar eventos
+- `GET /api/eventos/{id}` - Obtener detalles evento
+- `PUT /api/eventos/{id}` - Editar evento (admin)
+- `POST /api/eventos/{id}/inscribirse` - Inscribirse en evento
+- `DELETE /api/eventos/{id}/inscribirse` - Desinscribirse
+- `GET /api/eventos/{id}/participantes` - Ver participantes (admin)
+
+### Juntas del Club
+- `POST /api/clubes/{club_id}/juntas` - Convocar nueva junta (admin)
+  - Body: titulo, descripcion, fecha_programada, ubicacion, tipo, enlace_videoconferencia, quorum_minimo, mayoria_requerida
+  - File upload: convocatoria (PDF/documento)
+  - Retorna: junta creada con ID
+- `GET /api/clubes/{club_id}/juntas` - Listar juntas del club
+  - Query params: estado, ordenar_por (fecha), filtro_periodo
+  - Retorna: lista de juntas con estado y próximas destacadas
+- `GET /api/clubes/{club_id}/juntas/{junta_id}` - Obtener detalles de junta
+  - Retorna: convocatoria, orden del día, estado, votaciones pendientes
+- `PUT /api/clubes/{club_id}/juntas/{junta_id}` - Editar junta (antes de realizarla, admin)
+  - Body: titulo, descripcion, fecha_programada, ubicacion, etc.
+- `DELETE /api/clubes/{club_id}/juntas/{junta_id}` - Cancelar junta (admin)
+  - Body: motivo_cancelacion
+  - Notifica a todos los socios
+- `GET /api/clubes/{club_id}/juntas/{junta_id}/convocatoria` - Descargar convocatoria
+- `POST /api/clubes/{club_id}/juntas/{junta_id}/confirmar-asistencia` - Confirmar asistencia (socio)
+  - Body: asistencia (true/false)
+- `GET /api/clubes/{club_id}/juntas/{junta_id}/asistentes` - Ver asistentes confirmados (admin, después de junta)
+- `POST /api/clubes/{club_id}/juntas/{junta_id}/finalizar` - Marcar junta como finalizada (admin)
+  - Genera acta automática basada en votaciones
+- `GET /api/clubes/{club_id}/juntas/{junta_id}/acta` - Ver acta de junta (después de finalizada)
+  - Retorna: documento acta generado o enlace para descargar
+- `POST /api/clubes/{club_id}/juntas/{junta_id}/acta/descargar` - Descargar acta en PDF
+- `PUT /api/clubes/{club_id}/juntas/{junta_id}/acta` - Editar acta antes de aprobarla (admin)
+  - Body: cambios a decisiones, próxima fecha, etc.
+- `POST /api/clubes/{club_id}/juntas/{junta_id}/acta/enviar-email` - Enviar acta por email a socios (admin)
+- `POST /api/clubes/{club_id}/juntas/{junta_id}/votaciones` - Crear votación para junta
+  - Body: titulo, descripcion, opciones, tipo, quorum_requerido, mayoria_requerida
+- `GET /api/clubes/{club_id}/juntas/{junta_id}/votaciones` - Listar votaciones de junta
+- `POST /api/clubes/{club_id}/juntas/{junta_id}/votaciones/{votacion_id}/votar` - Emitir voto (socio)
+  - Body: opcion_id
+- `GET /api/clubes/{club_id}/juntas/{junta_id}/votaciones/{votacion_id}/resultados` - Ver resultados votación
+- `POST /api/clubes/{club_id}/juntas/{junta_id}/votaciones/{votacion_id}/cerrar` - Cerrar votación (admin)
+- `GET /api/clubes/{club_id}/juntas/historico` - Listar histórico completo de juntas
+  - Query params: filtro_año, filtro_estado, ordenar_por
+  - Retorna: lista con resumen ejecutivo de cada junta
+
+### Productos/Tienda
+- `POST /api/productos` - Crear producto (admin)
+- `GET /api/productos` - Listar productos
+- `GET /api/productos/{id}` - Ver detalles producto
+- `PUT /api/productos/{id}` - Editar producto (admin)
+- `GET /api/ingresos/dashboard` - Ver estadísticas (admin)
+- `GET /api/ingresos/por-producto` - Ingresos por producto (admin)
+
+### Noticias
+- `POST /api/noticias` - Crear noticia (admin)
+- `GET /api/noticias` - Listar noticias
+- `GET /api/noticias/{id}` - Ver detalle
+
+### Votaciones
+- `POST /api/votaciones` - Crear votación (admin)
+- `GET /api/votaciones` - Listar votaciones activas
+- `POST /api/votaciones/{id}/votar` - Emitir voto
+- `GET /api/votaciones/{id}/resultados` - Ver resultados
+
+---
+
+## 4. Seguridad
+
+### Requisitos de Seguridad
+- [ ] Contraseñas hasheadas (Bcrypt/Argon2)
+- [ ] HTTPS en producción (SSL/TLS)
+- [ ] CORS configurado correctamente
+- [ ] SQL Injection prevention (usar ORM)
+- [ ] CSRF tokens en formularios
+- [ ] Rate limiting en endpoints
+- [ ] Input validation en todas las entradas
+- [ ] Output encoding en respuestas
+- [ ] Audit logging de cambios sensibles
+- [ ] RGPD compliance (derecho al olvido, exportación datos)
+
+### Autenticación
+- **Método**: JWT + Refresh Tokens
+- **Expiración**: Access token (15-60 min), Refresh token (7 días)
+- **Almacenamiento seguro**: HttpOnly cookies en frontend
+
+### HTTPS y Certificados (PWA)
+- **Requerimiento HTTPS**:
+  - OBLIGATORIO en producción (Service Worker solo funciona con HTTPS)
+  - Certificado SSL/TLS válido requerido
+  - Certificados auto-firmados aceptables en localhost
+  - Let's Encrypt para certificados gratuitos en producción
+- **Configuración de seguridad**:
+  - HSTS header habilitado
+  - Redirect automático HTTP → HTTPS
+  - TLS 1.2+ requerido
+- **Desarrollo local**:
+  - HTTP permitido en localhost (sin restricciones)
+  - HTTPS opcional con certificados auto-firmados
+
+---
+
+## 5. Requisitos de Rendimiento
+
+### Backend
+- **Tiempo de respuesta API**: < 500ms en operaciones normales
+- **Concurrencia**: Mínimo 50 usuarios simultáneos (escalable)
+- **Disponibilidad**: 99% uptime
+- **Backups**: Automáticos diarios
+
+### PWA Frontend
+- **Tiempo de carga inicial**: < 2 segundos en 4G
+- **Time to Interactive (TTI)**: < 3 segundos
+- **Lighthouse score**: > 90
+- **Optimizaciones**:
+  - Cache-first para assets estáticos (JS, CSS, imágenes)
+  - Network-first para datos dinámicos (APIs)
+  - Minificación de assets
+  - Compresión gzip de respuestas
+  - Lazy loading de imágenes
+  - Service Worker precarga assets críticos
+- **Full-text search offline**:
+  - Índice de búsqueda almacenado localmente en IndexedDB
+  - Búsqueda instantánea sin conexión
+
+---
+
+## 6. Testing
+
+### Estrategia de Testing
+- **Unit Tests**: Funciones y métodos individuales (>80% cobertura)
+- **Integration Tests**: Endpoints y flujos completos
+- **Test Data**: Fixtures con datos de prueba
+
+### Marcos de Testing
+- **pytest**: Framework principal
+- **pytest-cov**: Coverage de código
+- **httpx**: Testing de endpoints FastAPI
+- **Mock**: Mockear dependencias
+
+---
+
+## 7. Despliegue y DevOps
+
+### Fase 1 - Desarrollo Local
+- Desarrollo en máquina local
+- SQLite para BD
+- Hot reload habilitado
+
+### Fase 2 - Testing/Staging
+- Servidor Linux (Ubuntu 22.04)
+- PostgreSQL en contenedor Docker
+- CI/CD con GitHub Actions ou GitLab CI
+
+### Fase 3 - Producción
+- **Hosting**: AWS, Google Cloud ou servidor dedicado
+- **Containerización**: Docker + Docker Compose ou Kubernetes
+- **Servidor Web**: Nginx reverse proxy
+- **Base de datos**: PostgreSQL managed service
+- **Caché**: Redis (opcional, para sesiones y caché)
+
+### Docker/Compose Stack
+```yaml
+services:
+  backend:
+    build: ./backend
+    ports: 8000:8000
+    environment:
+      - DATABASE_URL=postgresql://...
+  postgres:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  nginx:
+    image: nginx:latest
+    ports: 80:80, 443:443
+```
+
+---
+
+## 8. Dependencias Python (requirements.txt - Inicial)
+
+```
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.12.1  # Migraciones DB
+
+# Data Validation
+pydantic==2.5.0
+
+# Authentication - Local & OAuth
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# Google OAuth
+google-auth==2.25.2  # Para autenticación con Google
+google-auth-oauthlib==1.1.0  # Para flujo OAuth de Google
+google-auth-httplib2==0.2.0
+
+# File Handling
+pillow==10.1.0  # Para procesamiento de imágenes
+python-multipart==0.0.6  # Already listed, para form-data
+
+# Encryption
+cryptography==41.0.7  # Para encriptar contraseña de instalaciones
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+httpx==0.25.2
+
+# Utilities
+requests==2.31.0
+python-dateutil==2.8.2
+
+# Logging
+python-json-logger==2.0.7  # JSON logging
+
+# PWA & Frontend Serving
+whitenoise==6.6.0  # Servir archivos estáticos eficientemente
+aiofiles==23.2.1  # Async file operations
+
+# Development
+black==23.12.0  # Code formatter
+flake8==6.1.0   # Linter
+isort==5.13.2   # Import sorter
+```
+
+---
+
+## 8.1 Dependencias Frontend - NPM (package.json)
+
+```json
+{
+  "name": "piar-pwa",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.18.0",
+    "@reduxjs/toolkit": "^1.9.7",
+    "react-redux": "^8.1.3",
+    "axios": "^1.6.0",
+    "dexie": "^3.2.4",
+    "date-fns": "^2.30.0",
+    "clsx": "^2.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.0",
+    "vite": "^5.0.0",
+    "vite-plugin-pwa": "^0.17.0",
+    "workbox-window": "^7.0.0",
+    "typescript": "^5.3.0",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@types/node": "^20.10.0",
+    "tailwindcss": "^3.3.6",
+    "postcss": "^8.4.32",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.54.0",
+    "eslint-plugin-react": "^7.33.2",
+    "@typescript-eslint/eslint-plugin": "^6.13.2",
+    "@typescript-eslint/parser": "^6.13.2"
+  }
+}
+```
+
+**Librerías PWA clave**:
+- `vite-plugin-pwa`: Plugin Vite para PWA (genera manifest, service worker, etc.)
+- `workbox-window`: Cliente para interactuar con Service Worker
+- `dexie`: Wrapper de IndexedDB para almacenamiento offline
+
+---
+
+## 9. Variables de Entorno (.env)
+
+```
+# Database
+DATABASE_URL=sqlite:///./test.db  # Fase 1
+# DATABASE_URL=postgresql://user:password@localhost/piar_db  # Fase 2
+
+# Security
+SECRET_KEY=tu_clave_secreta_super_segura_aqui
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# App
+APP_NAME="PIAR - Club de Aeromodelismo"
+DEBUG=True  # False en producción
+ENVIRONMENT=development  # development, staging, production
+
+# Upload Files
+UPLOAD_DIR=./uploads/carnet_photos
+MAX_FILE_SIZE=5242880  # 5MB en bytes
+ALLOWED_EXTENSIONS=jpg,jpeg,png
+
+# Email
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SENDER_EMAIL=noreply@piarclub.com
+SENDER_PASSWORD=tu_contraseña
+
+# Google OAuth
+GOOGLE_CLIENT_ID=tu_google_client_id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=tu_google_client_secret
+GOOGLE_REDIRECT_URI=http://localhost:8000/api/auth/google-callback
+# GOOGLE_REDIRECT_URI=https://tudominio.com/api/auth/google-callback  # Para producción
+
+# Seguridad de Contraseña de Instalaciones
+ENCRYPTION_KEY=tu_clave_encriptacion_segura
+
+# CORS
+ALLOWED_ORIGINS=["http://localhost:8000", "http://localhost:3000"]
+FRONTEND_URL=http://localhost:3000  # Para redirects de Google OAuth
+
+# Frontend URL para OAuth callbacks
+FRONTEND_GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google-callback
+# FRONTEND_GOOGLE_CALLBACK_URL=https://tudominio.com/auth/google-callback  # Para producción
+
+# PWA Configuration
+PWA_NAME=PIAR - Club de Aeromodelismo
+PWA_SHORT_NAME=PIAR
+PWA_DESCRIPTION=Gestión de clubes de aeromodelismo con características de PWA
+PWA_THEME_COLOR=#FF6B35  # Color principal del tema
+PWA_BACKGROUND_COLOR=#FFFFFF
+PWA_DISPLAY=standalone  # Mostrar como app nativa (standalone, fullscreen, minimal-ui, browser)
+PWA_START_URL=/
+PWA_SCOPE=/
+PWA_ORIENTATION=portrait-primary
+
+# Service Worker Cache Strategy
+SERVICE_WORKER_CACHE_VERSION=v1
+PWA_OFFLINE_PAGE=/offline.html
+
+# Analytics (Opcional - para PWA)
+GOOGLE_ANALYTICS_ID=
+```
+
+---
+
+## 10. Roadmap de Desarrollo
+
+### Sprint 1 (Semanas 1-2) - Backend + PWA Setup
+
+**Backend**:
+- [ ] Setup inicial del proyecto Python
+- [ ] Modelos de datos base (Usuario, Club, MiembroClub, tokens Google, Invitaciones)
+- [ ] API de autenticación con email/contraseña
+- [ ] API de autenticación con Google OAuth
+- [ ] API de invitación a clubes (admin invita por email)
+  - [ ] Sistema de tokens de invitación
+  - [ ] Email de invitación para usuarios registrados
+  - [ ] Email de invitación con lo de registro para nuevos usuarios
+  - [ ] Endpoint para registrarse con token de invitación
+  - [ ] Endpoint para aceptar invitación
+  - [ ] Validación y vencimiento de tokens (30 días)
+- [ ] Vincular/Desvincular Google OAuth
+- [ ] API CRUD de clubes
+- [ ] API de gestión de miembros del club (sin búsqueda, solo invitación)
+- [ ] Personalización de club (logo, colores)
+- [ ] API CRUD de socios
+- [ ] API de carga de foto de carnet
+- [ ] API para ver/cambiar contraseña de instalaciones
+- [ ] API de declaración de seguro y carnet
+- [ ] Sección de ayuda (documentación estática)
+- [ ] Modelos básicos de Evento y Producto
+- [ ] API de listado básico de eventos
+- [ ] API de listado básico de productos/tienda
+
+**Frontend PWA**:
+- [ ] Setup del proyecto React + Vite
+- [ ] Configuración PWA (manifest.json, service worker, workbox)
+- [ ] Estructura de carpetas y componentes base
+- [ ] Sistema de autenticación (login/register con email)
+- [ ] Google OAuth integration en frontend
+- [ ] Tema responsive (Tailwind CSS + variables por club)
+- [ ] Componentes de Header, Navigation, Footer
+- [ ] Páginas de Login/Register
+- [ ] Dashboard básico
+- [ ] IndexedDB setup para almacenamiento offline
+- [ ] Service Worker para cache-first strategy
+
+### Sprint 2 (Semanas 3-4)
+- [ ] API de noticias (crear, leer, actualizar, eliminar)
+- [ ] Frontend básico de noticias
+- [ ] Comentarios en noticias
+- [ ] API de eventos completa (crear, leer, inscribirse)
+- [ ] Lista de participantes en eventos
+- [ ] API de productos/tienda completa
+- [ ] Dashboard básico de ingresos de afiliación
+
+### Sprint 3 (Semanas 5-6)
+- [ ] API de votaciones completa
+- [ ] Frontend de votaciones
+- [ ] API de juntas del club (convocar, listar, detalles)
+- [ ] API de gestión de asistencia a juntas
+- [ ] API de votaciones en juntas
+- [ ] Generación automática de acta de junta
+- [ ] Frontend de juntas (convocar, visualizar, confirmar asistencia)
+- [ ] Frontend de votaciones en juntas
+- [ ] Descarga de convocatoria y acta en PDF
+- [ ] Envío de acta por email
+- [ ] Histórico de juntas
+- [ ] Sistema de notificaciones por email
+- [ ] Recordatorios automáticos para eventos
+- [ ] Alertas de vencimiento de seguro/carnet
+- [ ] Calendario interactivo de eventos
+
+### Sprint 4+ (Producción)
+- [ ] Migración a PostgreSQL
+- [ ] Dockerización
+- [ ] Deployment a servidor
+- [ ] Tests exhaustivos
+- [ ] Reportes y estadísticas
+- [ ] Optimización de rendimiento
+- [ ] Sistema de backup automático
+
+---
+
+## 11. Consideraciones Futuras
+
+- **Aplicación móvil**: Consumir API REST desde React Native ou Flutter
+- **Websockets**: Notificaciones en tiempo real
+- **Sistema de pagos**: Para cuotas de socios
+- **Integración SMS**: Para alertas críticas de cambio de contraseña
+- **Analytics**: Seguimiento de uso de la plataforma
+- **Multitenancy**: Soporte para varios clubs
+- **Reconocimiento facial**: Validación automática de foto de carnet
+- **QR/NFC**: Escáner de código QR para acceso a instalaciones con contraseña
+- **Almacenamiento en la nube**: Para fotos de carnet (AWS S3, Azure Blob)
+- **API de dos factores**: Para cambios de contraseña críticos
+- **Sincronización de contraseña**: Sistema de actualización en puertas/cerraduras inteligentes
+- **Sistema de reservas**: Reservar campos/hangares para eventos
+- **Integración de calendario**: Sincronización con Google Calendar / Outlook
+- **Galería de eventos**: Fotos y videos de eventos pasados
+- **Sistema de puntos**: Puntos por participación en eventos (futuro gamification)
+- **Newsletter**: Envío de noticias por email
+- **API de afiliación automática**: Integración directa con Amazon/AliExpress API para actualización automática de precios
+- **Reportes fiscales**: Generación automática de reportes para contabilidad
+- **Sistema de cobros**: Cuotas de afiliación y gestión de pagos (Stripe, PayPal)
+- **Chat en eventos**: Chat en tiempo real durante eventos
+- **Validación de documentación**: Integración con organismos oficiales para validar carnet y seguro

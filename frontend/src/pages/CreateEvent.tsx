@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar';
 import '../styles/Forms.css';
 
 const CreateEvent: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
+    const { clubId } = useParams<{ clubId: string }>();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -34,7 +34,7 @@ const CreateEvent: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!id) return;
+        if (!clubId) return;
 
         setLoading(true);
         setError(null);
@@ -46,8 +46,8 @@ const CreateEvent: React.FC = () => {
                 requisitos: formData.requisitos ? { notas: formData.requisitos } : {},
             };
 
-            await EventService.create(parseInt(id), payload);
-            navigate(`/clubes/${id}/eventos`);
+            await EventService.create(parseInt(clubId), payload);
+            navigate(`/clubes/${clubId}/eventos`);
         } catch (err) {
             setError('Error al crear el evento. Verifica los datos.');
             console.error(err);

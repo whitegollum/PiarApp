@@ -93,7 +93,7 @@ function App() {
             }
           />
           <Route
-            path="/clubes/:id/noticias/crear"
+            path="/clubes/:clubId/noticias/crear"
             element={
               <ProtectedRoute>
                 <CreateNews />
@@ -109,7 +109,7 @@ function App() {
             }
           />
           <Route
-            path="/clubes/:id/eventos"
+            path="/clubes/:clubId/eventos"
             element={
               <ProtectedRoute>
                 <ClubEvents />
@@ -117,7 +117,7 @@ function App() {
             }
           />
           <Route
-            path="/clubes/:id/eventos/crear"
+            path="/clubes/:clubId/eventos/crear"
             element={
               <ProtectedRoute>
                 <CreateEvent />

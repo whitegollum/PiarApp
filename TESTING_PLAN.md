@@ -1,25 +1,38 @@
-# 📋 Plan de Pruebas Funcionales - PIAR Phase 7
+# 📋 Plan de Pruebas Funcionales
 
-**Fecha de Inicio:** 2024  
-**Versión:** 0.7.0 (MVP)  
-**Status:** En Progreso
+## 📊 RESUMEN DE PRUEBAS
 
----
+| ID | Caso de Uso | Status | Resultado |
+|----|----|--------|-----------|
+| CU-001 | Registro nuevo usuario | 🟢 | OK |
+| CU-002 | Login válido | 🟢 | OK |
+| CU-003 | Login inválido | 🟢 | OK |
+| CU-004 | Logout | 🟢 | OK |
+| CU-005 | Rutas protegidas | 🟢 | OK |
+| CU-006 | Crear club | 🟢 | OK |
+| CU-007 | Listar clubes | 🟢 | OK |
+| CU-008 | Detalle club | 🟢 | OK |
+| CU-009 | Editar club | 🟢 | OK |
+| CU-010 | Invitar miembro | 🟢 | OK |
+| CU-011 | Listar miembros | 🟢 | OK |
+| CU-012 | Remover miembro | 🟢 | OK |
+| CU-013 | Ver rol en club | 🟢 | OK |
+| CU-014 | Ver perfil | 🟢 | OK |
+| CU-015 | Editar perfil | 🟢 | OK |
+| CU-016 | Cambiar contraseña | 🟢 | OK |
+| CU-017 | Ver noticias | 🟢 | OK |
+| CU-018 | Crear noticia | 🟢 | OK |
+| CU-019 | Error conexión | 🟢 | OK |
+| CU-020 | Validación vacíos | 🟢 | OK |
+| CU-021 | Email duplicado | 🟢 | OK |
+| CU-022 | Token expirado | ⏳ | [Por completar] |
+| CU-023 | Editar noticia | 🟢 | OK |
+| CU-024 | Eliminar noticia | 🟢 | OK |
+| CU-025 | Crear evento | 🟢 | OK |
+| CU-026 | Listar eventos | 🟢 | OK |
+| CU-027 | Editar evento | 🟢 | OK |
+| CU-028 | Eliminar evento | 🟢 | OK |
 
-## 📌 Estructura del Documento
-
-Cada caso de uso incluye:
-- **ID:** Identificador único (CU-001, etc.)
-- **Nombre:** Título descriptivo
-- **Módulo:** Categoría funcional
-- **Descripción:** Qué se prueba
-- **Precondiciones:** Estado inicial requerido
-- **Pasos:** Acciones a realizar (paso a paso)
-- **Resultado Esperado:** Qué debe suceder
-- **Status:** ⏳ Pendiente / 🟢 OK / ❌ Fallido / 🟡 Parcial
-- **Notas:** Observaciones durante la prueba
-
----
 
 ## 🔐 MÓDULO 1: AUTENTICACIÓN
 
@@ -1003,101 +1016,3 @@ Cada caso de uso incluye:
 **Status:** 🟢 OK  
 **Resultado Actual:** ✅ Borrado de eventos funcionando correctamente
 **Notas:**
-
----
-
-## 📊 RESUMEN DE PRUEBAS
-
-| ID | Caso de Uso | Status | Resultado |
-|----|----|--------|-----------|
-| CU-001 | Registro nuevo usuario | 🟢 | OK |
-| CU-002 | Login válido | 🟢 | OK |
-| CU-003 | Login inválido | 🟢 | OK |
-| CU-004 | Logout | 🟢 | OK |
-| CU-005 | Rutas protegidas | 🟢 | OK |
-| CU-006 | Crear club | 🟢 | OK |
-| CU-007 | Listar clubes | 🟢 | OK |
-| CU-008 | Detalle club | 🟢 | OK |
-| CU-009 | Editar club | 🟢 | OK |
-| CU-010 | Invitar miembro | 🟢 | OK |
-| CU-011 | Listar miembros | 🟢 | OK |
-| CU-012 | Remover miembro | 🟢 | OK |
-| CU-013 | Ver rol en club | 🟢 | OK |
-| CU-014 | Ver perfil | 🟢 | OK |
-| CU-015 | Editar perfil | 🟢 | OK |
-| CU-016 | Cambiar contraseña | 🟢 | OK |
-| CU-017 | Ver noticias | 🟢 | OK |
-| CU-018 | Crear noticia | 🟢 | OK |
-| CU-019 | Error conexión | 🟢 | OK |
-| CU-020 | Validación vacíos | 🟢 | OK |
-| CU-021 | Email duplicado | 🟢 | OK |
-| CU-022 | Token expirado | ⏳ | [Por completar] |
-| CU-023 | Editar noticia | 🟢 | OK |
-| CU-024 | Eliminar noticia | 🟢 | OK |
-| CU-025 | Crear evento | 🟢 | OK |
-| CU-026 | Listar eventos | 🟢 | OK |
-| CU-027 | Editar evento | 🟢 | OK |
-| CU-028 | Eliminar evento | 🟢 | OK |
-
-**Total:** 28 casos de uso
-
----
-
-## 📝 Instrucciones de Uso
-
-1. **Leer cada caso de uso** con sus precondiciones y pasos
-2. **Ejecutar los pasos** exactamente como se indican
-3. **Comparar con resultado esperado**
-4. **Reportar status:**
-   - ✅ Si todo funciona correctamente
-   - ❌ Si falló completamente
-   - 🟡 Si funciona parcialmente
-5. **Escribir en Notas** lo que sucedió diferente
-6. **Continuar con siguiente caso de uso**
-
----
-
-## 🎯 Recomendación de Orden
-
-**Orden sugerido para pruebas:**
-
-1. **Fase 1: Autenticación (CU-001 a CU-005)**
-   - Fundación para el resto
-   - Tomar ~15 minutos
-
-2. **Fase 2: Clubes (CU-006 a CU-009)**
-   - Feature principal
-   - Tomar ~20 minutos
-
-3. **Fase 3: Miembros (CU-010 a CU-013)**
-   - Complemento a clubes
-   - Tomar ~15 minutos
-
-4. **Fase 4: Perfil (CU-014 a CU-016)**
-   - Gestión personal
-   - Tomar ~10 minutos
-
-5. **Fase 5: Noticias (CU-017 a CU-018)**
-   - Contenido del club
-   - Tomar ~10 minutos
-
-6. **Fase 6: Errores (CU-019 a CU-022)**
-   - Robustez
-   - Tomar ~15 minutos
-
-**Tiempo total estimado:** 85 minutos
-
----
-
-## 📌 Notas Importantes
-
-- **Backend debe estar corriendo** todo el tiempo (http://localhost:8000)
-- **Frontend debe estar corriendo** todo el tiempo (http://localhost:5175)
-- **Tener navegador abierto** con DevTools para ver errores
-- **Limpiar localStorage** si necesitas reset: F12 → Application → localStorage → Delete
-- **Crear usuarios de prueba** con el script: `python create_test_users.py`
-
----
-
-**Generado para Phase 7 MVP**  
-**Vamos paso a paso! 💪**

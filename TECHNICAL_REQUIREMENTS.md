@@ -7,9 +7,9 @@
 - **Justificación**: Desarrollo rápido, excelentes frameworks web, buena comunidad
 
 ### Backend
-- **Framework**: FastAPI o Flask (decisión pendiente según velocidad requerida)
+- **Framework**: FastAPI (✅)
   - **FastAPI**: Más moderno, mejor rendimiento, validación automática con Pydantic
-  - **Flask**: Más simple, menos dependencias, curva de aprendizaje menor
+  - **Nota**: Flask queda descartado en este repo (la API actual es FastAPI).
 - **ASGI Server**: Uvicorn (para FastAPI) o Gunicorn (para Flask)
 
 ### Frontend (PWA - Progressive Web App)
@@ -52,7 +52,7 @@
   - Seguridad mejorada
   - Transacciones ACID
 
-### Otros Componentes
+### Other Components
 - **Autenticación**: JWT (JSON Web Tokens) ou sesiones seguras
 - **OAuth 2.0**: Google Login integrado
 - **Hash de contraseñas**: Bcrypt o Argon2
@@ -60,15 +60,165 @@
 - **Logging**: Python logging module / Serilog
 - **Testing**: Pytest para tests unitarios e integración
 - **API Documentation**: Swagger/OpenAPI (automático en FastAPI)
-- **Multitenancy**: Tenant isolation, context per request
-- **PWA Libraries**:
-  - workbox-core, workbox-precaching (Service Worker)
-  - pwa-asset-generator (iconos y splash screens)
-  - IndexedDB wrapper (dexie.js para almacenamiento offline)
+
+### Implementaciones relevantes (fases previas)
+
+**Servicio de Email (backend) (✅)**
+- Ubicación: `app/services/email_service.py`
+- Funciones:
+  - `enviar_invitacion_club(email, token, club_nombre)`: invitación para usuario existente (link a aceptar invitación)
+  - `enviar_bienvenida_nuevo_usuario(email, nombre, club_nombre, token)`: invitación + registro
+  - `enviar_verificacion_email(email, token)`: verificación de email
+  - `enviar_reset_contrasena(email, token)`: reset de contraseña
+- Características:
+  - Plantillas HTML (MIME multipart) y envío SMTP opcional con TLS
+  - Async: el envío SMTP se ejecuta en executor para no bloquear requests
+  - Desarrollo: si `SMTP_SERVER` está vacío, escribe logs en consola y continúa
+- Nota de alineación Frontend/URLs:
+  - El servicio genera enlaces a rutas tipo `/auth/registrarse-desde-invitacion`, `/auth/verificar-email`, `/auth/reset-contrasena`.
+  - En el frontend actual están implementadas `/auth/login`, `/auth/registro` y `/auth/aceptar-invitacion` (las demás rutas requieren implementación si se quieren usar los enlaces tal cual).
+
+**Configuración (backend) (✅)**
+- Ubicación: `app/config.py`
+- Variables relevantes:
+  - SMTP: `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SENDER`, `SMTP_SENDER_NAME`, `SMTP_USE_TLS`
+  - Invitaciones: `INVITATION_TOKEN_EXPIRY_DAYS`
+  - Frontend: `FRONTEND_URL`
+  - Instancia global: `settings` (Pydantic Settings)
+
+**Schemas Pydantic (backend) (✅)**
+- `app/schemas/club.py`: `ClubCreate`, `ClubUpdate`, `ClubResponse`, `MiembroClubResponse`, `InvitacionClubResponse`
+- `app/schemas/usuario.py`: `UsuarioResponse`, `UsuarioDetalleResponse`
+- `app/schemas/noticia.py`: `NoticiaCreate`, `NoticiaUpdate`, `NoticiaResponse`
+- `app/schemas/evento.py`: `EventoCreate`, `EventoUpdate`, `EventoResponse`
+
+**Auth Utilities (backend) (✅)**
+- Ubicación: `app/utils/security.py`
+- Incluye hash/verify de password (bcrypt) y helpers JWT (access/refresh) + generación de tokens de invitación con `secrets`.
+
+**Frontend - Autenticación (parcial ✅ / ⏳)**
+- Páginas implementadas:
+  - `/auth/login`: login con email/password + UI (show/hide password) + Google OAuth stub
+  - `/auth/registro`: registro con validación mínima (>= 8 chars + confirmación) + Google OAuth stub
+  - `/auth/aceptar-invitacion`: alta desde invitación (usa `POST /api/auth/registrarse-desde-invitacion`)
+- Infraestructura:
+  - `AuthContext`: estado global, persistencia en localStorage y refresh automático vía `APIService`
+  - `ProtectedRoute`: protege rutas y deja soporte de roles preparado
+  - `APIService`: cliente HTTP centralizado con `skipAuth` y auto-refresh en 401
+- Pendiente (si se quiere completar el flujo end-to-end): rutas UI para verificación de email y recuperación/reset de contraseña.
+
+**Frontend - Rutas SPA disponibles (Phase 7 / estado actual)**
+
+Públicas (sin login):
+- `/auth/login`
+- `/auth/registro`
+- `/auth/aceptar-invitacion`
+
+Protegidas (con login):
+- `/` (Dashboard)
+- `/clubes/crear`
+- `/clubes/:clubId` (Detalle)
+- `/clubes/:clubId/editar`
+- `/clubes/:clubId/miembros`
+- `/clubes/:clubId/noticias`
+- `/clubes/:clubId/noticias/crear`
+- `/clubes/:clubId/noticias/:noticiaId/editar`
+- `/clubes/:clubId/eventos`
+- `/clubes/:clubId/eventos/crear`
+- `/clubes/:clubId/eventos/:eventoId/editar`
+- `/perfil`
+- `/configuracion`
+- `/admin/clubes`
+
+## 3. Especificación de API (Implementada)
+
+### Autenticación (`app/routes/auth.py`)
+- **POST /api/auth/login**: Login con email/contraseña. Retorna access_token y refresh_token.
+- **POST /api/auth/registro**: Registro de nuevo usuario. Valida email único.
+- **POST /api/auth/registrarse-desde-invitacion**: Registro validando token de invitación y agregando al club.
+- **POST /api/auth/google-login**: Login con Google OAuth.
+- **POST /api/auth/refresh-token**: Generar nuevo access_token usando refresh_token (validez 7 días).
+- **POST /api/auth/logout**: Logout (en MVP se gestiona eliminando tokens en frontend).
+- **GET /api/auth/invitaciones/pendientes**: Ver invitaciones pendientes del usuario.
+- **POST /api/auth/invitaciones/aceptar/{token}**: Aceptar invitación y crear membresía.
+- **GET /api/auth/usuarios/me**: Datos del usuario actual.
+- **PUT /api/auth/usuarios/me**: Actualizar perfil.
+- **GET /api/auth/usuarios/me/export**: Exportar datos personales del usuario (base para RGPD).
+- **POST /api/auth/usuarios/cambiar-contraseña**: Cambio de credenciales.
+
+### Convenciones de Autenticación (implementado)
+- **Campo de password normalizado**: los requests de auth usan `password` (no `contraseña`) en JSON.
+  - Se acepta vía Pydantic con `populate_by_name=True` para evitar inconsistencias de naming.
+- **Cliente HTTP centralizado en frontend**: `APIService` encapsula `Authorization: Bearer <access_token>`, `skipAuth` para endpoints públicos y auto-refresh en 401.
+
+### Gestión de Clubes (`app/routes/clubes.py`)
+- **POST /api/clubes**: Crear nuevo club (usuario se hace admin).
+- **GET /api/clubes**: Listar clubes donde el usuario es miembro activo.
+- **GET /api/clubes/{club_id}**: Detalles del club (requiere ser miembro).
+- **PUT /api/clubes/{club_id}**: Actualizar club (solo admin).
+- **GET /api/clubes/{club_id}/miembros**: Listar miembros activos.
+- **POST /api/clubes/{club_id}/miembros/invitar**: Invitar miembro por email (solo admin).
+- **DELETE /api/clubes/{club_id}/miembros/{usuario_id}**: Remover miembro (solo admin).
+
+### Noticias y Eventos
+- **Noticias (`app/routes/noticias.py`)**: CRUD completo. Admin crea/edita/borra. Miembros leen.
+- **Eventos (`app/routes/eventos.py`)**: CRUD completo. Admin gestión.
+
+## 4. Flujos Clave del Sistema
+
+### Login Estándar
+1. **Frontend**: Usuario introduce Email + Contraseña.
+2. **API**: `POST /api/auth/login`. backend valida hash.
+3. **Respuesta**: Retorna tokens JWT (Access + Refresh).
+4. **Cliente**: Almacena en localStorage/Context y redirige.
+
+### URLs de Desarrollo (referencia)
+| Servicio | Puerto | URL |
+|---|---:|---|
+| Backend (FastAPI) | 8000 | http://localhost:8000/api |
+| Docs API (Swagger) | 8000 | http://localhost:8000/docs |
+| Docs API (ReDoc) | 8000 | http://localhost:8000/redoc |
+| OpenAPI JSON | 8000 | http://localhost:8000/openapi.json |
+| Frontend (Vite) | 5173 (por defecto) | http://localhost:5173 |
+
+Notas:
+- Si el puerto 5173 está ocupado, Vite puede levantar en 5174/5175 (CORS ya permite 5173/5174/5175).
+
+### Verificación rápida de Autenticación (curl)
+
+Login:
+```bash
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@email.com",
+    "password": "password123"
+  }'
+```
+
+Registro:
+```bash
+curl -X POST http://localhost:8000/api/auth/registro \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre_completo": "Test User",
+    "email": "test@email.com",
+    "password": "password123"
+  }'
+```
+
+### Aceptar Invitación (Usuario Nuevo)
+1. **Email**: Usuario recibe enlace con token.
+2. **Frontend**: Página `AcceptInvitation` captura token.
+3. **Usuario**: Completa formulario de registro.
+4. **API**: `POST /api/auth/registrarse-desde-invitacion`.
+5. **Backend**: Valida token, crea usuario, crea membresía club.
+6. **Resultado**: Usuario logueado y miembro del club en un paso.
 
 ---
 
-## 2. Arquitectura de la Aplicación
+## 5. Arquitectura de la Aplicación
+
 
 ### Estructura de Carpetas - Sistema Recomendado
 
@@ -598,82 +748,97 @@ DOCUMENTOS_JUNTA
 
 ## 3.5 Endpoints de API Principales (Referencia)
 
+> Nota: esta sección combina endpoints **implementados hoy** y endpoints **planificados** (futuros). Para evitar confusiones, cada endpoint lleva un estado.
+
+**Leyenda de estado**:
+- **[IMPLEMENTADO]** existe en `backend/app/routes/*` y está montado en `app/main.py`.
+- **[PARCIAL]** existe pero es stub/MVP (respuesta fija o “- implementar”).
+- **[PLANIFICADO]** aparece como objetivo funcional, pero no hay ruta en el backend actual.
+
 ### Autenticación y Usuarios
-- `POST /api/auth/registro` - Registrarse con email y contraseña
+- **[IMPLEMENTADO]** `POST /api/auth/registro` - Registrarse con email y contraseña
   - Body: email, password, nombre
   - Retorna: mensaje de confirmación
-- `POST /api/auth/login` - Login con email y contraseña
+- **[IMPLEMENTADO]** `POST /api/auth/login` - Login con email y contraseña
   - Body: email, password
   - Retorna: access_token, refresh_token, usuario
-- `POST /api/auth/google-login` - Google OAuth callback
+- **[IMPLEMENTADO]** `POST /api/auth/google-login` - Login con Google OAuth (token de Google)
   - Body: google_token (token de Google)
   - Retorna: access_token, refresh_token, usuario
-- `POST /api/auth/google-callback` - Callback de Google (si es necesario)
-- `POST /api/auth/registrarse-desde-invitacion` - Registrarse con token de invitación
+- **[PLANIFICADO]** `POST /api/auth/google-callback` - Callback de Google (si fuese necesario)
+- **[IMPLEMENTADO]** `POST /api/auth/registrarse-desde-invitacion` - Registrarse con token de invitación
   - Body: email, password, nombre, invitacion_token
   - Retorna: usuario creado, access_token, automaticamente vinculado a membresía
   - Validación: email debe coincidir con el de la invitación
-- `POST /api/auth/invitaciones/aceptar/{token}` - Aceptar invitación a club
+- **[IMPLEMENTADO]** `POST /api/auth/invitaciones/aceptar/{token}` - Aceptar invitación a club
   - Body: (vacío si usuario ya está autenticado)
   - Retorna: confirmación, datos del club
   - Funcionalidad: Valida token, agrega usuario a MIEMBRO_CLUB, marca invitación como aceptada
-- `GET /api/auth/invitaciones/pendientes` - Ver invitaciones pendientes del usuario
+- **[IMPLEMENTADO]** `POST /api/auth/invitaciones/rechazar/{token}` - Rechazar invitación
+- **[IMPLEMENTADO]** `GET /api/auth/invitaciones/pendientes` - Ver invitaciones pendientes del usuario
   - Retorna: lista de invitaciones con club_id, clubname, rol, estado
-- `POST /api/auth/logout` - Cerrar sesión
-- `POST /api/auth/refresh-token` - Refrescar token expirado
-- `POST /api/auth/cambiar-contraseña` - Cambiar contraseña (requiere auth)
-- `POST /api/auth/recuperar-contraseña` - Solicitar reset de contraseña
-- `POST /api/auth/resetear-contraseña` - Resetear contraseña con token
-- `GET /api/usuarios/me` - Obtener datos del usuario actual
-- `PUT /api/usuarios/me` - Actualizar perfil del usuario actual
-- `POST /api/usuarios/vincular-google` - Vincular Google a cuenta existente
-- `DELETE /api/usuarios/desvincular-google` - Desvincular Google
+- **[IMPLEMENTADO]** `POST /api/auth/logout` - Cerrar sesión
+- **[IMPLEMENTADO]** `POST /api/auth/refresh-token` - Refrescar token
+- **[IMPLEMENTADO]** `POST /api/auth/usuarios/cambiar-contraseña` - Cambiar contraseña (requiere auth)
+  - Body (actual): contraseña_actual, contraseña_nueva
+- **[PLANIFICADO]** `POST /api/auth/recuperar-contraseña` - Solicitar reset de contraseña
+- **[PLANIFICADO]** `POST /api/auth/resetear-contraseña` - Resetear contraseña con token
+- **[IMPLEMENTADO]** `GET /api/auth/usuarios/me` - Obtener datos del usuario actual
+- **[IMPLEMENTADO]** `PUT /api/auth/usuarios/me` - Actualizar perfil del usuario actual
+- **[IMPLEMENTADO]** `GET /api/auth/usuarios/me/export` - Exportar datos personales (base RGPD)
+- **[PLANIFICADO]** `POST /api/usuarios/vincular-google` - Vincular Google a cuenta existente
+- **[PLANIFICADO]** `DELETE /api/usuarios/desvincular-google` - Desvincular Google
 
 ### Gestión de Clubes
-- `POST /api/clubes` - Crear nuevo club (admin)
-- `GET /api/clubes/{club_id}` - Obtener detalles del club
-- `PUT /api/clubes/{club_id}` - Actualizar club (admin de club)
-- `POST /api/clubes/{club_id}/personalización` - Actualizar logo/colores/tema (admin)
-- `GET /api/clubes/{club_id}/miembros` - Listar miembros del club
-- `POST /api/clubes/{club_id}/miembros/invitar` - Invitar usuario por email (admin)
+- **[IMPLEMENTADO]** `POST /api/clubes` - Crear nuevo club (requiere superadmin en implementación actual)
+- **[IMPLEMENTADO]** `GET /api/clubes` - Listar clubes del usuario actual
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}` - Obtener detalles del club
+- **[IMPLEMENTADO]** `PUT /api/clubes/{club_id}` - Actualizar club (admin del club)
+- **[PLANIFICADO]** `POST /api/clubes/{club_id}/personalización` - Actualizar logo/colores/tema (no implementado)
+- **[IMPLEMENTADO]** `GET /api/clubes/mi-rol/{club_id}` - Obtener mi rol en el club
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/miembros` - Listar miembros del club
+- **[IMPLEMENTADO]** `POST /api/clubes/{club_id}/miembros/invitar` - Invitar usuario por email (admin)
   - Body: email, rol (socio/editor/moderador/admin), nombre (opcional)
   - Funcionalidad: Si email registrado → invitación directa. Si no → email con link de registro
   - Retorna: invitación con ID, token, estado
-- `GET /api/clubes/{club_id}/miembros/invitaciones` - Ver invitaciones pendientes (admin)
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/miembros/invitaciones` - Ver invitaciones pendientes (admin)
   - Query params: estado (pendiente/aceptada/expirada), ordenar_por
   - Retorna: lista de invitaciones con estados
-- `POST /api/clubes/{club_id}/miembros/invitaciones/{invitacion_id}/reenviar` - Reenviar invitación
-- `DELETE /api/clubes/{club_id}/miembros/{usuario_id}` - Remover miembro
-- `PUT /api/clubes/{club_id}/miembros/{usuario_id}/rol` - Cambiar rol de miembro
+- **[PLANIFICADO]** `POST /api/clubes/{club_id}/miembros/invitaciones/{invitacion_id}/reenviar` - Reenviar invitación
+- **[IMPLEMENTADO]** `DELETE /api/clubes/{club_id}/miembros/{usuario_id}` - Remover miembro
+- **[IMPLEMENTADO]** `PUT /api/clubes/{club_id}/miembros/{usuario_id}/rol` - Cambiar rol de miembro
 
 ### Socios
-- `POST /api/socios/registro` - Registrar socio en club (después de autenticación)
-- `GET /api/socios/{id}` - Obtener perfil de socio
-- `PUT /api/socios/{id}` - Actualizar perfil de socio
-- `POST /api/socios/{id}/foto-carnet` - Subir foto de carnet
-- `GET /api/socios/{id}/foto-carnet` - Descargar foto de carnet
+- **[PARCIAL]** `GET /api/socios/` - Listar socios (stub)
+- **[PARCIAL]** `POST /api/socios/registro` - Registrar socio (stub)
+- **[PLANIFICADO]** `GET /api/socios/{id}` - Obtener perfil de socio
+- **[PLANIFICADO]** `PUT /api/socios/{id}` - Actualizar perfil de socio
+- **[PLANIFICADO]** `POST /api/socios/{id}/foto-carnet` - Subir foto de carnet
+- **[PLANIFICADO]** `GET /api/socios/{id}/foto-carnet` - Descargar foto de carnet
 
 ### Documentación / Seguro y Carnet
-- `GET /api/documentacion/ayuda` - Ver guías
-- `POST /api/documentacion/declarar` - Hacer declaración
-- `GET /api/documentacion/declaracion/{socio_id}` - Ver declaración
-- `PUT /api/documentacion/declaracion/{socio_id}` - Actualizar declaración
+- **[IMPLEMENTADO]** `GET /api/documentacion/ayuda` - Ver guías
+- **[PLANIFICADO]** `POST /api/documentacion/declarar` - Hacer declaración
+- **[PLANIFICADO]** `GET /api/documentacion/declaracion/{socio_id}` - Ver declaración
+- **[PLANIFICADO]** `PUT /api/documentacion/declaracion/{socio_id}` - Actualizar declaración
 
 ### Contraseña de Instalaciones
-- `GET /api/instalaciones/contraseña` - Ver contraseña actual
-- `POST /api/instalaciones/contraseña` - Cambiar contraseña (admin)
-- `GET /api/instalaciones/contraseña/historial` - Ver historial (admin)
+- **[IMPLEMENTADO]** `GET /api/instalaciones/contraseña` - Ver contraseña actual
+- **[PLANIFICADO]** `POST /api/instalaciones/contraseña` - Cambiar contraseña (admin)
+- **[PLANIFICADO]** `GET /api/instalaciones/contraseña/historial` - Ver historial (admin)
 
 ### Eventos
-- `POST /api/eventos` - Crear evento (admin)
-- `GET /api/eventos` - Listar eventos
-- `GET /api/eventos/{id}` - Obtener detalles evento
-- `PUT /api/eventos/{id}` - Editar evento (admin)
-- `POST /api/eventos/{id}/inscribirse` - Inscribirse en evento
-- `DELETE /api/eventos/{id}/inscribirse` - Desinscribirse
-- `GET /api/eventos/{id}/participantes` - Ver participantes (admin)
+- **[IMPLEMENTADO]** `POST /api/clubes/{club_id}/eventos` - Crear evento (admin del club)
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/eventos` - Listar eventos del club
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/eventos/{evento_id}` - Obtener detalles del evento
+- **[IMPLEMENTADO]** `PUT /api/clubes/{club_id}/eventos/{evento_id}` - Editar evento (admin del club)
+- **[IMPLEMENTADO]** `DELETE /api/clubes/{club_id}/eventos/{evento_id}` - Eliminar evento (admin del club)
+- **[IMPLEMENTADO]** `POST /api/clubes/{club_id}/eventos/{evento_id}/asistencia` - Registrar/actualizar asistencia (RSVP)
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/eventos/{evento_id}/asistencia` - Listar asistentes (miembros activos)
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/eventos/{evento_id}/mi-asistencia` - Ver mi estado de asistencia
 
 ### Juntas del Club
+- **[PLANIFICADO]** (Sección completa) No hay rutas de juntas en el backend actual.
 - `POST /api/clubes/{club_id}/juntas` - Convocar nueva junta (admin)
   - Body: titulo, descripcion, fecha_programada, ubicacion, tipo, enlace_videoconferencia, quorum_minimo, mayoria_requerida
   - File upload: convocatoria (PDF/documento)
@@ -712,36 +877,38 @@ DOCUMENTOS_JUNTA
   - Retorna: lista con resumen ejecutivo de cada junta
 
 ### Productos/Tienda
-- `POST /api/productos` - Crear producto (admin)
-- `GET /api/productos` - Listar productos
-- `GET /api/productos/{id}` - Ver detalles producto
-- `PUT /api/productos/{id}` - Editar producto (admin)
-- `GET /api/ingresos/dashboard` - Ver estadísticas (admin)
-- `GET /api/ingresos/por-producto` - Ingresos por producto (admin)
+- **[PARCIAL]** `GET /api/productos/` - Listar productos (stub)
+- **[PLANIFICADO]** `POST /api/productos` - Crear producto (admin)
+- **[PLANIFICADO]** `GET /api/productos/{id}` - Ver detalles producto
+- **[PLANIFICADO]** `PUT /api/productos/{id}` - Editar producto (admin)
+- **[PLANIFICADO]** `GET /api/ingresos/dashboard` - Ver estadísticas (admin)
+- **[PLANIFICADO]** `GET /api/ingresos/por-producto` - Ingresos por producto (admin)
 
 ### Noticias
-- `POST /api/noticias` - Crear noticia (admin)
-- `GET /api/noticias` - Listar noticias
-- `GET /api/noticias/{id}` - Ver detalle
+- **[IMPLEMENTADO]** `POST /api/clubes/{club_id}/noticias` - Crear noticia (admin del club)
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/noticias` - Listar noticias del club
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/noticias/{noticia_id}` - Obtener detalle
+- **[IMPLEMENTADO]** `PUT /api/clubes/{club_id}/noticias/{noticia_id}` - Editar noticia (admin o autor)
+- **[IMPLEMENTADO]** `DELETE /api/clubes/{club_id}/noticias/{noticia_id}` - Eliminar noticia (admin o autor)
 
 ### Votaciones
-- `POST /api/votaciones` - Crear votación (admin)
-- `GET /api/votaciones` - Listar votaciones activas
-- `POST /api/votaciones/{id}/votar` - Emitir voto
-- `GET /api/votaciones/{id}/resultados` - Ver resultados
+- **[PARCIAL]** `GET /api/votaciones/` - Listar votaciones (stub)
+- **[PLANIFICADO]** `POST /api/votaciones` - Crear votación (admin)
+- **[PLANIFICADO]** `POST /api/votaciones/{id}/votar` - Emitir voto
+- **[PLANIFICADO]** `GET /api/votaciones/{id}/resultados` - Ver resultados
 
 ---
 
 ## 4. Seguridad
 
 ### Requisitos de Seguridad
-- [ ] Contraseñas hasheadas (Bcrypt/Argon2)
+- [x] Contraseñas hasheadas (bcrypt via passlib)
 - [ ] HTTPS en producción (SSL/TLS)
-- [ ] CORS configurado correctamente
-- [ ] SQL Injection prevention (usar ORM)
+- [x] CORS configurado correctamente (lista de origins para dev)
+- [x] SQL Injection prevention (usar ORM)
 - [ ] CSRF tokens en formularios
 - [ ] Rate limiting en endpoints
-- [ ] Input validation en todas las entradas
+- [x] Input validation en todas las entradas (Pydantic)
 - [ ] Output encoding en respuestas
 - [ ] Audit logging de cambios sensibles
 - [ ] RGPD compliance (derecho al olvido, exportación datos)
@@ -749,7 +916,8 @@ DOCUMENTOS_JUNTA
 ### Autenticación
 - **Método**: JWT + Refresh Tokens
 - **Expiración**: Access token (15-60 min), Refresh token (7 días)
-- **Almacenamiento seguro**: HttpOnly cookies en frontend
+- **Almacenamiento actual (MVP)**: localStorage (access_token, refresh_token)
+- **Mejora recomendada**: migrar a cookies HttpOnly + SameSite en frontend para reducir riesgo de XSS.
 
 ### HTTPS y Certificados (PWA)
 - **Requerimiento HTTPS**:
@@ -954,12 +1122,14 @@ GOOGLE_REDIRECT_URI=http://localhost:8000/api/auth/google-callback
 # Seguridad de Contraseña de Instalaciones
 ENCRYPTION_KEY=tu_clave_encriptacion_segura
 
-# CORS
-ALLOWED_ORIGINS=["http://localhost:8000", "http://localhost:3000"]
-FRONTEND_URL=http://localhost:3000  # Para redirects de Google OAuth
+# Frontend (dev)
+FRONTEND_URL=http://localhost:5173
 
-# Frontend URL para OAuth callbacks
-FRONTEND_GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google-callback
+# CORS (debe ser una lista JSON)
+CORS_ORIGINS=["http://localhost:5173","http://localhost:5174","http://localhost:5175","http://127.0.0.1:5173","http://127.0.0.1:5174","http://127.0.0.1:5175"]
+
+# Frontend URL para OAuth callbacks (si se implementa flujo de callback en UI)
+FRONTEND_GOOGLE_CALLBACK_URL=http://localhost:5173/auth/google-callback
 # FRONTEND_GOOGLE_CALLBACK_URL=https://tudominio.com/auth/google-callback  # Para producción
 
 # PWA Configuration
@@ -979,109 +1149,8 @@ PWA_OFFLINE_PAGE=/offline.html
 
 # Analytics (Opcional - para PWA)
 GOOGLE_ANALYTICS_ID=
+
+# Frontend (Vite) - ejemplo
+# VITE_API_URL=http://localhost:8000/api  # default si no se define
 ```
 
----
-
-## 10. Roadmap de Desarrollo
-
-### Sprint 1 (Semanas 1-2) - Backend + PWA Setup
-
-**Backend**:
-- [ ] Setup inicial del proyecto Python
-- [ ] Modelos de datos base (Usuario, Club, MiembroClub, tokens Google, Invitaciones)
-- [ ] API de autenticación con email/contraseña
-- [ ] API de autenticación con Google OAuth
-- [ ] API de invitación a clubes (admin invita por email)
-  - [ ] Sistema de tokens de invitación
-  - [ ] Email de invitación para usuarios registrados
-  - [ ] Email de invitación con lo de registro para nuevos usuarios
-  - [ ] Endpoint para registrarse con token de invitación
-  - [ ] Endpoint para aceptar invitación
-  - [ ] Validación y vencimiento de tokens (30 días)
-- [ ] Vincular/Desvincular Google OAuth
-- [ ] API CRUD de clubes
-- [ ] API de gestión de miembros del club (sin búsqueda, solo invitación)
-- [ ] Personalización de club (logo, colores)
-- [ ] API CRUD de socios
-- [ ] API de carga de foto de carnet
-- [ ] API para ver/cambiar contraseña de instalaciones
-- [ ] API de declaración de seguro y carnet
-- [ ] Sección de ayuda (documentación estática)
-- [ ] Modelos básicos de Evento y Producto
-- [ ] API de listado básico de eventos
-- [ ] API de listado básico de productos/tienda
-
-**Frontend PWA**:
-- [ ] Setup del proyecto React + Vite
-- [ ] Configuración PWA (manifest.json, service worker, workbox)
-- [ ] Estructura de carpetas y componentes base
-- [ ] Sistema de autenticación (login/register con email)
-- [ ] Google OAuth integration en frontend
-- [ ] Tema responsive (Tailwind CSS + variables por club)
-- [ ] Componentes de Header, Navigation, Footer
-- [ ] Páginas de Login/Register
-- [ ] Dashboard básico
-- [ ] IndexedDB setup para almacenamiento offline
-- [ ] Service Worker para cache-first strategy
-
-### Sprint 2 (Semanas 3-4)
-- [ ] API de noticias (crear, leer, actualizar, eliminar)
-- [ ] Frontend básico de noticias
-- [ ] Comentarios en noticias
-- [ ] API de eventos completa (crear, leer, inscribirse)
-- [ ] Lista de participantes en eventos
-- [ ] API de productos/tienda completa
-- [ ] Dashboard básico de ingresos de afiliación
-
-### Sprint 3 (Semanas 5-6)
-- [ ] API de votaciones completa
-- [ ] Frontend de votaciones
-- [ ] API de juntas del club (convocar, listar, detalles)
-- [ ] API de gestión de asistencia a juntas
-- [ ] API de votaciones en juntas
-- [ ] Generación automática de acta de junta
-- [ ] Frontend de juntas (convocar, visualizar, confirmar asistencia)
-- [ ] Frontend de votaciones en juntas
-- [ ] Descarga de convocatoria y acta en PDF
-- [ ] Envío de acta por email
-- [ ] Histórico de juntas
-- [ ] Sistema de notificaciones por email
-- [ ] Recordatorios automáticos para eventos
-- [ ] Alertas de vencimiento de seguro/carnet
-- [ ] Calendario interactivo de eventos
-
-### Sprint 4+ (Producción)
-- [ ] Migración a PostgreSQL
-- [ ] Dockerización
-- [ ] Deployment a servidor
-- [ ] Tests exhaustivos
-- [ ] Reportes y estadísticas
-- [ ] Optimización de rendimiento
-- [ ] Sistema de backup automático
-
----
-
-## 11. Consideraciones Futuras
-
-- **Aplicación móvil**: Consumir API REST desde React Native ou Flutter
-- **Websockets**: Notificaciones en tiempo real
-- **Sistema de pagos**: Para cuotas de socios
-- **Integración SMS**: Para alertas críticas de cambio de contraseña
-- **Analytics**: Seguimiento de uso de la plataforma
-- **Multitenancy**: Soporte para varios clubs
-- **Reconocimiento facial**: Validación automática de foto de carnet
-- **QR/NFC**: Escáner de código QR para acceso a instalaciones con contraseña
-- **Almacenamiento en la nube**: Para fotos de carnet (AWS S3, Azure Blob)
-- **API de dos factores**: Para cambios de contraseña críticos
-- **Sincronización de contraseña**: Sistema de actualización en puertas/cerraduras inteligentes
-- **Sistema de reservas**: Reservar campos/hangares para eventos
-- **Integración de calendario**: Sincronización con Google Calendar / Outlook
-- **Galería de eventos**: Fotos y videos de eventos pasados
-- **Sistema de puntos**: Puntos por participación en eventos (futuro gamification)
-- **Newsletter**: Envío de noticias por email
-- **API de afiliación automática**: Integración directa con Amazon/AliExpress API para actualización automática de precios
-- **Reportes fiscales**: Generación automática de reportes para contabilidad
-- **Sistema de cobros**: Cuotas de afiliación y gestión de pagos (Stripe, PayPal)
-- **Chat en eventos**: Chat en tiempo real durante eventos
-- **Validación de documentación**: Integración con organismos oficiales para validar carnet y seguro

@@ -1,6 +1,6 @@
-# 🚀 Fases de Desarrollo - PIAR
+# 🚀 Fases de Desarrollo - PIARAPP
 
-Este documento rastrea el progreso histórico y futuro del desarrollo de la plataforma PIAR.
+Este documento rastrea el progreso histórico y futuro del desarrollo de la plataforma PIARAPP.
 
 ---
 
@@ -9,10 +9,11 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
 |------|--------|--------|--------------|
 | 1-6 | MVP Core (Auth, Clubes, Miembros) | ✅ Completado | Q4 2023 |
 | 7 | Perfiles y Gestión Avanzada | ✅ Completado | Q1 2024 |
-| 8 | Noticias y Eventos | ✅ Completado | Feb 2026 |
-| 9 | Interacción Social y OAuth | ⏳ Pendiente | TBD |
+| 8 | Noticias y Eventos (CRUD + Asistencia API) | ✅ Completado | Feb 2026 |
+| 9 | Módulos de Club + Social + OAuth UI | ⏳ Pendiente | TBD |
 | 10 | Testing y QA | ⏳ Pendiente | TBD |
 | 11 | Despliegue y DevOps | ⏳ Pendiente | TBD |
+| 12+ | Backlog Futuro (Ideas) | 💡 Ideas | TBD |
 
 ---
 
@@ -21,12 +22,13 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
 ### Phase 1-6: MVP Core
 **Objetivo:** Establecer la base del sistema, autenticación y gestión básica de clubes.
 - [x] Configuración inicial del proyecto (FastAPI + React/Vite).
+- [x] **Autenticación (Backend)**: Login, Registro, Refresh Tokens, endpoint `POST /api/auth/google-login`.
+- [x] **Sistema de Invitaciones (Fase 2)**: Flujo de invitación por email y aceptación para usuarios nuevos/existentes.
 - [x] Base de datos SQLite y modelos SQLAlchemy.
-- [x] Autenticación JWT (Login, Registro, Refresh Token).
 - [x] Gestión de Usuarios (Modelos, Endpoints).
 - [x] Gestión de Clubes (Crear, Listar, Ver Detalle).
-- [x] Sistema de Invitaciones por Email (Simulado).
 - [x] Dashboard principal.
+
 
 ### Phase 7: Administración y Perfiles
 **Objetivo:** Refinar la experiencia de usuario y potenciar la gestión de miembros.
@@ -41,19 +43,24 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
 #### Backend
 - [x] **Modelos:** Creación de tablas `Noticia` y `Evento` con relaciones a Club y Usuario.
 - [x] **Schemas:** Definición de Pydantic models para validación de entrada/salida.
-- [x] **API Endpoints:** Rutas CRUD completas `/api/clubes/{id}/noticias` y `/api/clubes/{id}/eventos`.
+- [x] **API Endpoints:** Rutas CRUD completas `/api/clubes/{club_id}/noticias` y `/api/clubes/{club_id}/eventos`.
+- [x] **Asistencia (RSVP):** Endpoints implementados para inscripción/cancelación/consulta.
+    - `POST /api/clubes/{club_id}/eventos/{evento_id}/asistencia`
+    - `GET /api/clubes/{club_id}/eventos/{evento_id}/asistencia`
+    - `GET /api/clubes/{club_id}/eventos/{evento_id}/mi-asistencia`
+    - Incluye control de aforo y movimiento a `lista_espera` cuando aplica.
 - [x] **Seguridad:** Permisos diferenciados (Admin crea/edita, Miembros ven).
 
 #### Frontend
 - [x] **Servicios:** Integración de `NewsService` y `EventService` en `contentService.ts`.
-- [x] **UX Standards:** Creación de `UX_STANDARDS.md` y unificación de estilos de formularios (`Forms.css`).
+- [x] **UX Standards:** Creación de `frontend/UX_STANDARDS.md` y unificación de estilos de formularios (`Forms.css`).
 - [x] **Gestión de Noticias:** 
     - [x] Listado (`NewsList.tsx`) con tarjetas responsivas.
     - [x] Formularios de Creación y Edición (`CreateNews.tsx`, `EditNews.tsx`).
 - [x] **Gestión de Eventos:** 
     - [x] Listado (`EventList.tsx`) con fechas y estados.
     - [x] Formularios de Creación y Edición (`CreateEvent.tsx`, `EditEvent.tsx`) con manejo de fechas.
-- [x] **Pruebas:** Actualización de casos de prueba funcional (`PRUEBAS_FUNCIONALES.md`).
+- [x] **Pruebas:** Actualización de casos de prueba funcional (`TESTING_PLAN.md`).
 
 ---
 
@@ -61,17 +68,43 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
 
 ### Phase 9: Interacción Social y Seguridad Extendida
 **Objetivo:** Fomentar la participación de los miembros y facilitar el acceso.
-- [ ] **Inscripción a Eventos (RSVP):**
-    - [ ] Endpoint `POST /eventos/{id}/asistir`.
-    - [ ] Control de aforo y listas de espera.
-    - [ ] UI: Botón "Inscribirse" / "Cancelar".
+- [ ] **Inscripción a Eventos (RSVP) - UI + Integración:**
+    - [ ] Frontend: botón "Inscribirme" / "Cancelar" y lectura de estado (usa endpoints `/api/clubes/{club_id}/eventos/{evento_id}/asistencia`).
+    - [ ] Frontend: mostrar asistentes (inscritos + lista_espera) donde aplique.
+    - [ ] UX: estados de carga/errores y manejo de 404 en "mi-asistencia".
 - [ ] **Comentarios:**
     - [ ] Modelos de BD para Comentarios en Noticias.
     - [ ] Endpoints CRUD para comentarios.
     - [ ] UI: Componente de sección de comentarios.
-- [ ] **Google OAuth:**
-    - [ ] Finalizar integración backend/frontend.
-    - [ ] Configuración de credenciales de producción.
+
+- [ ] **Socios + Documentación Reglamentaria (MVP funcional pendiente):**
+    - [ ] Backend: completar rutas de `socios` (actualmente stub) y modelo/servicios asociados.
+    - [ ] Backend: endpoints de foto de carnet (subida/descarga) + validaciones.
+    - [ ] Backend: declaración de seguro RC y carnet de piloto (persistencia + auditoría).
+    - [ ] Backend: sección de ayuda (documentación/guías) más allá del placeholder.
+    - [ ] Frontend: pantallas de socio (perfil ampliado, foto de carnet, documentación).
+
+- [ ] **Contraseña de Instalaciones:**
+    - [ ] Backend: `GET/POST` de contraseña + historial y auditoría (actualmente stub).
+    - [ ] Frontend: vista para socios activos + panel admin para cambios.
+
+- [ ] **Tienda + Ingresos (Afiliación):**
+    - [ ] Backend: productos e ingresos (routes existen pero están stub).
+    - [ ] Frontend: catálogo básico de productos + panel admin de ingresos.
+
+- [ ] **Google OAuth (UI + Producción):**
+    - [ ] Frontend: implementar flujo en `Login.tsx` y `Register.tsx` (ahora es placeholder).
+    - [ ] Configuración de credenciales de producción + validaciones de vinculación/desvinculación.
+
+- [ ] **Personalización de club (UI + API):**
+    - [ ] Backend: endpoints de personalización (logo/colores/tema) si se mantienen como requisito.
+    - [ ] Frontend: UI para gestionar personalización y aplicar tema por club.
+
+- [ ] **PWA Offline (incremental):**
+    - [ ] Caché de noticias/eventos/perfil para lectura offline (hoy solo PWA básico).
+    - [ ] IndexedDB para almacenamiento local y estrategia de sincronización.
+    - [ ] Mejor UX offline (pantalla offline/indicadores) y pull-to-refresh.
+    - [ ] Actualización de versión con aviso “Nueva versión disponible”.
 
 ### Phase 10: Calidad y Pruebas
 **Objetivo:** Asegurar la robustez del código antes de desplegar.
@@ -93,6 +126,17 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
 - [ ] **Chat en Tiempo Real:** Websockets para chat de club.
 - [ ] **Pagos:** Integración con Stripe para cuotas de socios.
 - [ ] **Notificaciones Push:** Firebase Cloud Messaging.
+
+#### Backlog adicional (desde notas antiguas)
+- [ ] **Notificaciones por email (no solo invitaciones/reset):** avisos de eventos, noticias, juntas.
+- [ ] **Exportación de datos:** socios, eventos, asistencia, votaciones.
+- [ ] **Dashboard de estadísticas:** actividad del club, participación, asistencia.
+- [ ] **QR para eventos:** generación y escaneo (check-in).
+- [ ] **Modo oscuro + tema por club:** respetar preferencia del SO.
+- [ ] **Deep linking:** URLs compartibles de noticias/eventos.
+- [ ] **Búsqueda avanzada/full-text (y opcional offline):** contenidos del club.
+- [ ] **Integración calendario del sistema (iCal/sync):** futuro.
+
 
 ---
 **Documento Vivo** - Actualizar al completar cada hito.

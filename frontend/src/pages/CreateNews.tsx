@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar';
 import '../styles/Forms.css';
 
 const CreateNews: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { clubId } = useParams<{ clubId: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,14 +37,14 @@ const CreateNews: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
+    if (!clubId) return;
     
     setLoading(true);
     setError(null);
 
     try {
-      await NewsService.create(parseInt(id), formData);
-      navigate(`/clubes/${id}/noticias`);
+      await NewsService.create(parseInt(clubId), formData);
+      navigate(`/clubes/${clubId}/noticias`);
     } catch (err) {
       setError('Error al crear la noticia. Inténtalo de nuevo.');
       console.error(err);

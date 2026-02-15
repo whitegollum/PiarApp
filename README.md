@@ -1,56 +1,254 @@
 # PiarAPP - Sistema de Gestion de Clubes de Aeromodelismo
 
-MVP (Phase 7) - Version 0.7.0
-Estado: Completado
+MVP (Gestion de clubes de aeromodelismo) - Version 0.9.0
+Estado: En Desarrollo
 
 Plataforma web para la gestion de clubes de aeromodelismo con autenticacion segura, multitenancy y gestion de membresias.
 
----
 
-## Estado actual (Phase 7)
+## El nombre
+PiarApp es la aplicación de la Asociación Cerdos Voladores para gestionar su propio campo de vuelo. El nombre lo resume bien: si no te convence, quizá tienes alma de cerdo; y si te encanta, entonces eres un cerdo… que además vuela.
 
-### Completado
-- Backend con autenticacion JWT, refresh token, invitaciones y modulos de clubes, noticias y eventos.
-- Frontend con login/registro, dashboard, clubes, miembros, perfil y configuracion.
-- Perfil de usuario con edicion de datos y cambio de contrasena.
-- Gestion de clubes con roles, invitaciones y manejo de miembros.
-- Configuracion de usuario con preferencias persistentes.
-- Exportacion de datos personales desde perfil.
 
-### En progreso
-- Google OAuth callback en frontend (backend listo).
-- Testing (pytest, React tests, E2E).
-- Deployment (Docker, CI/CD).
 
----
+## Características principales
 
-## Caracteristicas principales
+### Autenticación y seguridad
+- Registro/login por **email + contraseña**.
+- Autenticación con **JWT + refresh token**.
+- Contraseñas almacenadas con **bcrypt**.
+- Invitaciones por email con **token** de acceso.
+- Protección de rutas y acciones por autenticación.
+- **RBAC** activo para control de permisos por rol.
+- Google OAuth 2.0: **integración en curso** (no cerrar como completado hasta validación end-to-end).
 
-### Autenticacion y seguridad
-- Email/Contrasena (8+ caracteres).
-- Google OAuth 2.0 (backend listo para integracion).
-- JWT con refresh token.
-- Contrasenas con bcrypt.
-- Invitaciones por email con tokens.
-- Rutas protegidas con ProtectedRoute.
+### Gestión de clubes y membresía
+- Creación, consulta y edición de clubes.
+- Gestión de miembros por club.
+- Sistema de invitaciones a club (usuario existente o nuevo).
+- Roles actuales: **Superadministrador, Admin y Miembro**.
+- Página dedicada para edición/configuración del club.
 
-### Gestion de clubes
-- Crear, ver y editar clubes.
-- Gestion de miembros y roles.
-- Invitaciones por email.
+### Perfil y cuenta de usuario
+- Visualización y edición de datos personales.
+- Cambio de contraseña.
+- Preferencias de usuario persistentes.
+- Descarga/exportación de datos personales (**GDPR**).
 
-### Perfil de usuario
-- Ver y editar informacion personal.
-- Cambiar contrasena.
-- Preferencias persistentes en configuracion.
-- Exportar datos personales (GDPR-ready).
+### Noticias del club
+- CRUD completo de noticias con permisos.
+- Listado y detalle de noticias.
+- Edición restringida a usuarios con permisos de administración.
+- Comentarios en noticias: **pendiente/en progreso** (si todavía no está en producción).
 
-### Contenido del club
-- Noticias y anuncios (CRUD).
-- Eventos (CRUD).
-- Votaciones y socios con endpoints listos.
+### Eventos del club
+- CRUD completo de eventos con permisos.
+- Listado y detalle de eventos.
+- Inscripción a eventos (**RSVP**).
+- Control de aforo.
+- Gestión de asistentes.
+- Lista de espera: marcar como “disponible” solo si ya está implementada en producción; en caso contrario, dejarla como pendiente.
 
----
+### Estado técnico y despliegue
+- Testing automatizado completo (pytest, React tests, E2E): **pendiente/en progreso**.
+- Pipeline de deployment (Docker + CI/CD): **pendiente/en progreso**.
+
+### Capacidades previstas (no cerradas)
+- Votaciones del club (fase posterior).
+- Gestión avanzada de socios (fase posterior).
+- Integración Google OAuth completa (frontend + flujo completo) en cierre de fase actual.
+
+
+
+
+
+
+
+
+
+## Fases del proyecto
+
+## Fase 1: MVP
+
+### ✅ Completado (capacidades funcionales)
+
+- **Acceso y autenticación de usuarios**
+  - Registro e inicio de sesión.
+  - Autenticación con **JWT** y **refresh token**.
+  - Gestión de perfil con edición de datos y cambio de contraseña.
+  - Persistencia de preferencias de usuario.
+
+- **Gestión de clubes y miembros**
+  - Creación y administración de clubes.
+  - Gestión de miembros por club.
+  - Sistema de invitaciones para incorporación de usuarios.
+  - Página específica de edición y gestión del club.
+
+- **Roles y permisos**
+  - Roles de **Superadministrador**, **Admin** y **Miembro**.
+  - **RBAC** aplicado para proteger rutas y acciones de edición.
+
+- **Noticias**
+  - Publicación y administración completa (alta, edición, eliminación y consulta).
+  - Visualización en listado y detalle.
+  - Edición restringida a usuarios con permisos de administración.
+
+- **Eventos**
+  - Gestión completa de eventos (alta, edición, eliminación y consulta).
+  - Visualización en listado y detalle.
+  - Sistema **RSVP** con control de aforo e inscripciones.
+
+- **Cumplimiento y privacidad**
+  - Descarga de datos personales del usuario (**GDPR**).
+
+### 🚧 En progreso / pendiente
+
+- Integración final de **Google OAuth**.
+- Sistema de **comentarios** en noticias y eventos.
+- **Testing** (pytest, tests de React, E2E).
+- **Deployment** (Docker, CI/CD).
+
+
+
+
+
+
+
+
+
+## Fase 2: Post-MVP — consolidación operativa y escalado
+
+- **Seguridad y cumplimiento (prioridad alta)**
+  - Confirmación de email obligatoria en cuentas locales.
+  - Endurecimiento del flujo OAuth Google:
+    - Vincular y desvincular cuenta Google.
+    - Prevención de cuentas duplicadas (email local + Google).
+  - Auditoría reforzada:
+    - Registro de acceso a datos sensibles (p. ej., visualización de contraseña de instalaciones).
+    - Registro de cambios críticos (quién, cuándo, IP y motivo).
+  - Refuerzo RGPD:
+    - Derecho al olvido por club (tenant-aware).
+    - Minimización de datos en tracking de afiliación.
+
+- **Gobierno funcional del club**
+  - Flujo completo de membresías:
+    - Estados: activo, pendiente y suspendido.
+    - Invitaciones con caducidad, reenvío y trazabilidad.
+  - Reglas automáticas de elegibilidad:
+    - Bloqueo de inscripción a eventos por documentación vencida.
+    - Alertas de vencimiento (30 días).
+  - Política de contraseña de instalaciones:
+    - Cifrado fuerte.
+    - Retención limitada del histórico (últimas 3).
+    - Doble confirmación para cambios sensibles.
+
+- **Base PWA robusta**
+  - Instalación PWA completa (manifest + service worker) y modo standalone.
+  - Offline funcional mínimo:
+    - Noticias, eventos y perfil cacheados.
+    - Formularios en cola con sincronización.
+  - Estrategia de caché formal:
+    - Cache-first para assets.
+    - Network-first para APIs.
+    - Versionado y limpieza de caché.
+  - Gestión de actualizaciones:
+    - Detección de nueva versión.
+    - Prompt de actualización al usuario.
+
+- **Operación y calidad de plataforma**
+  - CI/CD mínimo de producción:
+    - Lint, test unitario, test E2E smoke, build y despliegue.
+  - Observabilidad:
+    - Logging estructurado.
+    - Métricas básicas.
+    - Alertas de error.
+  - Backups y recuperación:
+    - Política de backup/restauración.
+    - Prueba periódica de recuperación.
+  - Hardening de archivos:
+    - Validación fuerte de uploads (foto carnet).
+    - Thumbnails seguros.
+    - Almacenamiento protegido.
+
+
+
+
+
+
+## Fase 3: Expansión funcional de participación y gobierno
+
+- **Sistema de votaciones completo**
+  - Creación de votaciones (simple/múltiple), fechas de apertura/cierre y visibilidad.
+  - Restricciones: un voto por socio activo y reglas de anonimato.
+  - Resultados en tiempo real (configurable) y cierre anticipado por admin.
+  - Exportación de resultados y trazabilidad del proceso.
+
+- **Comentarios y moderación**
+  - Comentarios en noticias y eventos.
+  - Moderación por roles (admin/moderador).
+  - Reporte, ocultación y eliminación de contenido.
+  - Notificaciones por respuesta/mención.
+
+- **Búsqueda avanzada**
+  - Búsqueda full-text en noticias, eventos, socios y documentos.
+  - Filtros por club, categoría, estado y fechas.
+  - Ordenación por relevancia/recencia.
+  - Búsqueda offline básica en contenidos cacheados.
+
+- **Asistencia y reportes de eventos**
+  - Gestión de inscritos, lista de espera y validación de requisitos.
+  - Confirmación/rechazo de solicitudes (si aplica moderación).
+  - Registro de asistencia real y no-shows.
+  - Reportes por evento: participación, ocupación, asistencia y cancelaciones.
+
+- **Juntas del club (núcleo)**
+  - Convocatoria con orden del día y documentación adjunta.
+  - Confirmación de asistencia (RSVP).
+  - Votación por mociones con quórum/mayorías configurables.
+  - Generación de acta (editable), publicación y consulta del histórico.
+
+
+
+## Fase 4: Comunicación multicanal, analítica avanzada e integraciones
+
+- **Notificaciones multicanal**
+  - Notificaciones por email para eventos, votaciones, cambios críticos y recordatorios.
+  - Push notifications web/móvil (PWA), con gestión de permisos y preferencias.
+  - Centro de notificaciones con estado leído/no leído.
+
+- **Estadísticas y cuadros de mando avanzados**
+  - KPIs de membresía (altas/bajas/retención), actividad y participación.
+  - KPIs de contenido (noticias), eventos (aforo/asistencia) y votaciones.
+  - Métricas por club y comparativas temporales.
+  - Exportación de informes (CSV/PDF).
+
+- **QR e identidad operativa**
+  - QR para check-in en eventos.
+  - QR de validación de socio/carnet interno del club.
+  - Registro auditable de escaneos y accesos.
+
+- **Integraciones externas**
+  - Calendarios (iCal/Google Calendar/Outlook) para eventos y juntas.
+  - Redes sociales para difusión de noticias/eventos (publicación controlada).
+  - Webhooks/API para automatizaciones con sistemas de terceros.
+  - Integración de almacenamiento documental (actas, convocatorias, anexos).
+
+- **Optimización UX y rendimiento**
+  - Mejoras de rendimiento en dispositivos antiguos.
+  - Estrategias de compresión y lazy loading.
+  - Deep links para compartir noticias/eventos.
+  - Iteración de UX basada en métricas reales de uso.
+
+
+
+
+
+
+
+
+
+
+
 
 ## Instalacion rapida
 
@@ -76,7 +274,16 @@ npm run dev
 
 Frontend en: http://localhost:5173
 
----
+
+
+
+
+
+
+
+
+
+
 
 ## Estructura del proyecto
 
@@ -107,7 +314,16 @@ piarApp/
 └── REQUISITOS_TÉCNICOS.md
 ```
 
----
+
+
+
+
+
+
+
+
+
+
 
 ## Stack tecnologico
 
@@ -137,7 +353,20 @@ SQLite (desarrollo)
 PostgreSQL (produccion)
 ```
 
----
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## API endpoints (principales)
 
@@ -188,7 +417,21 @@ PUT    /eventos/{id}
 DELETE /eventos/{id}
 ```
 
----
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Seguridad implementada
 
@@ -202,72 +445,15 @@ DELETE /eventos/{id}
 | Invitaciones | Tokens criptograficos unicos |
 | Roles | Administrador / Miembro |
 
----
 
-## Flujos de usuario principales
 
-### Registro
-```mermaid
-graph LR
-    A[Registro] -> B[Email/Contrasena] -> C[Confirmar] -> D[Login] -> E[Dashboard]
-```
 
-### Crear club
-```mermaid
-graph LR
-    A[Dashboard] -> B[Crear club] -> C[Formulario] -> D[Club creado] -> E[Admin automatico]
-```
 
-### Invitar miembros
-```mermaid
-graph LR
-    A[Club] -> B[Miembros] -> C[Invitar] -> D[Email] -> E[Usuario acepta] -> F[Unido]
-```
 
-### Perfil de usuario
-```mermaid
-graph LR
-    A[Navbar] -> B[Mi perfil] -> C[Editar datos o contrasena] -> D[Guardado]
-```
 
----
 
-## Testing
 
-```bash
-cd backend
-pytest tests/
 
-cd frontend
-npm test
-```
-
----
-
-## Despliegue
-
-```bash
-docker-compose build
-docker-compose up
-```
-
----
-
-## Solucionar problemas
-
-### Backend no inicia
-```bash
-python --version
-pip install -r requirements.txt
-python run.py
-```
-
-### Frontend no se conecta
-1. Backend corriendo en 8000.
-2. CORS configurado en app/main.py.
-3. .env correcto en frontend/.env.
-
----
 
 ## Documentacion adicional
 
@@ -276,7 +462,16 @@ python run.py
 - [REQUISITOS_TÉCNICOS.md](REQUISITOS_TÉCNICOS.md)
 - [PRUEBAS_FUNCIONALES.md](PRUEBAS_FUNCIONALES.md)
 
----
+
+
+
+
+
+
+
+
+
+
 
 ## Links utiles
 
@@ -288,49 +483,27 @@ python run.py
 | API Docs (ReDoc) | http://localhost:8000/redoc |
 | OpenAPI Spec | http://localhost:8000/openapi.json |
 
----
 
-## Proximos pasos
 
-### Phase 8: Noticias y Eventos
-- UI de noticias y eventos (listar, crear, editar, eliminar).
-- Detalle de noticia/evento.
-- Ajustes de UX en dashboard para accesos rapidos.
 
-### Phase 9: OAuth + Tests
-- Completar callback de Google OAuth en frontend.
-- Agregar tests basicos en backend y frontend.
-- Preparar pipeline de CI/CD y despliegue.
 
----
 
-## Contribuir
 
-1. Fork el proyecto
-2. Crea rama: `git checkout -b feature/AmazingFeature`
-3. Commit: `git commit -m 'Add AmazingFeature'`
-4. Push: `git push origin feature/AmazingFeature`
-5. Abre Pull Request
 
----
+
+
+
+
+
+
+
+
+
+
 
 ## Licencia
 
 Licensed under the MIT License - ver archivo LICENSE para detalles.
-
----
-
-## Soporte
-
-- Bugs: abrir issue en GitHub
-- Sugerencias: Discussions en GitHub
-- Email: contacto@piar.app
-
----
-
-Ultima actualizacion: 2026 - Phase 7
-Version: 0.7.0 - MVP Core Features
-Estado: MVP funcional en validacion
 
 Desarrollado por el equipo PiarAPP
 

@@ -871,6 +871,141 @@ Cada caso de uso incluye:
 
 ---
 
+### CU-023: Editar Noticia (Admin)
+**Módulo:** Noticias  
+**Descripción:** Administrador edita una noticia existente  
+**Precondiciones:**
+- Usuario es administrador del club
+- Noticia creada previamente
+
+**Pasos:**
+1. En listado de noticias, hacer click en botón "Editar" (lápiz)
+2. Modificar título o contenido
+3. Hacer click "Guardar Cambios"
+
+**Resultado Esperado:**
+- ✅ Cambios guardados exitosamente
+- ✅ Redirección al listado
+- ✅ Noticia muestra datos actualizados
+
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Edición de noticias funcionando correctamente
+**Notas:** Formulario precarga correctamente los datos
+
+---
+
+### CU-024: Eliminar Noticia (Admin)
+**Módulo:** Noticias  
+**Descripción:** Administrador elimina una noticia  
+**Precondiciones:**
+- Usuario es administrador del club
+- Noticia creada previamente
+
+**Pasos:**
+1. En formulario de edición de noticia
+2. Hacer click en botón "Eliminar" (rojo)
+3. Confirmar en el diálogo del navegador
+
+**Resultado Esperado:**
+- ✅ Noticia eliminada exitosamente
+- ✅ Desaparece del listado de noticias
+
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Eliminación funcionando con confirmación
+**Notas:**
+
+---
+
+## 📅 MÓDULO 7: EVENTOS
+
+### CU-025: Crear Evento (Admin)
+**Módulo:** Eventos  
+**Descripción:** Administrador crea un nuevo evento  
+**Precondiciones:**
+- Usuario es administrador del club
+- En sección de Eventos
+
+**Pasos:**
+1. Hacer click en "Crear Evento"
+2. Completar formulario (Nombre, Fechas, Descripción, Tipo)
+3. Hacer click en "Crear Evento"
+
+**Resultado Esperado:**
+- ✅ Evento creado exitosamente
+- ✅ Redirige al listado de eventos
+- ✅ Evento visible con sus detalles
+
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Creación de eventos funcionando, valida campos obligatorios
+**Notas:**
+
+---
+
+### CU-026: Listar Eventos del Club
+**Módulo:** Eventos  
+**Descripción:** Miembros ven los eventos programados  
+**Precondiciones:**
+- Usuario es miembro del club
+- Existen eventos creados
+
+**Pasos:**
+1. Ir a la pestaña/sección "Eventos" del club
+2. Observar el listado de tarjetas de eventos
+
+**Resultado Esperado:**
+- ✅ Se muestran los eventos del club
+- ✅ Información visible: Título, Fecha, Descripción corta
+- ✅ Botones de acción visibles según rol
+
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Listado carga correctamente
+**Notas:**
+
+---
+
+### CU-027: Editar Evento (Admin)
+**Módulo:** Eventos  
+**Descripción:** Administrador modifica un evento  
+**Precondiciones:**
+- Usuario es administrador
+- Existe evento
+
+**Pasos:**
+1. En tarjeta de evento, click en botón "Editar" (lápiz)
+2. Modificar fechas o descripción
+3. Guardar cambios
+
+**Resultado Esperado:**
+- ✅ Información actualizada
+- ✅ Persiste tras recargar
+
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Edición de eventos funcionando (fechas se parsean bien)
+**Notas:**
+
+---
+
+### CU-028: Eliminar Evento (Admin)
+**Módulo:** Eventos  
+**Descripción:** Administrador cancela/elimina un evento  
+**Precondiciones:**
+- Usuario es administrador
+
+**Pasos:**
+1. En formulario de edición de evento
+2. Click en botón "Eliminar"
+3. Confirmar
+
+**Resultado Esperado:**
+- ✅ Evento eliminado
+- ✅ Desaparece de la lista
+
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Borrado de eventos funcionando correctamente
+**Notas:**
+
+---
+
 ## 📊 RESUMEN DE PRUEBAS
 
 | ID | Caso de Uso | Status | Resultado |
@@ -897,8 +1032,14 @@ Cada caso de uso incluye:
 | CU-020 | Validación vacíos | 🟢 | OK |
 | CU-021 | Email duplicado | 🟢 | OK |
 | CU-022 | Token expirado | ⏳ | [Por completar] |
+| CU-023 | Editar noticia | 🟢 | OK |
+| CU-024 | Eliminar noticia | 🟢 | OK |
+| CU-025 | Crear evento | 🟢 | OK |
+| CU-026 | Listar eventos | 🟢 | OK |
+| CU-027 | Editar evento | 🟢 | OK |
+| CU-028 | Eliminar evento | 🟢 | OK |
 
-**Total:** 22 casos de uso
+**Total:** 28 casos de uso
 
 ---
 

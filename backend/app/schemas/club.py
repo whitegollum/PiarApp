@@ -1,5 +1,5 @@
 """Esquemas para Club"""
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from datetime import datetime
 
@@ -10,8 +10,7 @@ class UsuarioBasicoResponse(BaseModel):
     email: str
     nombre_completo: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ClubCreate(BaseModel):
@@ -53,8 +52,7 @@ class ClubResponse(BaseModel):
     sitio_web: Optional[str] = None
     fecha_creacion: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MiembroClubCreate(BaseModel):
@@ -78,8 +76,7 @@ class MiembroClubResponse(BaseModel):
     fecha_aprobacion: Optional[datetime] = None
     usuario: Optional[UsuarioBasicoResponse] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InvitacionClubResponse(BaseModel):
@@ -90,5 +87,4 @@ class InvitacionClubResponse(BaseModel):
     fecha_creacion: datetime
     fecha_vencimiento: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

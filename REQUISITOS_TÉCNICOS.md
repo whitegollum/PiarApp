@@ -14,11 +14,10 @@
 
 ### Frontend (PWA - Progressive Web App)
 - **Arquitectura**: Progressive Web App (PWA) con capacidades de aplicación nativa
-- **Framework**: React 18+ ou Vue.js 3+ con TypeScript
+- **Framework**: React 18+ con TypeScript
   - **React**: mejor ecosistema, más librerías, mejor rendimiento
-  - **Vue.js**: más ligero, más fácil de aprender, buena experiencia
-- **Styling**: Tailwind CSS + componentes personalizados
-- **Estado Global**: Redux Toolkit (React) o Pinia (Vue)
+- **Styling**: CSS Modules / Custom CSS (Diseño propio)
+- **Estado Global**: React Context API
 - **PWA Features**:
   - Service Worker para funcionamiento offline
   - Web App Manifest (install en home screen)
@@ -27,9 +26,9 @@
   - Cache-first strategy para assets estáticos
   - IndexedDB para almacenamiento local de datos
 - **Herramientas**:
-  - Build: Vite o Next.js (mejor rendimiento que Create React App)
-  - PWA: workbox-webpack-plugin (integración service worker)
-  - Testing: Jest + React Testing Library
+  - Build: Vite (mejor rendimiento que Create React App)
+  - PWA: vite-plugin-pwa (integración service worker)
+  - Testing: Vitest + React Testing Library
 - **Nota**: API REST consumida desde PWA y futuros clientes móviles (iOS/Android)
 
 ### Base de Datos (Versión 1 - Ágil / Versión 2 - Definitiva)
@@ -143,7 +142,7 @@ piarApp/
 │   ├── public/
 │   │   ├── index.html              # Index HTML principal
 │   │   ├── manifest.json           # PWA Manifest
-│   │   ├── service-worker.js       # Service Worker
+│   │   ├── sw.js                   # Service Worker (generado)
 │   │   ├── icons/
 │   │   │   ├── icon-192x192.png
 │   │   │   ├── icon-512x512.png
@@ -162,37 +161,9 @@ piarApp/
 │   │   │   │   ├── LoginForm.tsx
 │   │   │   │   ├── RegisterForm.tsx
 │   │   │   │   └── GoogleAuthButton.tsx
-│   │   │   ├── club/
-│   │   │   │   ├── ClubCard.tsx
-│   │   │   │   ├── ClubProfile.tsx
-│   │   │   │   └── ClubCustomization.tsx
-│   │   │   ├── socios/
-│   │   │   │   ├── ProfileForm.tsx
-│   │   │   │   ├── PhotoCarnetUpload.tsx
-│   │   │   │   └── DocumentationForm.tsx
-│   │   │   ├── noticias/
-│   │   │   │   ├── NoticiaList.tsx
-│   │   │   │   ├── NoticiaCard.tsx
-│   │   │   │   └── NoticiaDetail.tsx
-│   │   │   ├── eventos/
-│   │   │   │   ├── EventCalendar.tsx
-│   │   │   │   ├── EventCard.tsx
-│   │   │   │   └── EventRegistration.tsx
-│   │   │   ├── votaciones/
-│   │   │   │   ├── VotacionCard.tsx
-│   │   │   │   └── VotacionResults.tsx
-│   │   │   ├── productos/
-│   │   │   │   ├── ProductList.tsx
-│   │   │   │   ├── ProductCard.tsx
-│   │   │   │   └── IngresesDashboard.tsx
-│   │   │   ├── common/
-│   │   │   │   ├── Header.tsx
-│   │   │   │   ├── Footer.tsx
-│   │   │   │   ├── Navigation.tsx
-│   │   │   │   └── Loading.tsx
-│   │   │   └── layout/
-│   │   │       ├── MainLayout.tsx
-│   │   │       └── AuthLayout.tsx
+│   │   │   ├── ProtectedRoute.tsx
+│   │   │   ├── Navbar.tsx
+│   │   │   └── ... (otros componentes)
 │   │   ├── pages/
 │   │   │   ├── Dashboard.tsx
 │   │   │   ├── Login.tsx
@@ -200,55 +171,33 @@ piarApp/
 │   │   │   ├── ClubList.tsx
 │   │   │   ├── ClubDetail.tsx
 │   │   │   ├── Profile.tsx
-│   │   │   ├── Noticias.tsx
-│   │   │   ├── Eventos.tsx
-│   │   │   ├── Votaciones.tsx
-│   │   │   ├── Tienda.tsx
-│   │   │   ├── Help.tsx
-│   │   │   └── NotFound.tsx
+│   │   │   ├── Settings.tsx
+│   │   │   ├── ClubMembers.tsx
+│   │   │   └── ... (otras rutas)
 │   │   ├── services/
-│   │   │   ├── api.ts              # Instancia de Axios/Fetch
-│   │   │   ├── auth.service.ts     # Servicio de autenticación
-│   │   │   ├── club.service.ts     # Servicio de clubes
-│   │   │   ├── socio.service.ts    # Servicio de socios
-│   │   │   ├── noticia.service.ts
-│   │   │   ├── evento.service.ts
-│   │   │   ├── votacion.service.ts
-│   │   │   ├── producto.service.ts
-│   │   │   └── storage.service.ts  # Servicio de IndexedDB (offline)
-│   │   ├── store/                  # Redux/Pinia store
-│   │   │   ├── auth/
-│   │   │   │   ├── authSlice.ts
-│   │   │   │   └── authThunks.ts
-│   │   │   ├── club/
-│   │   │   │   ├── clubSlice.ts
-│   │   │   │   └── clubThunks.ts
-│   │   │   ├── ui/
-│   │   │   │   └── uiSlice.ts
-│   │   │   └── store.ts
+│   │   │   ├── api.ts              # Cliente API centralizado
+│   │   │   └── ...
+│   │   ├── contexts/
+│   │   │   └── AuthContext.tsx     # Estado global de autenticación
 │   │   ├── hooks/
 │   │   │   ├── useAuth.ts
-│   │   │   ├── useClub.ts
-│   │   │   └── useOffline.ts       # Hook para detectar offline
+│   │   │   └── ...
 │   │   ├── utils/
-│   │   │   ├── constants.ts
-│   │   │   ├── validators.ts
-│   │   │   ├── formatters.ts
-│   │   │   └── pwa.ts              # Utilidades PWA
+│   │   │   └── ...
 │   │   ├── types/
-│   │   │   ├── api.ts
-│   │   │   ├── auth.ts
-│   │   │   ├── club.ts
-│   │   │   └── entities.ts
-│   │   ├── styles/
-│   │   │   ├── globals.css
-│   │   │   ├── variables.css       # CSS variables por club
-│   │   │   └── responsive.css
-│   │   └── registerServiceWorker.ts # Registro de Service Worker
-│   ├── workbox-config.js           # Configuración Workbox (offline)
+│   │   │   └── ...
+│   │   ├── styles/                 # Archivos CSS por componente
+│   │   │   ├── Auth.css
+│   │   │   ├── Dashboard.css
+│   │   │   ├── Navbar.css
+│   │   │   ├── Profile.css
+│   │   │   ├── Settings.css
+│   │   │   ├── ClubMembers.css
+│   │   │   └── ...
+│   │   └── main.tsx
 │   ├── package.json
 │   ├── tsconfig.json
-│   ├── vite.config.ts              # Configuración Vite con PWA plugin
+│   ├── vite.config.ts              # Configuración Vite + PWA
 │   ├── .env.example
 │   └── README.md
 ├── docs/
@@ -896,7 +845,7 @@ services:
 
 ---
 
-## 8. Dependencias Python (requirements.txt - Inicial)
+## 8. Dependencias Python (requirements.txt - Actual)
 
 ```
 # Web Framework
@@ -905,51 +854,29 @@ uvicorn[standard]==0.24.0
 
 # Database
 sqlalchemy==2.0.23
-alembic==1.12.1  # Migraciones DB
+alembic==1.12.1
 
 # Data Validation
 pydantic==2.5.0
+pydantic-settings==2.1.0
+email-validator==2.1.0
 
-# Authentication - Local & OAuth
+# Authentication
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
+bcrypt==4.0.1
+pyjwt==2.11.0
 
-# Google OAuth
-google-auth==2.25.2  # Para autenticación con Google
-google-auth-oauthlib==1.1.0  # Para flujo OAuth de Google
-google-auth-httplib2==0.2.0
-
-# File Handling
-pillow==10.1.0  # Para procesamiento de imágenes
-python-multipart==0.0.6  # Already listed, para form-data
-
-# Encryption
-cryptography==41.0.7  # Para encriptar contraseña de instalaciones
-
-# Environment Variables
+# Files & Config
+aiofiles==23.2.1
+pillow==10.1.0
 python-dotenv==1.0.0
+PyYAML==6.0.1
 
 # Testing
-pytest==7.4.3
-pytest-cov==4.1.0
-httpx==0.25.2
-
-# Utilities
-requests==2.31.0
-python-dateutil==2.8.2
-
-# Logging
-python-json-logger==2.0.7  # JSON logging
-
-# PWA & Frontend Serving
-whitenoise==6.6.0  # Servir archivos estáticos eficientemente
-aiofiles==23.2.1  # Async file operations
-
-# Development
-black==23.12.0  # Code formatter
-flake8==6.1.0   # Linter
-isort==5.13.2   # Import sorter
+pytest==8.2.2
+httpx==0.26.0
 ```
 
 ---
@@ -958,50 +885,33 @@ isort==5.13.2   # Import sorter
 
 ```json
 {
-  "name": "piar-pwa",
-  "version": "1.0.0",
+  "name": "piarapp-pwa",
+  "version": "0.1.0",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint src",
-    "type-check": "tsc --noEmit"
-  },
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.18.0",
-    "@reduxjs/toolkit": "^1.9.7",
-    "react-redux": "^8.1.3",
-    "axios": "^1.6.0",
-    "dexie": "^3.2.4",
-    "date-fns": "^2.30.0",
-    "clsx": "^2.0.0"
+    "react-router-dom": "^6.20.0",
+    "axios": "^1.6.2",
+    "dexie": "^3.2.4"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.0",
-    "vite": "^5.0.0",
-    "vite-plugin-pwa": "^0.17.0",
-    "workbox-window": "^7.0.0",
-    "typescript": "^5.3.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.8",
+    "vite-plugin-pwa": "^0.16.5",
+    "typescript": "^5.2.2",
+    "vitest": "^1.6.0",
+    "jsdom": "^24.0.0",
+    "@testing-library/react": "^14.3.1",
+    "@testing-library/jest-dom": "^6.4.5",
     "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.15",
-    "@types/node": "^20.10.0",
-    "tailwindcss": "^3.3.6",
-    "postcss": "^8.4.32",
-    "autoprefixer": "^10.4.16",
-    "eslint": "^8.54.0",
-    "eslint-plugin-react": "^7.33.2",
-    "@typescript-eslint/eslint-plugin": "^6.13.2",
-    "@typescript-eslint/parser": "^6.13.2"
+    "@types/node": "^20.10.0"
   }
 }
 ```
 
 **Librerías PWA clave**:
 - `vite-plugin-pwa`: Plugin Vite para PWA (genera manifest, service worker, etc.)
-- `workbox-window`: Cliente para interactuar con Service Worker
 - `dexie`: Wrapper de IndexedDB para almacenamiento offline
 
 ---

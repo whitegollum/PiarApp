@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import APIService from '../services/api'
 import Navbar from '../components/Navbar'
 import '../styles/Settings.css'
 
@@ -12,6 +14,7 @@ interface UserPreferences {
 
 export default function Settings() {
   const navigate = useNavigate()
+  const { usuario, updateUser } = useAuth()
   const [preferences, setPreferences] = useState<UserPreferences>({
     notifications_enabled: true,
     email_digest: 'weekly',
@@ -20,6 +23,18 @@ export default function Settings() {
   })
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (usuario) {
+      setPreferences({
+        notifications_enabled: usuario.notifications_enabled ?? true,
+        email_digest: (usuario.email_digest as any) || 'weekly',
+        dark_mode: usuario.dark_mode ?? false,
+        language: (usuario.language as any) || 'es',
+      })
+    }
+  }, [usuario])
 
   const handlePreferenceChange = (key: keyof UserPreferences, value: any) => {
     setPreferences(prev => ({
@@ -30,12 +45,19 @@ export default function Settings() {
 
   const handleSavePreferences = async () => {
     setSaving(true)
-    // Simular guardado
-    setTimeout(() => {
+    try {
+      setError(null)
+      // Llamada real al backend
+      const updatedUser = await APIService.put('/auth/usuarios/me', preferences)
+      updateUser(updatedUser)
       setSuccess('Preferencias guardadas exitosamente')
-      setSaving(false)
       setTimeout(() => setSuccess(null), 3000)
-    }, 500)
+    } catch (error) {
+      console.error('Error saving settings:', error)
+      setError('Error al guardar preferencias')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -45,10 +67,11 @@ export default function Settings() {
         <div className="settings-container">
           <div className="settings-header">
             <h1>Configuración</h1>
-            <p>Personaliza tu experiencia en PIAR</p>
+            <p>Personaliza tu experiencia en PiarAPP</p>
           </div>
 
           {success && <div className="alert alert-success">{success}</div>}
+          {error && <div className="alert alert-error">{error}</div>}
 
           {/* Sección de Notificaciones */}
           <section className="settings-section">

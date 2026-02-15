@@ -11,8 +11,8 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'PIAR - Gestión de Clubs',
-        short_name: 'PIAR',
+        name: 'PiarAPP - Gestión de Clubs',
+        short_name: 'PiarAPP',
         description: 'Aplicación de Gestión de Clubs de Aeromodelismo',
         theme_color: '#FF6B35',
         background_color: '#ffffff',
@@ -50,7 +50,13 @@ export default defineConfig({
       }
     })
   ],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/test/setup.ts'
+  },
   server: {
+    host: true,
     port: 5173,
     proxy: {
       '/api': {

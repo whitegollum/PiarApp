@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Script para iniciar el servidor PIAR
+Script para iniciar el servidor PiarAPP
 """
 import sys
 import os

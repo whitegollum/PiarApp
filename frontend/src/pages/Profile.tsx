@@ -21,6 +21,7 @@ interface ProfileUser {
   fecha_creacion: string
   ultimo_login?: string
   email_verificado?: boolean
+  es_superadmin?: boolean
 }
 
 interface Club {
@@ -150,6 +151,31 @@ export default function Profile() {
     }
   }
 
+  const handleDownloadData = async () => {
+    try {
+      setLoading(true)
+      const data = await APIService.get('/auth/usuarios/me/export')
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `piar-data-${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      
+      setSuccess('Datos descargados exitosamente')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err) {
+      setError('Error al descargar datos')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <>
       <Navbar />
@@ -256,6 +282,14 @@ export default function Profile() {
                   {profileUser?.email_verificado ? '✓ Verificado' : 'Pendiente'}
                 </span>
               </div>
+              {profileUser?.es_superadmin && (
+                <div className="profile-info-item">
+                  <span className="profile-info-label">Rol Global</span>
+                  <span className="badge badge-superadmin" style={{ background: '#7c3aed', color: 'white' }}>
+                    👑 Super Administrador
+                  </span>
+                </div>
+              )}
               <div className="profile-info-item">
                 <span className="profile-info-label">Fecha de creación</span>
                 <span className="profile-info-value">
@@ -371,7 +405,11 @@ export default function Profile() {
           <section className="profile-section danger-section">
             <h2>Datos Personales</h2>
             <p>Descarga una copia de todos tus datos personales</p>
-            <button className="btn btn-secondary">
+            <button 
+              className="btn btn-secondary" 
+              onClick={handleDownloadData}
+              disabled={loading}
+            >
               📥 Descargar mis Datos
             </button>
           </section>

@@ -1,7 +1,7 @@
 """Servicio de Google OAuth 2.0"""
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 import httpx
 
 from app.config import settings
@@ -101,8 +101,8 @@ class GoogleOAuthService:
         ).delete()
         
         # Calcular fecha de expiración
-        from datetime import datetime, timedelta
-        expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
+        from datetime import timedelta
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
         
         # Crear nuevo token
         token_google = TokenGoogle(

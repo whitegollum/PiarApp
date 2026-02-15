@@ -1,6 +1,6 @@
 {
-  "name": "PIAR - Gestión de Clubs de Aeromodelismo",
-  "short_name": "PIAR",
+  "name": "PiarAPP - Gestión de Clubs de Aeromodelismo",
+  "short_name": "PiarAPP",
   "description": "Aplicación PWA para gestión de clubs de aeromodelismo",
   "start_url": "/",
   "scope": "/",

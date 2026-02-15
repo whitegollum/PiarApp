@@ -8,7 +8,7 @@ interface FetchOptions extends RequestInit {
   skipAuth?: boolean
 }
 
-class APIService {
+export class APIService {
   /**
    * Realiza una petición HTTP autenticada
    */

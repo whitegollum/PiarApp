@@ -1,5 +1,5 @@
 """Esquemas para Usuario"""
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import Optional
 from datetime import datetime
 
@@ -13,13 +13,11 @@ class UsuarioResponse(BaseModel):
     fecha_creacion: datetime
     ultimo_login: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UsuarioDetalleResponse(UsuarioResponse):
     """Respuesta detallada de usuario con clubes"""
     clubes: Optional[list] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

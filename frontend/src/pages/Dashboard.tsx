@@ -16,6 +16,10 @@ interface Club {
 interface InvitacionPendiente {
   id: number
   club_id: number
+  club?: {
+    nombre: string
+    slug: string
+  }
   email: string
   rol: string
   estado: string
@@ -118,12 +122,14 @@ export default function Dashboard() {
           <section className="section clubs-section">
             <div className="section-header">
               <h2>Mis Clubes</h2>
-              <button 
-                className="btn btn-primary"
-                onClick={() => navigate('/clubes/crear')}
-              >
-                ➕ Nuevo Club
-              </button>
+              {usuario.es_superadmin && (
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => navigate('/admin/clubes')}
+                >
+                  ⚙️ Admin Clubes
+                </button>
+              )}
             </div>
 
             {error && (
@@ -165,13 +171,15 @@ export default function Dashboard() {
               <div className="empty-state">
                 <div className="empty-icon">🏢</div>
                 <h3>No tienes clubs aún</h3>
-                <p>Crea tu primer club o espera ser invitado a uno</p>
-                <button 
-                  className="btn btn-primary"
-                  onClick={() => navigate('/clubes/crear')}
-                >
-                  Crear Primer Club
-                </button>
+                <p>Espera ser invitado a uno{usuario.es_superadmin ? ' o crea uno en la administración' : ''}</p>
+                {usuario.es_superadmin && (
+                    <button 
+                    className="btn btn-primary"
+                    onClick={() => navigate('/admin/clubes')}
+                    >
+                    Ir a Admin Clubes
+                    </button>
+                )}
               </div>
             )}
           </section>
@@ -193,7 +201,7 @@ export default function Dashboard() {
                 {invitaciones.map(inv => (
                   <div key={inv.id} className="club-card">
                     <div className="club-header">
-                      <h3>Invitacion a club #{inv.club_id}</h3>
+                      <h3>{inv.club?.nombre || `Invitacion a club #${inv.club_id}`}</h3>
                       <span className="club-badge">{inv.rol}</span>
                     </div>
                     <p className="club-description">

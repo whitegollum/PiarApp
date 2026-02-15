@@ -3,13 +3,14 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
+from datetime import datetime
 
 from app.database.db import get_db
 from app.models.usuario import Usuario
 from app.schemas.auth import (
     LoginRequest, UsuarioCreate, UsuarioCreateDesdeInvitacion,
     TokenResponse, UsuarioResponse, GoogleLoginRequest,
-    InvitacionResponse, RefreshTokenRequest
+    InvitacionResponse, RefreshTokenRequest, UsuarioUpdate
 )
 from app.services.auth_service import AuthService
 from app.services.google_oauth_service import GoogleOAuthService
@@ -99,7 +100,7 @@ async def registrarse_desde_invitacion(
     
     return {
         "message": mensaje,
-        "usuario": UsuarioResponse.from_orm(usuario),
+        "usuario": UsuarioResponse.model_validate(usuario),
         "tokens": tokens
     }
 
@@ -125,7 +126,7 @@ async def login(
     tokens = AuthService.crear_tokens(usuario)
     
     return {
-        "usuario": UsuarioResponse.from_orm(usuario),
+        "usuario": UsuarioResponse.model_validate(usuario),
         "tokens": tokens
     }
 
@@ -161,7 +162,7 @@ async def google_login(
     tokens = AuthService.crear_tokens(usuario)
     
     return {
-        "usuario": UsuarioResponse.from_orm(usuario),
+        "usuario": UsuarioResponse.model_validate(usuario),
         "tokens": tokens
     }
 
@@ -206,7 +207,7 @@ async def ver_invitaciones_pendientes(
         db, current_user.email
     )
     
-    return [InvitacionResponse.from_orm(inv) for inv in invitaciones]
+    return [InvitacionResponse.model_validate(inv) for inv in invitaciones]
 
 
 @router.post("/invitaciones/aceptar/{token}", response_model=dict)
@@ -256,24 +257,55 @@ async def get_usuario_actual(
     current_user: Usuario = Depends(get_current_user)
 ):
     """Obtener datos del usuario actual"""
-    return UsuarioResponse.from_orm(current_user)
+    return UsuarioResponse.model_validate(current_user)
 
 
 @router.put("/usuarios/me", response_model=UsuarioResponse)
 async def actualizar_usuario(
-    usuario_update: dict,
+    usuario_update: UsuarioUpdate,
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Actualizar datos del usuario actual"""
+    """Actualizar datos del usuario actual (nombre, preferencias, etc.)"""
     
-    if "nombre_completo" in usuario_update:
-        current_user.nombre_completo = usuario_update["nombre_completo"]
+    update_data = usuario_update.model_dump(exclude_unset=True)
+    
+    for key, value in update_data.items():
+        setattr(current_user, key, value)
     
     db.commit()
     db.refresh(current_user)
     
-    return UsuarioResponse.from_orm(current_user)
+    return UsuarioResponse.model_validate(current_user)
+
+@router.get("/usuarios/me/export", response_model=dict)
+async def exportar_datos_usuario(
+    current_user: Usuario = Depends(get_current_user)
+):
+    """Exportar todos los datos personales del usuario (GDPR)"""
+    
+    return {
+        "perfil": {
+            "id": current_user.id,
+            "email": current_user.email,
+            "nombre_completo": current_user.nombre_completo,
+            "fecha_creacion": current_user.fecha_creacion,
+            "ultimo_login": current_user.ultimo_login,
+            "activo": current_user.activo,
+            "email_verificado": current_user.email_verificado
+        },
+        "preferencias": {
+            "notificaciones": current_user.notifications_enabled,
+            "resumen_email": current_user.email_digest,
+            "tema_oscuro": current_user.dark_mode,
+            "idioma": current_user.language
+        },
+        "seguridad": {
+            "2fa_habilitado": current_user.dos_fa_habilitado,
+            "google_vinculado": bool(current_user.google_id)
+        },
+        "exportado_en": datetime.now().isoformat()
+    }
 
 
 @router.post("/usuarios/cambiar-contraseña", response_model=dict)

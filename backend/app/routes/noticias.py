@@ -52,6 +52,10 @@ async def crear_noticia(
         club_id=club_id,
         titulo=noticia_create.titulo,
         contenido=noticia_create.contenido,
+        categoria=noticia_create.categoria,
+        imagen_url=noticia_create.imagen_url,
+        visible_para=noticia_create.visible_para,
+        permite_comentarios=noticia_create.permite_comentarios,
         autor_id=current_user.id
     )
     
@@ -59,7 +63,7 @@ async def crear_noticia(
     db.commit()
     db.refresh(nueva_noticia)
     
-    return NoticiaResponse.from_orm(nueva_noticia)
+    return NoticiaResponse.model_validate(nueva_noticia)
 
 
 @router.get("/clubes/{club_id}/noticias", response_model=list)
@@ -88,7 +92,7 @@ async def listar_noticias_club(
         Noticia.club_id == club_id
     ).order_by(Noticia.fecha_creacion.desc()).offset(skip).limit(limit).all()
     
-    return [NoticiaResponse.from_orm(n) for n in noticias]
+    return [NoticiaResponse.model_validate(n) for n in noticias]
 
 
 @router.get("/clubes/{club_id}/noticias/{noticia_id}", response_model=NoticiaResponse)
@@ -123,7 +127,7 @@ async def obtener_noticia(
             detail="Noticia no encontrada"
         )
     
-    return NoticiaResponse.from_orm(noticia)
+    return NoticiaResponse.model_validate(noticia)
 
 
 @router.put("/clubes/{club_id}/noticias/{noticia_id}", response_model=NoticiaResponse)
@@ -160,15 +164,13 @@ async def actualizar_noticia(
         )
     
     # Actualizar campos
-    if noticia_update.titulo:
-        noticia.titulo = noticia_update.titulo
-    if noticia_update.contenido:
-        noticia.contenido = noticia_update.contenido
+    for field, value in noticia_update.model_dump(exclude_unset=True).items():
+        setattr(noticia, field, value)
     
     db.commit()
     db.refresh(noticia)
     
-    return NoticiaResponse.from_orm(noticia)
+    return NoticiaResponse.model_validate(noticia)
 
 
 @router.delete("/clubes/{club_id}/noticias/{noticia_id}", response_model=dict)

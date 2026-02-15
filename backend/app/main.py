@@ -39,8 +39,8 @@ from app.routes import auth, clubes, socios, noticias, eventos, votaciones, inst
 app.include_router(auth.router, prefix="/api/auth", tags=["Autenticación"])
 app.include_router(clubes.router, prefix="/api/clubes", tags=["Clubes"])
 app.include_router(socios.router, prefix="/api/socios", tags=["Socios"])
-app.include_router(noticias.router, prefix="/api/noticias", tags=["Noticias"])
-app.include_router(eventos.router, prefix="/api/eventos", tags=["Eventos"])
+app.include_router(noticias.router, prefix="/api", tags=["Noticias"])
+app.include_router(eventos.router, prefix="/api", tags=["Eventos"])
 app.include_router(votaciones.router, prefix="/api/votaciones", tags=["Votaciones"])
 app.include_router(instalaciones.router, prefix="/api/instalaciones", tags=["Instalaciones"])
 app.include_router(documentacion.router, prefix="/api/documentacion", tags=["Documentación"])
@@ -51,7 +51,7 @@ app.include_router(productos.router, prefix="/api/productos", tags=["Productos"]
 async def root():
     """Endpoint raíz de la API"""
     return {
-        "message": "Bienvenido a PIAR - Gestión de Clubs de Aeromodelismo",
+        "message": "Bienvenido a PiarAPP - Gestión de Clubs de Aeromodelismo",
         "version": settings.app_version,
         "docs": "/docs"
     }

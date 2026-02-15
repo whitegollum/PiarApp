@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import APIService from '../services/api'
 import '../styles/Auth.css'
 
 export default function AcceptInvitation() {
@@ -13,6 +15,7 @@ export default function AcceptInvitation() {
   const [showPassword, setShowPassword] = useState(false)
   const [showPassword2, setShowPassword2] = useState(false)
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   const token = searchParams.get('token')
 
@@ -54,35 +57,19 @@ export default function AcceptInvitation() {
     setLoading(true)
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/auth/registrarse-desde-invitacion`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            nombre_completo: nombreCompleto,
-            email: invitationData.email,
-            password: password,
-            invitacion_token: token
-          })
-        }
-      )
+      const data = await APIService.post('/auth/registrarse-desde-invitacion', {
+        nombre_completo: nombreCompleto,
+        email: invitationData.email,
+        password: password,
+        invitacion_token: token
+      }, { skipAuth: true })
 
-      if (response.ok) {
-        const data = await response.json()
-        localStorage.setItem('access_token', data.tokens.access_token)
-        localStorage.setItem('refresh_token', data.tokens.refresh_token)
-        localStorage.setItem('user', JSON.stringify(data.usuario))
-        navigate('/')
-      } else {
-        const errorData = await response.json()
-        setError(errorData.detail || 'Error al aceptar invitación')
-      }
+      login(data.usuario, data.tokens.access_token, data.tokens.refresh_token)
+      navigate('/')
     } catch (error) {
-      setError('Error de conexión. Por favor intenta nuevamente.')
-      console.error(error)
+      const err = error as any
+      setError(err.message || 'Error de conexión. Por favor intenta nuevamente.')
+      console.error(err)
     } finally {
       setLoading(false)
     }
@@ -93,7 +80,7 @@ export default function AcceptInvitation() {
       <div className="auth-container">
         <div className="auth-card">
           <div className="auth-header">
-            <h1>PIAR</h1>
+            <h1>PiarAPP</h1>
             <p>Gestión de Clubs de Aeromodelismo</p>
           </div>
           <div className="auth-content">
@@ -112,7 +99,7 @@ export default function AcceptInvitation() {
       <div className="auth-container">
         <div className="auth-card">
           <div className="auth-header">
-            <h1>PIAR</h1>
+            <h1>PiarAPP</h1>
             <p>Gestión de Clubs de Aeromodelismo</p>
           </div>
           <div className="auth-content">
@@ -127,7 +114,7 @@ export default function AcceptInvitation() {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h1>PIAR</h1>
+          <h1>PiarAPP</h1>
           <p>Gestión de Clubs de Aeromodelismo</p>
         </div>
 

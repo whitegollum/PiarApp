@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import APIService from '../services/api'
 
 interface Usuario {
   id: number
@@ -8,6 +9,11 @@ interface Usuario {
   fecha_creacion: string
   ultimo_login?: string
   email_verificado?: boolean
+  es_superadmin?: boolean
+  notifications_enabled?: boolean
+  email_digest?: string
+  dark_mode?: boolean
+  language?: string
 }
 
 interface AuthContextType {
@@ -28,20 +34,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Cargar usuario y tokens del localStorage al iniciar
-    const storedUser = localStorage.getItem('user')
-    const accessToken = localStorage.getItem('access_token')
+    const initializeAuth = async () => {
+      // Cargar usuario y tokens del localStorage al iniciar
+      const storedUser = localStorage.getItem('user')
+      const accessToken = localStorage.getItem('access_token')
 
-    if (storedUser && accessToken) {
-      try {
-        setUsuario(JSON.parse(storedUser))
-      } catch (error) {
-        console.error('Error parsing stored user:', error)
-        localStorage.removeItem('user')
-        localStorage.removeItem('access_token')
+      if (storedUser && accessToken) {
+        try {
+          // 1. Establecer estado inicial desde localStorage para respuesta rápida
+          const parsedUser = JSON.parse(storedUser)
+          setUsuario(parsedUser)
+
+          // 2. Intentar actualizar datos frescos desde el servidor
+          try {
+            // Nota: APIService maneja automáticamente el refresh del token si expira
+            const freshUser = await APIService.get<Usuario>('/auth/usuarios/me')
+            setUsuario(freshUser)
+            localStorage.setItem('user', JSON.stringify(freshUser))
+          } catch (apiError) {
+            console.warn('No se pudo actualizar la información del usuario desde el servidor:', apiError)
+          }
+        } catch (error) {
+          console.error('Error parsing stored user:', error)
+          localStorage.removeItem('user')
+          localStorage.removeItem('access_token')
+        }
       }
+      setIsLoading(false)
     }
-    setIsLoading(false)
+
+    initializeAuth()
   }, [])
 
   const login = (usuario: Usuario, accessToken: string, refreshToken: string) => {

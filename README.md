@@ -1,7 +1,7 @@
 # PiarAPP - Sistema de Gestion de Clubes de Aeromodelismo
 
 MVP (Phase 7) - Version 0.7.0
-Estado: En progreso
+Estado: Completado
 
 Plataforma web para la gestion de clubes de aeromodelismo con autenticacion segura, multitenancy y gestion de membresias.
 
@@ -14,6 +14,8 @@ Plataforma web para la gestion de clubes de aeromodelismo con autenticacion segu
 - Frontend con login/registro, dashboard, clubes, miembros, perfil y configuracion.
 - Perfil de usuario con edicion de datos y cambio de contrasena.
 - Gestion de clubes con roles, invitaciones y manejo de miembros.
+- Configuracion de usuario con preferencias persistentes.
+- Exportacion de datos personales desde perfil.
 
 ### En progreso
 - Google OAuth callback en frontend (backend listo).
@@ -40,7 +42,8 @@ Plataforma web para la gestion de clubes de aeromodelismo con autenticacion segu
 ### Perfil de usuario
 - Ver y editar informacion personal.
 - Cambiar contrasena.
-- Preferencias basicas en configuracion.
+- Preferencias persistentes en configuracion.
+- Exportar datos personales (GDPR-ready).
 
 ### Contenido del club
 - Noticias y anuncios (CRUD).
@@ -88,6 +91,7 @@ piarApp/
 │   │   └── utils/
 │   ├── requirements.txt
 │   └── run.py
+│   └── migrations/
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/
@@ -97,6 +101,7 @@ piarApp/
 │   │   └── styles/
 │   ├── package.json
 │   └── vite.config.ts
+│   └── .env
 ├── PRUEBAS_FUNCIONALES.md
 ├── PHASE_7_STATUS.md
 └── REQUISITOS_TÉCNICOS.md
@@ -123,7 +128,7 @@ React 18.2.0
 TypeScript 5.3.3
 React Router 6.20.1
 Vite 5.4.21
-Axios (via APIService)
+Fetch API (via APIService)
 ```
 
 ### Database
@@ -145,12 +150,9 @@ POST   /auth/registro
 POST   /auth/registrarse-desde-invitacion
 POST   /auth/google-login
 POST   /auth/refresh-token
-POST   /auth/logout
-GET    /auth/invitaciones/pendientes
-POST   /auth/invitaciones/aceptar/{token}
-POST   /auth/invitaciones/rechazar/{token}
 GET    /auth/usuarios/me
 PUT    /auth/usuarios/me
+GET    /auth/usuarios/me/export
 POST   /auth/usuarios/cambiar-contraseña
 ```
 
@@ -163,6 +165,7 @@ PUT    /clubes/{id}
 DELETE /clubes/{id}
 GET    /clubes/{id}/miembros
 POST   /clubes/{id}/miembros/invitar
+GET    /clubes/{id}/miembros/invitaciones
 PUT    /clubes/{id}/miembros/{usuario}/rol
 DELETE /clubes/{id}/miembros/{usuario}
 ```
@@ -195,7 +198,7 @@ DELETE /eventos/{id}
 | Access token | JWT 15 minutos |
 | Refresh token | JWT 7 dias |
 | Almacenamiento | localStorage (frontend) |
-| CORS | Configurado para localhost:5173 |
+| CORS | Configurado para localhost y IP LAN |
 | Invitaciones | Tokens criptograficos unicos |
 | Roles | Administrador / Miembro |
 
@@ -289,6 +292,12 @@ python run.py
 
 ## Proximos pasos
 
+### Phase 8: Noticias y Eventos
+- UI de noticias y eventos (listar, crear, editar, eliminar).
+- Detalle de noticia/evento.
+- Ajustes de UX en dashboard para accesos rapidos.
+
+### Phase 9: OAuth + Tests
 - Completar callback de Google OAuth en frontend.
 - Agregar tests basicos en backend y frontend.
 - Preparar pipeline de CI/CD y despliegue.

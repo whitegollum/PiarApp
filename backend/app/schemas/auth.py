@@ -1,5 +1,5 @@
 """Esquemas Pydantic para autenticación y usuarios"""
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import Optional
 from datetime import datetime
 
@@ -29,8 +29,7 @@ class UsuarioCreate(UsuarioBase):
     """Schema para crear usuario con contraseña"""
     password: str = Field(..., min_length=8, alias="password")
     
-    class Config:
-        populate_by_name = True  # Permite usar ambos nombres de campos
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class UsuarioCreateDesdeInvitacion(UsuarioBase):
@@ -38,8 +37,7 @@ class UsuarioCreateDesdeInvitacion(UsuarioBase):
     password: str = Field(..., min_length=8, alias="password")
     invitacion_token: str
     
-    class Config:
-        populate_by_name = True  # Permite usar ambos nombres de campos
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class UsuarioResponse(UsuarioBase):
@@ -47,13 +45,28 @@ class UsuarioResponse(UsuarioBase):
     id: int
     email_verificado: bool
     activo: bool
+    es_superadmin: bool = False
     google_id: Optional[str] = None
     google_photo_url: Optional[str] = None
     fecha_creacion: datetime
     ultimo_login: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    # Preferencias
+    notifications_enabled: bool = True
+    email_digest: str = "weekly"
+    dark_mode: bool = False
+    language: str = "es"
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UsuarioUpdate(BaseModel):
+    """Schema para actualizar perfil/preferencias del usuario"""
+    nombre_completo: Optional[str] = None
+    notifications_enabled: Optional[bool] = None
+    email_digest: Optional[str] = None
+    dark_mode: Optional[bool] = None
+    language: Optional[str] = None
 
 
 class LoginRequest(BaseModel):
@@ -61,8 +74,7 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., alias="password")
     
-    class Config:
-        populate_by_name = True  # Permite usar ambos nombres
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GoogleLoginRequest(BaseModel):
@@ -81,20 +93,6 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
-class InvitacionResponse(BaseModel):
-    """Response de invitación"""
-    id: int
-    club_id: int
-    email: str
-    rol: str
-    estado: str
-    token: str
-    fecha_vencimiento: datetime
-    
-    class Config:
-        from_attributes = True
-
-
 class ClubBasicoResponse(BaseModel):
     """Response básico de Club"""
     id: int
@@ -103,8 +101,21 @@ class ClubBasicoResponse(BaseModel):
     logo_url: Optional[str] = None
     color_primario: str
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+
+class InvitacionResponse(BaseModel):
+    """Response de invitación"""
+    id: int
+    club_id: int
+    club: Optional[ClubBasicoResponse] = None
+    email: str
+    rol: str
+    estado: str
+    token: str
+    fecha_vencimiento: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MiembroClubResponse(BaseModel):
@@ -113,5 +124,4 @@ class MiembroClubResponse(BaseModel):
     rol: str
     estado: str
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

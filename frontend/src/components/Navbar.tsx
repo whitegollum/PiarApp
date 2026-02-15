@@ -20,7 +20,7 @@ export default function Navbar() {
         <div className="navbar-logo">
           <Link to="/">
             <span className="logo-icon">🛩️</span>
-            <span className="logo-text">PIAR</span>
+            <span className="logo-text">PiarAPP</span>
           </Link>
         </div>
 
@@ -28,6 +28,9 @@ export default function Navbar() {
         <div className="navbar-menu">
           <Link to="/" className="navbar-link">Dashboard</Link>
           <Link to="/clubes" className="navbar-link">Clubes</Link>
+          {usuario?.es_superadmin && (
+            <Link to="/admin/clubes" className="navbar-link" style={{ color: '#ff4444' }}>Admin (Super)</Link>
+          )}
         </div>
 
         {/* Usuario y menú */}
@@ -64,6 +67,15 @@ export default function Navbar() {
                 >
                   ⚙️ Configuración
                 </Link>
+                {usuario?.es_superadmin && (
+                  <Link 
+                    to="/admin/clubes" 
+                    className="dropdown-item"
+                    onClick={() => setMenuAbierto(false)}
+                  >
+                    🏢 Admin Clubes
+                  </Link>
+                )}
                 <hr />
                 <button 
                   className="dropdown-item danger"

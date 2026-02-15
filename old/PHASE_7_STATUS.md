@@ -10,7 +10,7 @@ PIAR es una plataforma web completa para la gestión de clubs de aeromodelismo, 
 
 ### ✅ Backend (Completado)
 - **FastAPI 0.104.1** con CORS configurado
-- **8 Modelos SQLAlchemy** con relaciones completas
+- **9 Modelos SQLAlchemy** con relaciones completas
 - **27+ Endpoints** mediante 4 módulos de rutas
 - **Autenticación JWT** con tokens de acceso (15 min) y refresh (7 días)
 - **Sistema de Invitaciones** con tokens criptográficos
@@ -18,10 +18,10 @@ PIAR es una plataforma web completa para la gestión de clubs de aeromodelismo, 
 - **Google OAuth 2.0** (token validation lista)
 - **Validación Pydantic** para todos los datos
 
-### ✅ Frontend (En Progreso - Phase 7)
+### ✅ Frontend (Completado - Phase 7)
 - **React 18 + TypeScript + Vite**
-- **12+ Páginas/Componentes** (auth, dashboard, clubs)
-- **5 CSS Stylesheets** profesionales y responsivos
+- **9 Páginas/Componentes** (auth, dashboard, clubs, settings)
+- **9 CSS Stylesheets** profesionales y responsivos
 - **AuthContext** para gestión global de estado
 - **APIService** con auto-refresh de tokens
 - **React Router** para navegación SPA
@@ -30,7 +30,8 @@ PIAR es una plataforma web completa para la gestión de clubs de aeromodelismo, 
 ### 🗄️ Base de Datos
 - **SQLite** (desarrollo local)
 - **PostgreSQL-Ready** (esquema compatible)
-- **8 Modelos** con relaciones y restricciones
+- **9 Modelos** con relaciones y restricciones
+- **Preferencias de usuario** persistidas (notificaciones, tema, idioma)
 
 ---
 
@@ -46,7 +47,8 @@ frontend/src/
 │   ├── ClubDetail.tsx                ✅ (con links a miembros)
 │   ├── CreateClub.tsx                ✅
 │   ├── Profile.tsx                   ✨ NUEVO Phase 7
-│   └── ClubMembers.tsx               ✨ NUEVO Phase 7
+│   ├── ClubMembers.tsx               ✨ NUEVO Phase 7
+│   └── Settings.tsx                  ✨ NUEVO Phase 7
 ├── components/
 │   ├── Navbar.tsx                    ✅ (actualizado para useAuth)
 │   └── ProtectedRoute.tsx            ✅
@@ -61,7 +63,8 @@ frontend/src/
     ├── Forms.css                     ✅
     ├── ClubDetail.css                ✅
     ├── Profile.css                   ✨ NUEVO Phase 7
-    └── ClubMembers.css               ✨ NUEVO Phase 7
+    ├── ClubMembers.css               ✨ NUEVO Phase 7
+    └── Settings.css                  ✨ NUEVO Phase 7
 ```
 
 ---
@@ -77,9 +80,10 @@ frontend/src/
 - Los cambios se sincronizan en AuthContext via updateUser()
 
 **Rutas:**
-- `GET /usuarios/perfil` - Obtener perfil actual
-- `PUT /usuarios/perfil` - Actualizar perfil
-- `POST /usuarios/cambiar-contrasena` - Cambiar contraseña
+- `GET /auth/usuarios/me` - Obtener perfil actual
+- `PUT /auth/usuarios/me` - Actualizar perfil y preferencias
+- `GET /auth/usuarios/me/export` - Exportar datos personales
+- `POST /auth/usuarios/cambiar-contraseña` - Cambiar contraseña
 
 ### 2.  **ClubMembers.tsx** (250 líneas)
 - Ver lista completa de miembros del club
@@ -99,6 +103,11 @@ frontend/src/
 - Integración con logout() automática
 - Menú dropdown con acceso a Perfil y Configuración
 - Enlaces a Dashboard y Clubes
+
+### 4. **Settings Persistente**
+- Guardado de preferencias en backend
+- Sincronización en AuthContext
+- Soporte de notificaciones, idioma y tema
 
 ### 4. **CSS Profesional**
 - **Profile.css** (280+ líneas): Formularios de perfil, campos de seguridad
@@ -162,9 +171,10 @@ POST   /auth/registro
 POST   /auth/registrarse-desde-invitacion
 POST   /auth/google-login
 POST   /auth/refresh-token
-GET    /usuarios/perfil
-PUT    /usuarios/perfil
-POST   /usuarios/cambiar-contrasena
+GET    /auth/usuarios/me
+PUT    /auth/usuarios/me
+GET    /auth/usuarios/me/export
+POST   /auth/usuarios/cambiar-contraseña
 ```
 
 ### Clubs (8)
@@ -266,23 +276,23 @@ Dashboard → Click Club → ClubDetail con Tabs (Resumen/Miembros/Noticias)
 
 ## 🔄 Próximas Fases (Roadmap)
 
-### Phase 8: Noticia & Eventos (2-3 horas)
-- [ ] Página de gestión de noticias
-- [ ] Página de gestión de eventos
-- [ ] Crear/Editar/Eliminar noticias
-- [ ] Crear/Editar/Eliminar eventos
+### Phase 8: Noticia & Eventos (✅ Completado)
+- [x] Página de gestión de noticias
+- [x] Página de gestión de eventos
+- [x] Crear/Editar/Eliminar noticias
+- [x] Crear/Editar/Eliminar eventos
 
-### Phase 9: Google OAuth (1-2 horas)
-- [ ] Implementar callback de OAuth
-- [ ] Vincular/desvincular Google
-- [ ] Login con Google funcional
+### Phase 9: Interacción de Usuarios (⏳ Pendiente)
+- [ ] Inscripción a Eventos (RSVP: Asistir/Cancelar)
+- [ ] Comentarios en noticias (Postear/Leer/Moderar)
+- [ ] Login con Google funcional (OAuth)
 
-### Phase 10: Tests & QA (5-6 horas)
+### Phase 10: Tests & QA (⏳ Pendiente)
 - [ ] Pytest para servicios backend
 - [ ] Jest para componentes React
 - [ ] Cypress para E2E
 
-### Phase 11: Deployment (2-3 horas)
+### Phase 11: Deployment (⏳ Pendiente)
 - [ ] Docker containerization
 - [ ] CI/CD (GitHub Actions)
 - [ ] Deploy a AWS/Heroku

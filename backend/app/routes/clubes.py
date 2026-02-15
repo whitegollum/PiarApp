@@ -23,7 +23,13 @@ async def crear_club(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Crear nuevo club"""
+    """Crear nuevo club (Solo Superadmin)"""
+    
+    if not current_user.es_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo los superadministradores pueden crear clubes"
+        )
     
     # Verificar que el slug sea único
     club_existente = db.query(Club).filter(Club.slug == club_create.slug).first()
@@ -56,7 +62,35 @@ async def crear_club(
     db.commit()
     db.refresh(nuevo_club)
     
-    return ClubResponse.from_orm(nuevo_club)
+    return ClubResponse.model_validate(nuevo_club)
+
+
+@router.get("/mi-rol/{club_id}", response_model=dict)
+async def obtener_mi_rol(
+    club_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obtener el rol del usuario en un club específico"""
+    
+    # 1. Buscar si es miembro directo
+    miembro = db.query(MiembroClub).filter(
+        MiembroClub.usuario_id == current_user.id,
+        MiembroClub.club_id == club_id,
+        MiembroClub.estado == "activo"
+    ).first()
+    
+    if miembro:
+        return {"rol": miembro.rol}
+        
+    # 2. Si es superadmin global, considerar administrador
+    if current_user.es_superadmin:
+        return {"rol": "administrador"}
+        
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="No eres miembro de este club"
+    )
 
 
 @router.get("", response_model=list)
@@ -72,7 +106,7 @@ async def listar_clubes_usuario(
     ).all()
     
     clubes = [miembro.club for miembro in miembros]
-    return [ClubResponse.from_orm(club) for club in clubes]
+    return [ClubResponse.model_validate(club) for club in clubes]
 
 
 @router.get("/{club_id}", response_model=ClubResponse)
@@ -103,7 +137,7 @@ async def get_club(
             detail="Club no encontrado"
         )
     
-    return ClubResponse.from_orm(club)
+    return ClubResponse.model_validate(club)
 
 
 @router.put("/{club_id}", response_model=ClubResponse)
@@ -151,7 +185,7 @@ async def actualizar_club(
     db.commit()
     db.refresh(club)
     
-    return ClubResponse.from_orm(club)
+    return ClubResponse.model_validate(club)
 
 
 # ==================== MIEMBROS ====================
@@ -181,7 +215,7 @@ async def listar_miembros(
         MiembroClub.estado == "activo"
     ).all()
     
-    return [MiembroClubResponse.from_orm(m) for m in miembros]
+    return [MiembroClubResponse.model_validate(m) for m in miembros]
 
 
 @router.post("/{club_id}/miembros/invitar", response_model=dict)
@@ -395,33 +429,4 @@ async def actualizar_rol_miembro(
     }
 
 
-# ==================== NOTICIAS ====================
 
-@router.get("/{club_id}/noticias", response_model=list)
-async def listar_noticias_club(
-    club_id: int,
-    skip: int = 0,
-    limit: int = 10,
-    current_user: Usuario = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Listar noticias del club"""
-    
-    # Verificar que el usuario es miembro del club
-    miembro = db.query(MiembroClub).filter(
-        MiembroClub.usuario_id == current_user.id,
-        MiembroClub.club_id == club_id
-    ).first()
-    
-    if not miembro:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no es miembro del club"
-        )
-    
-    # Obtener noticias del club
-    noticias = db.query(Noticia).filter(
-        Noticia.club_id == club_id
-    ).order_by(Noticia.fecha_creacion.desc()).offset(skip).limit(limit).all()
-    
-    return [NoticiaResponse.from_orm(noticia) for noticia in noticias]

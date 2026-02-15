@@ -342,3 +342,56 @@
     white-space: normal;
   }
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 24px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
+  .profile-header h1 {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+
+  .profile-info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .profile-info-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .profile-club-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .profile-club-item small {
+    display: block;
+    margin-top: 4px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+  .badge-superadmin {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+}
+

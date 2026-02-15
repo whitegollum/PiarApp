@@ -1,7 +1,7 @@
 """Servicio de invitaciones a clubes"""
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 
 from app.models.invitacion import Invitacion
@@ -38,7 +38,7 @@ class InvitacionService:
         token = AuthUtils.generate_invitation_token()
         
         # Calcular fecha de vencimiento
-        fecha_vencimiento = datetime.utcnow() + timedelta(
+        fecha_vencimiento = datetime.now(timezone.utc) + timedelta(
             days=InvitacionService.DURACION_INVITACION_DIAS
         )
         
@@ -97,7 +97,7 @@ class InvitacionService:
         invitaciones = db.query(Invitacion).filter(
             Invitacion.email == email,
             Invitacion.estado == "pendiente",
-            Invitacion.fecha_vencimiento > datetime.utcnow()
+            Invitacion.fecha_vencimiento > datetime.now(timezone.utc)
         ).all()
         
         return invitaciones
@@ -114,7 +114,7 @@ class InvitacionService:
         invitacion = db.query(Invitacion).filter(
             Invitacion.token == token,
             Invitacion.estado == "pendiente",
-            Invitacion.fecha_vencimiento > datetime.utcnow()
+            Invitacion.fecha_vencimiento > datetime.now(timezone.utc)
         ).first()
         
         if not invitacion:
@@ -128,7 +128,7 @@ class InvitacionService:
         # Actualizar invitación
         invitacion.usuario_id = usuario_id
         invitacion.estado = "aceptada"
-        invitacion.fecha_aceptacion = datetime.utcnow()
+        invitacion.fecha_aceptacion = datetime.now(timezone.utc)
         
         # Crear membresía en el club
         miembro_existente = db.query(MiembroClub).filter(
@@ -142,7 +142,7 @@ class InvitacionService:
                 club_id=invitacion.club_id,
                 rol=invitacion.rol,
                 estado="activo",
-                fecha_aprobacion=datetime.utcnow()
+                fecha_aprobacion=datetime.now(timezone.utc)
             )
             db.add(miembro)
         else:
@@ -192,7 +192,7 @@ class InvitacionService:
         # Generar nuevo token
         invitacion.token = generate_invitation_token()
         invitacion.estado = "pendiente"
-        invitacion.fecha_vencimiento = datetime.utcnow() + timedelta(
+        invitacion.fecha_vencimiento = datetime.now(timezone.utc) + timedelta(
             days=InvitacionService.DURACION_INVITACION_DIAS
         )
         

@@ -17,11 +17,22 @@ import ClubMembers from './pages/ClubMembers'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 
+import ClubEvents from './pages/ClubEvents'
+import ClubNews from './pages/ClubNews'
+import CreateNews from './pages/CreateNews'
+import EditNews from './pages/EditNews'
+import CreateEvent from './pages/CreateEvent'
+import EditEvent from './pages/EditEvent'
+import AdminClubs from './pages/admin/AdminClubs'
+
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
+          {/* Rutas de admin */}
+          <Route path="/admin/clubes" element={<ProtectedRoute><AdminClubs /></ProtectedRoute>} />
+
           {/* Rutas públicas */}
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/registro" element={<Register />} />
@@ -69,6 +80,55 @@ function App() {
             element={
               <ProtectedRoute>
                 <ClubMembers />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/clubes/:clubId/noticias"
+            element={
+              <ProtectedRoute>
+                <ClubNews />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clubes/:id/noticias/crear"
+            element={
+              <ProtectedRoute>
+                <CreateNews />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clubes/:clubId/noticias/:noticiaId/editar"
+            element={
+              <ProtectedRoute>
+                <EditNews />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clubes/:id/eventos"
+            element={
+              <ProtectedRoute>
+                <ClubEvents />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clubes/:id/eventos/crear"
+            element={
+              <ProtectedRoute>
+                <CreateEvent />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clubes/:clubId/eventos/:eventoId/editar"
+            element={
+              <ProtectedRoute>
+                <EditEvent />
               </ProtectedRoute>
             }
           />

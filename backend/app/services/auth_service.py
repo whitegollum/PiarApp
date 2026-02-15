@@ -1,5 +1,5 @@
 """Servicio de autenticación"""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -56,7 +56,7 @@ class AuthService:
         invitacion = db.query(Invitacion).filter(
             Invitacion.token == usuario_create.invitacion_token,
             Invitacion.estado == "pendiente",
-            Invitacion.fecha_vencimiento > datetime.utcnow()
+            Invitacion.fecha_vencimiento > datetime.now(timezone.utc)
         ).first()
         
         if not invitacion:
@@ -90,7 +90,7 @@ class AuthService:
         # Vincular el usuario a la invitación y club
         invitacion.usuario_id = usuario.id
         invitacion.estado = "aceptada"
-        invitacion.fecha_aceptacion = datetime.utcnow()
+        invitacion.fecha_aceptacion = datetime.now(timezone.utc)
         
         # Crear membresía del club
         miembro = MiembroClub(
@@ -98,7 +98,7 @@ class AuthService:
             club_id=invitacion.club_id,
             rol=invitacion.rol,
             estado="activo",
-            fecha_aprobacion=datetime.utcnow()
+            fecha_aprobacion=datetime.now(timezone.utc)
         )
         
         db.add(miembro)
@@ -131,7 +131,7 @@ class AuthService:
             return None
         
         # Actualizar último login
-        usuario.ultimo_login = datetime.utcnow()
+        usuario.ultimo_login = datetime.now(timezone.utc)
         db.commit()
         
         return usuario

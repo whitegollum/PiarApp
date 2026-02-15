@@ -19,54 +19,39 @@ Documentación completa del sistema de gestión de clubs de aeromodelismo PIAR.
 - Flujos de usuario principales
 - Troubleshooting
 
-**Cuándo leer:** Primero - para entender qué es PIAR
+**Cuándo leer:** Primero - para entender qué es PiarApp
 **Tipo:** Guía general de 300+ líneas
 
----
 
-### 2. **PHASE_7_STATUS.md** 📊
-**Ubicación:** `/PHASE_7_STATUS.md`  
+### 4. **UX_STANDARDS.md** 🎨
+**Ubicación:** `/frontend/UX_STANDARDS.md`
 **Contenido:**
-- Estado actual del MVP (Phase 7)
-- Características completadas
-- Backend (100% completado)
-- Frontend (95% completado)
-- Nuevas características Phase 7:
-  - Profile.tsx
-  - ClubMembers.tsx
-  - Settings.tsx
-- Seguridad implementada
-- Métrica de progreso
-- Roadmap de próximas fases
-- Archivos creados/modificados
+- Guía de estilos y estandarización UI
+- Estructura de formularios (layout, headers, groups)
+- Variables CSS estándar
+- Patrones de comportamiento (loading, error handling)
+- Reglas de diseño para nuevas pantallas
 
-**Cuándo leer:** Después del README - para ver progreso detallado
-**Tipo:** Documento técnico de 400+ líneas
+**Cuándo leer:** Antes de crear cualquier nueva pantalla o formulario
+**Tipo:** Guía de diseño de 100+ líneas
 
 ---
 
-### 3. **PHASE_7_SUMMARY.md** 🎉
-**Ubicación:** `/PHASE_7_SUMMARY.md`  
+### 5. **PRUEBAS_FUNCIONALES.md** 🧪
+**Ubicación:** `/PRUEBAS_FUNCIONALES.md`
 **Contenido:**
-- Resumen ejecutivo de Phase 7
-- Logros específicos
-- Tecnologías utilizadas
-- Status del proyecto (backend/frontend)
-- Funcionalidades MVP checklist
-- Seguridad implementada (tabla)
-- 6 pantallas públicas + 6 protegidas
-- Cómo usar rápidamente
-- Estructura BD (8 modelos)
-- Endpoints principales
-- Checklist Phase 7 completado
-- Progreso general MVP (85%)
+- Plan de pruebas detallado (28 casos de uso)
+- Pasos paso-a-paso para validar el sistema
+- Reproducción backend-only (curl)
+- Resultados esperados vs actuales
+- Matriz de estado de pruebas
 
-**Cuándo leer:** Para un resumen rápido de Phase 7
-**Tipo:** Documento ejecutivo de 300+ líneas
+**Cuándo leer:** Al finalizar una feature o antes de un release
+**Tipo:** Documento de calidad e instrucciones de prueba
 
 ---
 
-### 4. **CARACTERÍSTICAS_FUNCIONALES.md**
+### 6. **CARACTERÍSTICAS_FUNCIONALES.md**
 **Ubicación:** `/CARACTERÍSTICAS_FUNCIONALES.md`  
 **Contenido:**
 - Especificación detallada de features
@@ -79,7 +64,7 @@ Documentación completa del sistema de gestión de clubs de aeromodelismo PIAR.
 
 ---
 
-### 5. **REQUISITOS_TÉCNICOS.md**
+### 7. **REQUISITOS_TÉCNICOS.md**
 **Ubicación:** `/REQUISITOS_TÉCNICOS.md`  
 **Contenido:**
 - Detalles técnicos de arquitectura
@@ -93,13 +78,28 @@ Documentación completa del sistema de gestión de clubs de aeromodelismo PIAR.
 
 ---
 
+### 8. **DEVELOPMENT_PHASES.md** 🚀
+**Ubicación:** `/DEVELOPMENT_PHASES.md`
+**Contenido:**
+- Histórico de fases completadas (1-8)
+- Detalles de tareas realizadas por fase
+- Roadmap detallado de fases futuras (9-12+)
+- Objetivos por hito
+
+**Cuándo leer:** Para entender la evolución del proyecto y el futuro
+**Tipo:** Roadmap y registro de cambios
+
+---
+
 ## 🗂️ Estructura General
 
 ```
 📁 piar/
 ├── 📄 README.md                           ← START HERE
+├── 📄 DEVELOPMENT_PHASES.md               ← Roadmap & Historia
 ├── 📄 PHASE_7_STATUS.md                   ← Detalles Phase 7
 ├── 📄 PHASE_7_SUMMARY.md                  ← Resumen Phase 7
+├── 📄 PRUEBAS_FUNCIONALES.md              ← Test Plan
 ├── 📄 CARACTERÍSTICAS_FUNCIONALES.md      ← Features
 ├── 📄 REQUISITOS_TÉCNICOS.md              ← Architecture
 │
@@ -107,31 +107,39 @@ Documentación completa del sistema de gestión de clubs de aeromodelismo PIAR.
 │   ├── app/
 │   │   ├── main.py                        # FastAPI app
 │   │   ├── config.py                      # Configuration
-│   │   ├── models/                        # 8 SQLAlchemy models
-│   │   ├── routes/                        # 27+ API endpoints
+│   │   ├── models/                        # 9 SQLAlchemy models
+│   │   ├── routes/                        # 30+ API endpoints
 │   │   ├── services/                      # Auth, OAuth, Email
 │   │   ├── schemas/                       # Pydantic validation
 │   │   └── utils/                         # Security utilities
 │   ├── requirements.txt                   # Python dependencies
 │   ├── run.py                             # Start script
 │   └── piar.db                            # SQLite database
+│   └── migrations/                         # SQL migrations (SQLite)
 │
 ├── 📁 frontend/
+│   ├── UX_STANDARDS.md                    # ✨ NUEVO: Guía de estilos
 │   ├── src/
-│   │   ├── pages/                         # 9 React pages
+│   │   ├── pages/                         # 13 React pages
 │   │   │   ├── Login.tsx
 │   │   │   ├── Register.tsx
 │   │   │   ├── Dashboard.tsx
 │   │   │   ├── ClubDetail.tsx
 │   │   │   ├── CreateClub.tsx
 │   │   │   ├── ClubMembers.tsx            # NEW Phase 7
+│   │   │   ├── CreateNews.tsx             # NEW Phase 8
+│   │   │   ├── EditNews.tsx               # NEW Phase 8
+│   │   │   ├── CreateEvent.tsx            # NEW Phase 8
+│   │   │   ├── EditEvent.tsx              # NEW Phase 8
 │   │   │   ├── Profile.tsx                # NEW Phase 7
 │   │   │   ├── Settings.tsx               # NEW Phase 7
 │   │   │   └── AcceptInvitation.tsx
 │   │   ├── components/
 │   │   │   ├── Navbar.tsx                 # Updated Phase 7
+│   │   │   ├── NewsList.tsx               # Updated Phase 8
+│   │   │   ├── EventList.tsx              # Updated Phase 8
 │   │   │   └── ProtectedRoute.tsx
-│   │   ├── styles/                        # 8 CSS files
+│   │   ├── styles/                        # CSS files including Forms.css
 │   │   ├── services/
 │   │   │   └── api.ts                     # HTTP client
 │   │   ├── contexts/
@@ -139,6 +147,7 @@ Documentación completa del sistema de gestión de clubs de aeromodelismo PIAR.
 │   │   └── App.tsx                        # Router
 │   ├── package.json
 │   ├── vite.config.ts
+│   ├── .env                               # VITE_API_URL, app metadata
 │   └── index.html
 │
 └── 📁 docs/
@@ -188,6 +197,10 @@ Documentación completa del sistema de gestión de clubs de aeromodelismo PIAR.
 | `/clubes/crear` | Crear nuevo club |
 | `/clubes/:id` | Ver detalle del club |
 | `/clubes/:id/miembros` | Gestionar miembros |
+| `/clubes/:id/noticias/crear` | Publicar noticia (Admin) |
+| `/clubes/:id/noticias/:id/editar` | Editar noticia (Admin) |
+| `/clubes/:id/eventos/crear` | Crear evento (Admin) |
+| `/clubes/:id/eventos/:id/editar` | Editar evento (Admin) |
 | `/perfil` | Mi perfil ✨ NEW |
 | `/configuracion` | Configuración ✨ NEW |
 
@@ -235,7 +248,7 @@ CSS3 ← Styling
 ```
 Autenticación:       100% ✅
 Backend API:         100% ✅
-Frontend UI:         95% 🟢
+Frontend UI:         100% ✅
 Gestión Usuarios:    100% ✅
 Gestión Clubes:      100% ✅
 Google OAuth:        50% 🟡
@@ -259,57 +272,15 @@ Deployment:          0% ⬜
 
 ## 🔄 Próximas Fases
 
-| Phase | Tarea | ETA |
+| Phase | Tarea | Estado |
 |-------|-------|-----|
-| 8 | Noticias & Eventos UI | 2-3 hrs |
-| 9 | Google OAuth + Tests | 3-4 hrs |
-| 10 | Deployment (Docker, CI/CD) | 2-3 hrs |
-| 11 | Advanced Features | TBD |
+| 8 | Noticias & Eventos UI (CRUD) | ✅ Completado |
+| 9 | Interacción (Comentarios, RSVP Eventos) | ⏳ Pendiente |
+| 10 | Google OAuth + Tests | ⏳ Pendiente |
+| 11 | Deployment (Docker, CI/CD) | ⏳ Pendiente |
 
 ---
 
-## 📞 Troubleshooting Rápido
-
-### Backend no inicia
-```bash
-# Asegurar estar en backend/
-cd backend
-# Ejecutar con
-python run.py  # (no uvicorn directo)
-```
-
-### Frontend puerto en uso
-```bash
-# Puerto 5173 en uso, intenta 5174
-cd frontend && npm run dev
-# O especificar puerto
-npm run dev -- --port 5175
-```
-
-### Base de datos
-```bash
-# SQLite se crea automáticamente
-# Si necesitas reset
-rm backend/piar.db  # Se recrea en próximo run
-```
-
----
-
-## 🎯 Checklist de Verificación
-
-Después de instalar, verifica:
-
-- [ ] Backend corre en http://localhost:8000
-- [ ] Frontend corre en http://localhost:5173 (o 5174)
-- [ ] Puedes registrarte
-- [ ] Puedes iniciar sesión
-- [ ] API Docs en /docs (backend)
-- [ ] Puedes crear club
-- [ ] Puedes invitar miembro
-- [ ] Puedes ver tu perfil
-- [ ] Puedes cambiar configuración
-
----
 
 ## 📚 Referencias Externas
 
@@ -337,23 +308,22 @@ Después de instalar, verifica:
 
 ---
 
-## 📄 Versionado
-
-- **Versión Actual:** 0.7.0 (MVP Phase 7)
-- **Última Actualización:** 2024
-- **Status:** Production Ready (sin tests/deployment)
-
----
-
 ## 🏁 Siguiente Paso
 
-Para continuar desarrollo:
+Para continuar desarrollo (Fase 9):
 
-1. Lee la documentación releante arriba
-2. Sigue el orden sugerido (README → PHASE → Requirements)
-3. Para Phase 8, crea `ClubNews.tsx` y `ClubEvents.tsx`
-4. Implementa CRUD UI para noticias y eventos
-5. Actualiza rutas en `App.tsx`
+1. **Inscripción a Eventos:**
+   - Backend: Endpoint para registrar asistencia (`POST /eventos/:id/asistir`)
+   - Frontend: Botón "Inscribirse" en `EventList` y `EventDetail`
+   - Gestión de aforo y listas de espera.
+
+2. **Comentarios en Noticias:**
+   - Backend: CRUD de comentarios (`/noticias/:id/comentarios`)
+   - Frontend: Componente `CommentSection` en detalle de noticia.
+
+3. **Autenticación con Google (OAuth):**
+   - Configurar credenciales en Google Console.
+   - Completar implementación en frontend y backend.
 
 ---
 

@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.db import Base
 
@@ -10,6 +11,8 @@ class Invitacion(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     club_id = Column(Integer, ForeignKey("clubes.id"), index=True, nullable=False)
+    
+    club = relationship("Club", backref="invitaciones")
     
     # Email del invitado (puede no estar registrado aún)
     email = Column(String(255), index=True, nullable=False)

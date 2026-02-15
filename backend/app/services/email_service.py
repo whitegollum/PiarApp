@@ -16,7 +16,7 @@ class EmailService:
         # URL para aceptar la invitación
         invitation_url = f"{settings.frontend_url}/auth/aceptar-invitacion?token={token}"
         
-        asunto = f"Invitación a {club_nombre} - PIAR"
+        asunto = f"Invitación a {club_nombre} - PiarAPP"
         
         # Cuerpo del email en HTML
         cuerpo_html = f"""
@@ -24,7 +24,7 @@ class EmailService:
             <body style="font-family: Arial, sans-serif; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
                     <h2>¡Bienvenido a {club_nombre}!</h2>
-                    <p>Has sido invitado a unirte a <strong>{club_nombre}</strong> en PIAR.</p>
+                    <p>Has sido invitado a unirte a <strong>{club_nombre}</strong> en PiarAPP.</p>
                     
                     <p>Haz clic en el siguiente botón para aceptar la invitación:</p>
                     
@@ -47,7 +47,7 @@ class EmailService:
                     
                     <hr style="margin-top: 40px; border: none; border-top: 1px solid #ddd;">
                     <p style="color: #999; font-size: 12px; text-align: center;">
-                        PIAR - Gestión de Clubs de Aeromodelismo
+                        PiarAPP - Gestión de Clubs de Aeromodelismo
                     </p>
                 </div>
             </body>
@@ -64,16 +64,16 @@ class EmailService:
         # URL para registrarse desde la invitación
         registro_url = f"{settings.frontend_url}/auth/registrarse-desde-invitacion?token={token}"
         
-        asunto = f"Bienvenido a PIAR - Invitación a {club_nombre}"
+        asunto = f"Bienvenido a PiarAPP - Invitación a {club_nombre}"
         
         cuerpo_html = f"""
         <html>
             <body style="font-family: Arial, sans-serif; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h2>¡Bienvenido a PIAR, {nombre}!</h2>
+                    <h2>¡Bienvenido a PiarAPP, {nombre}!</h2>
                     <p>Has sido invitado a unirte a <strong>{club_nombre}</strong>.</p>
                     
-                    <p>PIAR es una plataforma de gestión integral para clubs de aeromodelismo, 
+                    <p>PiarAPP es una plataforma de gestión integral para clubs de aeromodelismo, 
                     con herramientas para:
                     </p>
                     <ul>
@@ -104,7 +104,7 @@ class EmailService:
                     
                     <hr style="margin-top: 40px; border: none; border-top: 1px solid #ddd;">
                     <p style="color: #999; font-size: 12px; text-align: center;">
-                        PIAR - Gestión de Clubs de Aeromodelismo<br>
+                        PiarAPP - Gestión de Clubs de Aeromodelismo<br>
                         {settings.frontend_url}
                     </p>
                 </div>
@@ -121,7 +121,7 @@ class EmailService:
         
         verification_url = f"{settings.frontend_url}/auth/verificar-email?token={token}"
         
-        asunto = "Verifica tu email en PIAR"
+        asunto = "Verifica tu email en PiarAPP"
         
         cuerpo_html = f"""
         <html>
@@ -160,14 +160,14 @@ class EmailService:
         
         reset_url = f"{settings.frontend_url}/auth/reset-contrasena?token={token}"
         
-        asunto = "Restablecer contraseña en PIAR"
+        asunto = "Restablecer contraseña en PiarAPP"
         
         cuerpo_html = f"""
         <html>
             <body style="font-family: Arial, sans-serif; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
                     <h2>Restablecer contraseña</h2>
-                    <p>Recibimos una solicitud para restablecer tu contraseña en PIAR.</p>
+                    <p>Recibimos una solicitud para restablecer tu contraseña en PiarAPP.</p>
                     
                     <p>Haz clic en el siguiente botón para crear una nueva contraseña:</p>
                     

@@ -596,6 +596,55 @@
   - Respuestas a comentarios
   - Cambios en datos de perfil
 
+### 1.11 Gestión de Tareas Comunes
+
+#### Crear Tareas
+- **Descripción**: Los administradores pueden crear y listar tareas comunes que necesitan ser realizadas en el club o instalaciones.
+- **Datos a capturar**:
+  - Nombre de la tarea (ej: "Limpiar zona de despegue")
+  - Descripción detallada (ej: "Se necesita desbrozar la parte delantera y retirar escombros.")
+  - Prioridad (Baja, Media, Alta, Crítica)
+  - Categoría (Mantenimiento, Mejora, Limpieza, Evento, Otro)
+  - Ubicación (ej: "Pista Principal", "Taller", "Área social")
+  - Materiales/Herramientas necesarias (lista opcional)
+  - Fecha límite sugerida (opcional)
+- **Funcionalidades**:
+  - Guardar como borrador
+  - Publicar/Activar tarea
+  - Editar tarea (solo admin)
+  - Archivar tarea completada/cancelada
+
+#### Visualizar y Asignar Tareas
+- **Descripción**: Los socios pueden visualizar las tareas activas y solicitar ser asignados a su ejecución, especificando la fecha y los colaboradores.
+- **Funcionalidades para Socios**:
+  - Listado de tareas activas pendientes de asignación.
+  - Filtro por prioridad/categoría.
+  - **Solicitud de Asignación**:
+    - El socio selecciona la tarea.
+    - Indica la fecha de ejecución orientativa.
+    - Añade a los colaboradores que ayudarán (deben ser socios activos).
+    - **Restricción**: El equipo (solicitante + colaboradores) no puede superar las cuatro (4) personas en total.
+    - Envío de la solicitud a administración.
+- **Funcionalidades para Administradores**:
+  - Listado de tareas con estado (Pendiente de Asignación, Asignada, En Curso, Finalizada).
+  - Ver solicitudes de asignación.
+  - Aprobar/Rechazar la solicitud de asignación.
+  - Asignar la tarea directamente a un socio.
+  - Modificar la fecha de ejecución de una tarea asignada.
+
+#### Seguimiento de Tareas
+- **Descripción**: Herramientas para seguir el progreso de las tareas asignadas.
+- **Funcionalidades**:
+  - Estado de la tarea (Asignada, En Curso, Completada).
+  - Socio responsable y lista de colaboradores.
+  - Campo de comentarios/actualizaciones de progreso.
+  - Alerta si la fecha de ejecución se acerca y la tarea no está marcada como "En Curso".
+- **Notificaciones**:
+  - Al socio responsable: Tarea asignada/aprobada.
+  - A los colaboradores: Invitación/Confirmación de participación en la tarea.
+  - A los administradores: Solicitud de asignación recibida.
+
+
 ---
 
 ## 2. Casos de Uso Principales

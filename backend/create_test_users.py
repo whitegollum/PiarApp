@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Script para crear usuarios de prueba en la base de datos PIAR.
+Script para crear usuarios de prueba en la base de datos PiarAPP.
 Uso: python create_test_users.py
 """
 
@@ -18,7 +18,7 @@ TEST_USERS = [
     },
     {
         "email": "admin@piar.com",
-        "nombre_completo": "Administrador PIAR",
+        "nombre_completo": "Administrador PiarAPP",
         "password": "Admin123456"
     },
     {

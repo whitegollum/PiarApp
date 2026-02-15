@@ -58,7 +58,7 @@ export default function Login() {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h1>PIAR</h1>
+          <h1>PiarAPP</h1>
           <p>Gestión de Clubs de Aeromodelismo</p>
         </div>
 

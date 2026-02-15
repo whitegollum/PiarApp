@@ -22,12 +22,17 @@
 - Tema claro/oscuro
 - Privacidad y datos personales
 - Interfaz moderna con toggle switches
+- Persistencia en backend y sincronización de sesión
 
 ✅ **Navegación Mejorada**
 - Navbar actualizado con useAuth() hook
 - Menú dropdown con acceso a perfil y configuración
 - Links a todas las páginas principales
 - Responsivo y accesible
+
+✅ **Exportación de Datos**
+- Descarga de datos personales desde el perfil
+- Endpoint GDPR-ready
 
 ### Tecnologías Utilizadas
 - React 18 + TypeScript
@@ -64,16 +69,16 @@ Total Agregado: ~1,400 líneas de código
 ### Backend Status
 ✅ **Completado (100%)**
 - 27+ endpoints API
-- 8 modelos SQLAlchemy
+- 9 modelos SQLAlchemy
 - 4 servicios (auth, oauth, invitaciones, email)
 - Validación Pydantic completa
 - JWT + Bcrypt implementado
 - CORS configurado
 
 ### Frontend Status
-✅ **Core Features (95%)**
+✅ **Core Features (100%)**
 - 9 páginas React completas
-- 8 stylesheets CSS responsivos
+- 9 stylesheets CSS responsivos
 - AuthContext + useAuth hook
 - APIService con auto-refresh
 - Protected routes
@@ -100,7 +105,7 @@ Total Agregado: ~1,400 líneas de código
 | Autenticación | JWT (15 min) + Refresh (7 días) |
 | Contraseñas | bcrypt + salt automático (8+ chars) |
 | Almacenamiento | localStorage (producción: cookies HttpOnly) |
-| CORS | localhost:5173 configurado |
+| CORS | localhost + IP LAN configurado |
 | Validación | Pydantic + frontend |
 | Invitaciones | Tokens criptográficos únicos |
 | Roles | Administrador / Miembro |
@@ -167,8 +172,8 @@ Total MVP:        ~7,600 líneas
 ### Coverage
 ```
 Backend Endpoints:   100% (27+ endpoints)
-Frontend Pages:      95% (9 páginas)
-Database Models:     100% (8 modelos)
+Frontend Pages:      100% (9 páginas)
+Database Models:     100% (9 modelos)
 Security:            90% (JWT, CORS, validation)
 Testing:             0% (no tests yet)
 ```

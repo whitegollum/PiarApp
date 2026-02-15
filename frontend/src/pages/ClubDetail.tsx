@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import APIService from '../services/api'
+import { NewsService, EventService } from '../services/contentService'
+import { Noticia, Evento } from '../types/models'
+import { useClubRole } from '../hooks/useClubRole'
 import Navbar from '../components/Navbar'
+import NewsList from '../components/NewsList'
+import EventList from '../components/EventList'
 import '../styles/ClubDetail.css'
 
 interface Club {
@@ -28,14 +33,7 @@ interface Miembro {
   club_id: number
   rol: string
   estado: string
-}
-
-interface Noticia {
-  id: number
-  titulo: string
-  contenido: string
-  fecha_creacion: string
-  autor?: {
+  usuario?: {
     id: number
     email: string
     nombre_completo: string
@@ -46,32 +44,44 @@ export default function ClubDetail() {
   const { usuario, logout } = useAuth()
   const { clubId } = useParams<{ clubId: string }>()
   const navigate = useNavigate()
+  const { role } = useClubRole(clubId)
+  
   const [club, setClub] = useState<Club | null>(null)
   const [miembros, setMiembros] = useState<Miembro[]>([])
   const [noticias, setNoticias] = useState<Noticia[]>([])
+  const [eventos, setEventos] = useState<Evento[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [tab, setTab] = useState<'resumen' | 'miembros' | 'noticias'>('resumen')
+  const [tab, setTab] = useState<'resumen' | 'miembros' | 'noticias' | 'eventos'>('resumen')
+  
+  const canEdit = role === 'administrador' || usuario?.es_superadmin;
 
   useEffect(() => {
-    if (!usuario) {
-      navigate('/auth/login')
+    if (!usuario || !clubId) {
+      if (!usuario) navigate('/auth/login')
       return
     }
 
     const cargarDatos = async () => {
       try {
         setLoading(true)
-        const [clubData, miembrosData, noticiasData] = await Promise.all([
-          APIService.get<Club>(`/clubes/${clubId}`),
-          APIService.get<Miembro[]>(`/clubes/${clubId}/miembros`),
-          APIService.get<Noticia[]>(`/clubes/${clubId}/noticias`)
+        const id = parseInt(clubId)
+        
+        // Cargar todo en paralelo
+        const [clubData, miembrosData, noticiasData, eventosData] = await Promise.all([
+          APIService.get<Club>(`/clubes/${id}`),
+          APIService.get<Miembro[]>(`/clubes/${id}/miembros`),
+          NewsService.getAll(id, 0, 5),    // Traer últimos 5
+          EventService.getAll(id, 0, 5)    // Traer últimos 5
         ])
+        
         setClub(clubData)
         setMiembros(miembrosData)
         setNoticias(noticiasData)
+        setEventos(eventosData)
       } catch (error) {
-        setError('Error al cargar club: ' + (error as Error).message)
+        console.error("Error loading club data:", error)
+        setError('Error al cargar datos del club')
       } finally {
         setLoading(false)
       }
@@ -81,6 +91,7 @@ export default function ClubDetail() {
   }, [clubId, usuario, navigate])
 
   if (!usuario) return null
+
 
   if (loading) {
     return (
@@ -163,6 +174,12 @@ export default function ClubDetail() {
             >
               Noticias ({noticias.length})
             </button>
+            <button
+              className={`tab ${tab === 'eventos' ? 'active' : ''}`}
+              onClick={() => setTab('eventos')}
+            >
+              Eventos ({eventos.length})
+            </button>
           </div>
 
           {/* Contenido */}
@@ -179,24 +196,38 @@ export default function ClubDetail() {
                     <div className="stat-label">Noticias</div>
                   </div>
                   <div className="stat-card">
-                    <div className="stat-value">0</div>
+                    <div className="stat-value">{eventos.length}</div>
                     <div className="stat-label">Eventos</div>
                   </div>
                 </div>
-                <div className="action-buttons">
-                  <button 
-                    className="btn btn-primary"
-                    onClick={() => navigate(`/clubes/${clubId}/miembros`)}
-                  >
-                    👥 Administrar Miembros
-                  </button>
-                  <button 
-                    className="btn btn-secondary"
-                    onClick={() => navigate(`/clubes/${clubId}/noticias`)}
-                  >
-                    📰 Gestionar Noticias
-                  </button>
-                </div>
+                {canEdit && (
+                  <div className="action-buttons">
+                    <button 
+                      className="btn btn-secondary"
+                      onClick={() => navigate(`/clubes/${clubId}/editar`)}
+                    >
+                      ✏️ Editar Club
+                    </button>
+                    <button 
+                      className="btn btn-primary"
+                      onClick={() => navigate(`/clubes/${clubId}/miembros`)}
+                    >
+                      👥 Administrar Miembros
+                    </button>
+                    <button 
+                      className="btn btn-outline"
+                      onClick={() => navigate(`/clubes/${clubId}/noticias/crear`)}
+                    >
+                      + Noticia
+                    </button>
+                    <button 
+                      className="btn btn-outline"
+                      onClick={() => navigate(`/clubes/${clubId}/eventos/crear`)}
+                    >
+                      + Evento
+                    </button>
+                  </div>
+                )}
 
                 {/* Información de Contacto */}
                 {(club.pais || club.region || club.email_contacto || club.telefono || club.sitio_web) && (
@@ -283,28 +314,21 @@ export default function ClubDetail() {
 
             {tab === 'noticias' && (
               <div className="tab-content">
-                {noticias.length > 0 ? (
-                  <div className="noticias-list">
-                    {noticias.map(noticia => (
-                      <div key={noticia.id} className="noticia-item">
-                        <h3>{noticia.titulo}</h3>
-                        <p className="noticia-content">{noticia.contenido}</p>
-                        <div className="noticia-meta">
-                          <span>
-                            Por: {noticia.autor?.nombre_completo || noticia.autor?.email || 'Autor desconocido'}
-                          </span>
-                          <span>
-                            {new Date(noticia.fecha_creacion).toLocaleDateString('es-ES')}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="empty-state-small">
-                    <p>No hay noticias aún</p>
-                  </div>
-                )}
+                <div className="content-header-row">
+                  <h3>Últimas Noticias</h3>
+                  <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/clubes/${clubId}/noticias`)}>Ver Todas</button>
+                </div>
+                <NewsList noticias={noticias} clubId={club.id} canEdit={canEdit} />
+              </div>
+            )}
+
+            {tab === 'eventos' && (
+              <div className="tab-content">
+                <div className="content-header-row">
+                   <h3>Próximos Eventos</h3>
+                   <button className="btn btn-sm btn-primary" onClick={() => navigate(`/clubes/${clubId}/eventos`)}>Ver Calendario</button>
+                </div>
+                <EventList eventos={eventos} clubId={club.id} canEdit={canEdit} />
               </div>
             )}
           </div>

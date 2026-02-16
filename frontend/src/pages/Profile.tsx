@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import Navbar from '../components/Navbar'
 import APIService from '../services/api'
@@ -32,7 +33,7 @@ interface Club {
 }
 
 export default function Profile() {
-  // const navigate = useNavigate()
+  const navigate = useNavigate()
   const { usuario, updateUser } = useAuth()
   const [formData, setFormData] = useState<FormData>({
     nombre_completo: usuario?.nombre_completo || '',
@@ -322,6 +323,17 @@ export default function Profile() {
                 ))}
               </div>
             )}
+          </section>
+
+          <section className="profile-section">
+            <h2>Documentacion Reglamentaria</h2>
+            <p>Gestiona tu seguro RC y carnet de piloto desde tu perfil.</p>
+            <button
+              className="btn btn-secondary"
+              onClick={() => navigate('/perfil/documentacion')}
+            >
+              📄 Ir a Documentacion
+            </button>
           </section>
 
           {/* Sección de seguridad */}

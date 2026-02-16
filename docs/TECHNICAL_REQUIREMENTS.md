@@ -247,7 +247,7 @@ piarApp/
 │   │   │   ├── noticia.py          # Modelo Noticia
 │   │   │   ├── votacion.py         # Modelo Votación
 │   │   │   ├── contraseña_instalaciones.py  # Contraseña de acceso
-│   │   │   ├── declaracion_documentacion.py # Declaración de carnet y seguro
+│   │   │   ├── documentacion_reglamentaria.py # Documentación de carnet y seguro
 │   │   │   ├── evento.py           # Modelo Evento
 │   │   │   ├── participante_evento.py # Participantes en eventos
 │   │   │   └── producto.py         # Modelo Producto
@@ -571,20 +571,23 @@ HISTORIAL_CONTRASEÑA_INSTALACIONES
 ├── administrador_id (FK)
 └── detalles (JSON)
 
-DECLARACION_DOCUMENTACION
+DOCUMENTACION_REGLAMENTARIA
 ├── id (PK)
-├── socio_id (FK a SOCIOS)
-├── tiene_seguro_rc (boolean)
-├── fecha_vencimiento_seguro
-├── aseguradora (string, opcional)
-├── tiene_carnet_piloto (boolean)
-├── tipo_carnet (string - básico/avanzado/profesional)
-├── numero_carnet (string, opcional)
-├── fecha_vencimiento_carnet
-├── fecha_declaracion (timestamp)
-├── aceptacion_responsabilidad (boolean)
-├── última_actualización
-└── fecha_próxima_revisión_30dias
+├── usuario_id (FK a USUARIOS)
+├── rc_numero
+├── rc_fecha_emision
+├── rc_fecha_vencimiento
+├── rc_archivo (BLOB)
+├── rc_archivo_nombre
+├── rc_archivo_mime
+├── carnet_numero
+├── carnet_fecha_emision
+├── carnet_fecha_vencimiento
+├── carnet_archivo (BLOB)
+├── carnet_archivo_nombre
+├── carnet_archivo_mime
+├── fecha_creacion
+└── fecha_actualizacion
 
 EVENTOS
 ├── id (PK)
@@ -822,9 +825,10 @@ DOCUMENTOS_JUNTA
 
 ### Documentación / Seguro y Carnet
 - **[IMPLEMENTADO]** `GET /api/documentacion/ayuda` - Ver guías
-- **[PLANIFICADO]** `POST /api/documentacion/declarar` - Hacer declaración
-- **[PLANIFICADO]** `GET /api/documentacion/declaracion/{socio_id}` - Ver declaración
-- **[PLANIFICADO]** `PUT /api/documentacion/declaracion/{socio_id}` - Actualizar declaración
+- **[IMPLEMENTADO]** `GET /api/documentacion/me` - Ver mi documentación
+- **[IMPLEMENTADO]** `POST /api/documentacion/me` - Crear/Actualizar documentación
+- **[IMPLEMENTADO]** `GET /api/documentacion/me/rc` - Descargar seguro RC
+- **[IMPLEMENTADO]** `GET /api/documentacion/me/carnet` - Descargar carnet piloto
 
 ### Contraseña de Instalaciones
 - **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/instalacion/password` - Ver contraseña actual (Miembros)

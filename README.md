@@ -20,3 +20,12 @@ PiarApp es la aplicacion de la Asociacion Cerdos Voladores para gestionar su cam
 - Plan de pruebas: [TESTING_PLAN.md](docs/TESTING_PLAN.md)
 - Roadmap e historial de fases: [DEVELOPMENT_PHASES.md](docs/DEVELOPMENT_PHASES.md)
 - Guía de despliegue y Docker: [DEPLOYMENT.md](docs/DEPLOYMENT.md)
+
+## Ejecucion
+### Backend
+cd backend && pip install -r requirements.txt
+python run.py
+
+### Frontend (en otra terminal)
+cd frontend && npm install
+npm run dev

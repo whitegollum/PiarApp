@@ -24,6 +24,7 @@ import EditNews from './pages/EditNews'
 import CreateEvent from './pages/CreateEvent'
 import EditEvent from './pages/EditEvent'
 import AdminClubs from './pages/admin/AdminClubs'
+import ClubDocumentacion from './pages/ClubDocumentacion'
 
 function App() {
   return (
@@ -138,6 +139,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/perfil/documentacion"
+            element={
+              <ProtectedRoute>
+                <ClubDocumentacion />
               </ProtectedRoute>
             }
           />

@@ -7,7 +7,7 @@ from app.config import settings
 from app.database.db import engine, Base, init_db
 
 # Importar modelos para que SQLAlchemy los registre
-from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion
+from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria
 
 # Crear tablas en la base de datos
 Base.metadata.create_all(bind=engine)

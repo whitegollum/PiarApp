@@ -8,3 +8,4 @@ from app.models.evento import Evento
 from app.models.asistencia import AsistenciaEvento
 from app.models.comentario import Comentario
 from app.models.instalacion import ContrasenaInstalacion
+from app.models.documentacion_reglamentaria import DocumentacionReglamentaria

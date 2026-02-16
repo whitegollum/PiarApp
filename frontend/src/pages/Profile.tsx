@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import Navbar from '../components/Navbar'
 import APIService from '../services/api'
@@ -33,7 +32,7 @@ interface Club {
 }
 
 export default function Profile() {
-  const navigate = useNavigate()
+  // const navigate = useNavigate()
   const { usuario, updateUser } = useAuth()
   const [formData, setFormData] = useState<FormData>({
     nombre_completo: usuario?.nombre_completo || '',

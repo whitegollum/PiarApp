@@ -18,6 +18,18 @@ export interface Noticia {
   permite_comentarios: boolean;
   fecha_creacion: string; // ISO date string
   fecha_actualizacion?: string;
+  // Relationship for optional include
+  comentarios_count?: number; 
+}
+
+export interface Comentario {
+    id: number;
+    autor_id: number;
+    noticia_id: number;
+    contenido: string;
+    fecha_creacion: string;
+    fecha_actualizacion?: string;
+    autor: UsuarioBasico;
 }
 
 export interface NoticiaCreate {
@@ -26,9 +38,10 @@ export interface NoticiaCreate {
   categoria?: string;
   imagen_url?: string;
   visible_para?: string;
-  permite_comentarios?: boolean;  inscritos_count?: number}
+  permite_comentarios?: boolean;
+}
 
-export interface NoticiaUpdate extends Partial(NoticiaCreate) {
+export type NoticiaUpdate = Partial<NoticiaCreate> & {
   estado?: string;
 }
 
@@ -68,7 +81,7 @@ export interface EventoCreate {
   permite_comentarios?: boolean;
 }
 
-export interface EventoUpdate extends Partial(EventoCreate) {
+export type EventoUpdate = Partial<EventoCreate> & {
   estado?: string;
 }
 

@@ -224,7 +224,15 @@ curl -X POST http://localhost:8000/api/auth/registro \
 
 ```
 piarApp/
+├── docs/                   # Documentación del proyecto
+│   ├── DEPLOYMENT.md
+│   ├── DEVELOPMENT_PHASES.md
+│   ├── DOCUMENTATION.md
+│   ├── FUNCTIONAL_SPECS.md
+│   ├── TECHNICAL_REQUIREMENTS.md
+│   └── TESTING_PLAN.md
 ├── backend/
+│   ├── data/               # Datos persistentes (SQLite)
 │   ├── app/
 │   │   ├── __init__.py
 │   │   ├── main.py                 # Punto de entrada
@@ -350,12 +358,8 @@ piarApp/
 │   ├── vite.config.ts              # Configuración Vite + PWA
 │   ├── .env.example
 │   └── README.md
-├── docs/
-│   ├── CARACTERÍSTICAS_FUNCIONALES.md
-│   ├── REQUISITOS_TÉCNICOS.md
-│   ├── ARQUITECTURA_DB.md
-│   └── API_ENDPOINTS.md
-└── docker-compose.yml              # Orquestación de contenedores (futuro)
+├── docker-compose.yml              # Orquestación de contenedores
+└── README.md
 ```
 
 ### Patrones de Diseño
@@ -823,9 +827,9 @@ DOCUMENTOS_JUNTA
 - **[PLANIFICADO]** `PUT /api/documentacion/declaracion/{socio_id}` - Actualizar declaración
 
 ### Contraseña de Instalaciones
-- **[IMPLEMENTADO]** `GET /api/instalaciones/contraseña` - Ver contraseña actual
-- **[PLANIFICADO]** `POST /api/instalaciones/contraseña` - Cambiar contraseña (admin)
-- **[PLANIFICADO]** `GET /api/instalaciones/contraseña/historial` - Ver historial (admin)
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/instalacion/password` - Ver contraseña actual (Miembros)
+- **[IMPLEMENTADO]** `POST /api/clubes/{club_id}/instalacion/password` - Cambiar contraseña (Admin)
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/instalacion/history` - Ver historial (Admin)
 
 ### Eventos
 - **[IMPLEMENTADO]** `POST /api/clubes/{club_id}/eventos` - Crear evento (admin del club)

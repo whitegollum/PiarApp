@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Noticia } from '../types/models'
 import { Link } from 'react-router-dom'
+import CommentsSection from './CommentsSection'
 import '../styles/NewsList.css'
 
 interface NewsListProps {
@@ -10,6 +11,15 @@ interface NewsListProps {
 }
 
 const NewsList: React.FC<NewsListProps> = ({ noticias, clubId, canEdit = false }) => {
+  const [expandedComments, setExpandedComments] = useState<Record<number, boolean>>({});
+
+  const toggleComments = (id: number) => {
+    setExpandedComments(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
   if (noticias.length === 0) {
     return (
       <div className="empty-state">
@@ -31,11 +41,9 @@ const NewsList: React.FC<NewsListProps> = ({ noticias, clubId, canEdit = false }
             <span className={`category-tag ${noticia.categoria}`}>{noticia.categoria || 'General'}</span>
             <h3 className="news-title">{noticia.titulo}</h3>
             <p className="news-excerpt">
-              {noticia.contenido.length > 150
-                ? `${noticia.contenido.substring(0, 150)}...`
-                : noticia.contenido}
+              {noticia.contenido}
             </p>
-            <div className="news-footer">
+            <div className="news-footer" style={{ borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '10px' }}>
               <span className="news-author">
                 {noticia.autor?.nombre_completo || 'Autor desconocido'}
               </span>
@@ -44,10 +52,23 @@ const NewsList: React.FC<NewsListProps> = ({ noticias, clubId, canEdit = false }
               </span>
             </div>
             
-            {canEdit && (
-              <Link to={`/clubes/${clubId}/noticias/${noticia.id}/editar`} className="btn-edit" style={{ marginTop: '10px', display: 'inline-block', fontSize: '0.9em', color: '#666' }}>
-                ✏️ Editar
-              </Link>
+            <div className="news-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button 
+                  onClick={() => toggleComments(noticia.id)}
+                  style={{ background: 'none', border: 'none', color: '#4b5563', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9em' }}
+                >
+                  💬 {expandedComments[noticia.id] ? 'Ocultar comentarios' : 'Comentarios'}
+                </button>
+
+                {canEdit && (
+                  <Link to={`/clubes/${clubId}/noticias/${noticia.id}/editar`} className="btn-edit" style={{ fontSize: '0.9em', color: '#666', textDecoration: 'none' }}>
+                    ✏️ Editar
+                  </Link>
+                )}
+            </div>
+
+            {expandedComments[noticia.id] && (
+              <CommentsSection clubId={clubId} noticiaId={noticia.id} />
             )}
           </div>
         </article>

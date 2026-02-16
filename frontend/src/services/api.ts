@@ -18,9 +18,9 @@ export class APIService {
   ): Promise<Response> {
     const { skipAuth = false, ...fetchOptions } = options
 
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...fetchOptions.headers
+      ...(fetchOptions.headers as Record<string, string>)
     }
 
     // Agregar token de autenticación si está disponible

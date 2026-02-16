@@ -48,7 +48,7 @@ export default function Settings() {
     try {
       setError(null)
       // Llamada real al backend
-      const updatedUser = await APIService.put('/auth/usuarios/me', preferences)
+      const updatedUser = await APIService.put<any>('/auth/usuarios/me', preferences)
       updateUser(updatedUser)
       setSuccess('Preferencias guardadas exitosamente')
       setTimeout(() => setSuccess(null), 3000)

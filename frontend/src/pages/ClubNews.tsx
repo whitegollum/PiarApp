@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { NewsService } from '../services/contentService'
 import { Noticia } from '../types/models'
@@ -9,7 +9,7 @@ import NewsList from '../components/NewsList'
 import '../styles/ClubDetail.css' // Reuse styles
 
 export default function ClubNews() {
-  const { usuario, logout } = useAuth()
+  const { usuario } = useAuth()
   const { clubId } = useParams<{ clubId: string }>()
   const navigate = useNavigate()
   const { role } = useClubRole(clubId)

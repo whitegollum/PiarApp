@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import APIService from '../services/api'
 import Navbar from '../components/Navbar'
+import FacilityManager from '../components/FacilityManager'
 import '../styles/ClubEdit.css'
 
 interface Club {
@@ -36,7 +37,7 @@ interface ClubUpdate {
 }
 
 export default function ClubEdit() {
-  const { usuario, logout } = useAuth()
+  const { usuario } = useAuth()
   const { clubId } = useParams<{ clubId: string }>()
   const navigate = useNavigate()
   const [club, setClub] = useState<Club | null>(null)
@@ -156,7 +157,7 @@ export default function ClubEdit() {
   if (loading) {
     return (
       <div className="club-edit-layout">
-        <Navbar usuario={usuario} onLogout={logout} />
+        <Navbar />
         <main className="club-edit-main">
           <div className="loading">
             <div className="spinner"></div>
@@ -170,7 +171,7 @@ export default function ClubEdit() {
   if (error && !club) {
     return (
       <div className="club-edit-layout">
-        <Navbar usuario={usuario} onLogout={logout} />
+        <Navbar />
         <main className="club-edit-main">
           <div className="alert alert-error">{error}</div>
           <button className="btn btn-primary" onClick={() => navigate(`/clubes/${clubId}`)}>
@@ -416,6 +417,14 @@ export default function ClubEdit() {
               </button>
             </div>
           </form>
+
+          {/* Gestión de Instalaciones */}
+          {club && (
+            <div style={{ marginTop: '2rem' }}>
+              <FacilityManager clubId={club.id} />
+            </div>
+          )}
+
         </div>
       </main>
     </>

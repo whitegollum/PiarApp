@@ -57,7 +57,13 @@ export default function AcceptInvitation() {
     setLoading(true)
 
     try {
-      const data = await APIService.post('/auth/registrarse-desde-invitacion', {
+      const data = await APIService.post<{
+        usuario: any,
+        tokens: {
+          access_token: string,
+          refresh_token: string
+        }
+      }>('/auth/registrarse-desde-invitacion', {
         nombre_completo: nombreCompleto,
         email: invitationData.email,
         password: password,

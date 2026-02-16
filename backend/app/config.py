@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     debug: bool = False
     
     # Base de datos
-    database_url: str = "sqlite:///./piar.db"
+    database_url: str = "sqlite:///./data/piar.db"
     
     # Seguridad
     secret_key: str = "tu-clave-secreta-aqui"

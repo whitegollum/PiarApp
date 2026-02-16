@@ -40,8 +40,15 @@ interface Miembro {
   }
 }
 
+interface ContrasenaData {
+  codigo: string
+  descripcion: string
+  activa: boolean
+  fecha_creacion: string
+}
+
 export default function ClubDetail() {
-  const { usuario, logout } = useAuth()
+  const { usuario } = useAuth()
   const { clubId } = useParams<{ clubId: string }>()
   const navigate = useNavigate()
   const { role } = useClubRole(clubId)
@@ -50,6 +57,7 @@ export default function ClubDetail() {
   const [miembros, setMiembros] = useState<Miembro[]>([])
   const [noticias, setNoticias] = useState<Noticia[]>([])
   const [eventos, setEventos] = useState<Evento[]>([])
+  const [instalacionPass, setInstalacionPass] = useState<ContrasenaData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [tab, setTab] = useState<'resumen' | 'miembros' | 'noticias' | 'eventos'>('resumen')
@@ -79,6 +87,17 @@ export default function ClubDetail() {
         setMiembros(miembrosData)
         setNoticias(noticiasData)
         setEventos(eventosData)
+
+        // Try to fetch facility password if member
+        // (This might fail with 403 if not member or 404 if not set, so we handle it separately to not block page load)
+        try {
+          const passData = await APIService.get<ContrasenaData>(`/clubes/${id}/instalacion/password`)
+          setInstalacionPass(passData)
+        } catch (err) {
+          // Ignore 404 or 403 for this specific part
+          console.log("No facility password available or access denied")
+        }
+
       } catch (error) {
         console.error("Error loading club data:", error)
         setError('Error al cargar datos del club')
@@ -96,7 +115,7 @@ export default function ClubDetail() {
   if (loading) {
     return (
       <div className="club-detail-layout">
-        <Navbar usuario={usuario} onLogout={logout} />
+        <Navbar />
         <main className="club-detail-main">
           <div className="loading">
             <div className="spinner"></div>
@@ -110,7 +129,7 @@ export default function ClubDetail() {
   if (error || !club) {
     return (
       <div className="club-detail-layout">
-        <Navbar usuario={usuario} onLogout={logout} />
+         <Navbar />
         <main className="club-detail-main">
           <div className="alert alert-error">{error || 'Club no encontrado'}</div>
           <button className="btn btn-primary" onClick={() => navigate('/')}>
@@ -186,6 +205,18 @@ export default function ClubDetail() {
           <div className="club-content">
             {tab === 'resumen' && (
               <div className="tab-content">
+                
+                {/* Facility Password Section */}
+                {instalacionPass && (
+                  <div className="facility-access-section">
+                    <h3>🔑 Código de Acceso</h3>
+                    <div className="access-code-container">
+                      <div className="access-code">{instalacionPass.codigo}</div>
+                      <p className="access-desc">{instalacionPass.descripcion || 'Contraseña actual de las instalaciones'}</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="stats-grid">
                   <div className="stat-card">
                     <div className="stat-value">{miembros.length}</div>

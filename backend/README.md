@@ -35,6 +35,7 @@ El servidor estará disponible en `http://localhost:8000`
 
 ```
 backend/
+├── data/                # Datos persistentes
 ├── app/
 │   ├── models/          # Modelos de SQLAlchemy
 │   ├── schemas/         # Schemas de Pydantic
@@ -56,6 +57,7 @@ backend/
 - Google OAuth backend listo.
 - Modulos de clubes, miembros, noticias, eventos e invitaciones.
 - Perfil de usuario con ver y editar datos, cambio de contrasena.
+- Gestión de código de acceso a instalaciones (club_id).
 
 ## Proximos pasos
 

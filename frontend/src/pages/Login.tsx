@@ -9,6 +9,7 @@ interface LoginResponse {
     id: number
     email: string
     nombre_completo: string
+    fecha_creacion: string
   }
   tokens: {
     access_token: string

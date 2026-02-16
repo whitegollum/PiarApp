@@ -28,6 +28,9 @@ class Noticia(Base):
     
     # Multimedia
     imagen_url = Column(Text, nullable=True)
+
+    # Relaciones
+    comentarios = relationship("Comentario", back_populates="noticia", cascade="all, delete-orphan")
     
     # Auditoría
     fecha_creacion = Column(DateTime, server_default=func.now())

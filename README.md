@@ -13,9 +13,10 @@ PiarApp es la aplicacion de la Asociacion Cerdos Voladores para gestionar su cam
 - Control de acceso por rol para proteger acciones sensibles.
 
 ## Documentacion
-- Vision, estado y bases del proyecto: [DOCUMENTATION.md](DOCUMENTATION.md)
-- Especificacion funcional detallada: [FUNCTIONAL_SPECS.md](FUNCTIONAL_SPECS.md)
-- Requisitos tecnicos y arquitectura: [TECHNICAL_REQUIREMENTS.md](TECHNICAL_REQUIREMENTS.md)
+- Vision, estado y bases del proyecto: [DOCUMENTATION.md](docs/DOCUMENTATION.md)
+- Especificacion funcional detallada: [FUNCTIONAL_SPECS.md](docs/FUNCTIONAL_SPECS.md)
+- Requisitos tecnicos y arquitectura: [TECHNICAL_REQUIREMENTS.md](docs/TECHNICAL_REQUIREMENTS.md)
 - Estandares de UX/UI: [frontend/UX_STANDARDS.md](frontend/UX_STANDARDS.md)
-- Plan de pruebas: [TESTING_PLAN.md](TESTING_PLAN.md)
-- Roadmap e historial de fases: [DEVELOPMENT_PHASES.md](DEVELOPMENT_PHASES.md)
+- Plan de pruebas: [TESTING_PLAN.md](docs/TESTING_PLAN.md)
+- Roadmap e historial de fases: [DEVELOPMENT_PHASES.md](docs/DEVELOPMENT_PHASES.md)
+- Guía de despliegue y Docker: [DEPLOYMENT.md](docs/DEPLOYMENT.md)

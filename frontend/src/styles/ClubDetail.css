@@ -353,3 +353,52 @@
 }
 
 .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+
+/* Sección de Contraseña de Instalaciones */
+.facility-access-section {
+  background-color: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.facility-access-section h3 {
+  margin-top: 0;
+  color: #555;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.access-code-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.access-code {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  background-color: #f8f9fa;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e0;
+  font-family: monospace;
+  letter-spacing: 2px;
+  user-select: all;
+  cursor: pointer;
+}
+
+.access-desc {
+  color: #718096;
+  font-style: italic;
+  font-size: 0.9rem;
+  margin: 0;
+}
+

@@ -5,11 +5,14 @@ from sqlalchemy.orm import Session
 from app.database.db import get_db
 from app.models.usuario import Usuario
 from app.models.noticia import Noticia
+from app.models.comentario import Comentario  # Added
 from app.models.club import Club
 from app.models.miembro_club import MiembroClub
 from app.schemas.noticia import NoticiaCreate, NoticiaResponse, NoticiaUpdate
+from app.schemas.comentario import ComentarioCreate, ComentarioResponse, ComentarioUpdate # Added
 from app.routes.auth import get_current_user
 from datetime import datetime
+from typing import List # Added
 
 router = APIRouter()
 
@@ -207,5 +210,145 @@ async def eliminar_noticia(
     
     db.delete(noticia)
     db.commit()
+    
+    return {"message": "Noticia eliminada correctamente"}
+
+
+# ==================== COMENTARIOS ====================
+
+@router.get("/clubes/{club_id}/noticias/{noticia_id}/comentarios", response_model=List[ComentarioResponse])
+async def listar_comentarios(
+    club_id: int,
+    noticia_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Listar comentarios de una noticia"""
+    
+    # Verificar acceso al club/noticia
+    noticia = db.query(Noticia).filter(
+        Noticia.id == noticia_id,
+        Noticia.club_id == club_id
+    ).first()
+    
+    if not noticia:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Noticia no encontrada"
+        )
+        
+    # Verificar membresía
+    miembro = db.query(MiembroClub).filter(
+        MiembroClub.usuario_id == current_user.id,
+        MiembroClub.club_id == club_id,
+        MiembroClub.estado == "activo"
+    ).first()
+    
+    if not miembro:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No eres miembro activo de este club"
+        )
+
+    # Devolver comentarios ordenados por fecha (más recientes abajo? o arriba?)
+    # Usualmente comentarios cronológicos: más viejos arriba.
+    return db.query(Comentario).filter(
+        Comentario.noticia_id == noticia_id
+    ).order_by(Comentario.fecha_creacion.asc()).all()
+
+
+@router.post("/clubes/{club_id}/noticias/{noticia_id}/comentarios", response_model=ComentarioResponse)
+async def crear_comentario(
+    club_id: int,
+    noticia_id: int,
+    comentario: ComentarioCreate,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Publicar un comentario en una noticia"""
+    
+    noticia = db.query(Noticia).filter(
+        Noticia.id == noticia_id,
+        Noticia.club_id == club_id
+    ).first()
+    
+    if not noticia:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Noticia no encontrada"
+        )
+        
+    if not noticia.permite_comentarios:
+         raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Los comentarios están desactivados para esta noticia"
+        )
+
+    # Verificar membresía
+    miembro = db.query(MiembroClub).filter(
+        MiembroClub.usuario_id == current_user.id,
+        MiembroClub.club_id == club_id,
+        MiembroClub.estado == "activo"
+    ).first()
+    
+    if not miembro:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No eres miembro activo de este club"
+        )
+        
+    nuevo_comentario = Comentario(
+        contenido=comentario.contenido,
+        autor_id=current_user.id,
+        noticia_id=noticia_id
+    )
+    
+    db.add(nuevo_comentario)
+    db.commit()
+    db.refresh(nuevo_comentario)
+    
+    return nuevo_comentario
+
+
+@router.delete("/clubes/{club_id}/noticias/{noticia_id}/comentarios/{comentario_id}")
+async def eliminar_comentario(
+    club_id: int,
+    noticia_id: int,
+    comentario_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Eliminar un comentario (autor o administrador)"""
+    
+    comentario = db.query(Comentario).filter(
+        Comentario.id == comentario_id,
+        Comentario.noticia_id == noticia_id
+    ).first()
+    
+    if not comentario:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Comentario no encontrado"
+        )
+        
+    # Verificar permisos (Autor o Admin del club)
+    miembro = db.query(MiembroClub).filter(
+        MiembroClub.usuario_id == current_user.id,
+        MiembroClub.club_id == club_id
+    ).first()
+    
+    es_admin = miembro and miembro.rol in ["administrador", "propietario"]
+    es_autor = comentario.autor_id == current_user.id
+    
+    if not (es_admin or es_autor):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso para eliminar este comentario"
+        )
+        
+    db.delete(comentario)
+    db.commit()
+    
+    return {"message": "Comentario eliminado"}
     
     return {"message": "Noticia eliminada exitosamente"}

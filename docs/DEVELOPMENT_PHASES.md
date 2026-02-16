@@ -68,14 +68,14 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
 
 ### Phase 9: Interacción Social y Seguridad Extendida
 **Objetivo:** Fomentar la participación de los miembros y facilitar el acceso.
-- [ ] **Inscripción a Eventos (RSVP) - UI + Integración:**
-    - [ ] Frontend: botón "Inscribirme" / "Cancelar" y lectura de estado (usa endpoints `/api/clubes/{club_id}/eventos/{evento_id}/asistencia`).
-    - [ ] Frontend: mostrar asistentes (inscritos + lista_espera) donde aplique.
-    - [ ] UX: estados de carga/errores y manejo de 404 en "mi-asistencia".
-- [ ] **Comentarios:**
-    - [ ] Modelos de BD para Comentarios en Noticias.
-    - [ ] Endpoints CRUD para comentarios.
-    - [ ] UI: Componente de sección de comentarios.
+- [x] **Inscripción a Eventos (RSVP) - UI + Integración:**
+    - [x] Frontend: botón "Inscribirme" / "Cancelar" y lectura de estado (usa endpoints `/api/clubes/{club_id}/eventos/{evento_id}/asistencia`).
+    - [x] Frontend: mostrar asistentes (inscritos + lista_espera) donde aplique.
+    - [x] UX: estados de carga/errores y manejo de 404 en "mi-asistencia".
+- [x] **Comentarios:**
+    - [x] Modelos de BD para Comentarios en Noticias.
+    - [x] Endpoints CRUD para comentarios.
+    - [x] UI: Componente de sección de comentarios.
 
 - [ ] **Socios + Documentación Reglamentaria (MVP funcional pendiente):**
     - [ ] Backend: completar rutas de `socios` (actualmente stub) y modelo/servicios asociados.
@@ -84,9 +84,9 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
     - [ ] Backend: sección de ayuda (documentación/guías) más allá del placeholder.
     - [ ] Frontend: pantallas de socio (perfil ampliado, foto de carnet, documentación).
 
-- [ ] **Contraseña de Instalaciones:**
-    - [ ] Backend: `GET/POST` de contraseña + historial y auditoría (actualmente stub).
-    - [ ] Frontend: vista para socios activos + panel admin para cambios.
+- [x] **Contraseña de Instalaciones:**
+    - [x] Backend: `GET/POST` de contraseña + historial y auditoría.
+    - [x] Frontend: vista para socios activos + panel admin para cambios.
 
 - [ ] **Tienda + Ingresos (Afiliación):**
     - [ ] Backend: productos e ingresos (routes existen pero están stub).
@@ -115,8 +115,8 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
 
 ### Phase 11: Despliegue y DevOps
 **Objetivo:** Llevar la aplicación a un entorno productivo.
-- [ ] **Docker:** Dockerfile para Backend y Frontend.
-- [ ] **Orquestación:** Docker Compose para desarrollo local y producción.
+- [x] **Docker:** Dockerfile para Backend y Frontend.
+- [x] **Orquestación:** Docker Compose para desarrollo local y producción.
 - [ ] **Base de Datos:** Migración a PostgreSQL.
 - [ ] **CI/CD:** Pipelines de GitHub Actions (Lint, Test, Build).
 - [ ] **Hosting:** Despliegue en proveedor Cloud (AWS/Render/Railway).

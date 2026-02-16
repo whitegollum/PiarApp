@@ -71,9 +71,11 @@ frontend/
 ## Estado actual
 
 - Autenticacion completa (login/registro y sesiones).
-- Modulos de clubes, miembros y noticias visibles en UI.
+- Modulos de clubes, miembros, noticias y eventos visibles en UI.
 - Perfil con edicion de datos y cambio de contrasena.
 - Configuracion con preferencias basicas.
+- Vista de Código de Acceso a instalaciones (Socios).
+- Gestión de acceso a instalaciones (Admin del club).
 
 ## Proximos pasos
 

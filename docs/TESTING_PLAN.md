@@ -32,6 +32,8 @@
 | CU-026 | Listar eventos | 🟢 | OK |
 | CU-027 | Editar evento | 🟢 | OK |
 | CU-028 | Eliminar evento | 🟢 | OK |
+| CU-029 | Ver contraseña instalación (Miembro) | 🟢 | OK |
+| CU-030 | Actualizar contraseña instalación (Admin) | 🟢 | OK |
 
 
 ## 🔐 MÓDULO 1: AUTENTICACIÓN
@@ -433,7 +435,7 @@
     ```
 
 **Limpieza (sin endpoint de borrado):**
-- El miembro queda en estado `inactivo`. Si necesitas borrar el usuario, elimina en SQLite (`backend/piar.db`):
+- El miembro queda en estado `inactivo`. Si necesitas borrar el usuario, elimina en SQLite (`backend/data/piar.db`):
    ```sql
    DELETE FROM invitaciones WHERE email = 'test-remover@example.com';
    DELETE FROM miembro_club WHERE usuario_id = TEST_USER_ID;
@@ -1015,4 +1017,50 @@
 
 **Status:** 🟢 OK  
 **Resultado Actual:** ✅ Borrado de eventos funcionando correctamente
+
+---
+
+### CU-029: Ver Contraseña de Instalaciones (Miembro)
+**Módulo:** Instalaciones (ClubDetail)
+**Descripción:** Un miembro activo visualiza el código de acceso a las instalaciones
+**Precondiciones:**
+- Usuario logueado como miembro activo del club
+- Existe una contraseña de instalación activa
+
+**Pasos:**
+1. Navegar al detalle del club
+2. Buscar la sección "Código de Acceso"
+3. Verificar que se muestre el código
+
+**Resultado Esperado:**
+- ✅ Se muestra el código (ej: "1234")
+- ✅ Se muestra la descripción (ej: "Puerta Principal")
+- ✅ Se oculta si no es miembro activo (Error 403 manejado o sección no visible)
+
+**Status:** 🟢 OK
+**Resultado Actual:** ✅ Funcionalidad verificada. Miembros ven el código, no miembros no.
+
+---
+
+### CU-030: Actualizar Contraseña de Instalaciones (Admin)
+**Módulo:** Instalaciones (ClubEdit)
+**Descripción:** Un administrador cambia el código de acceso
+**Precondiciones:**
+- Usuario logueado como administrador del club
+
+**Pasos:**
+1. Navegar a "Editar Club"
+2. Ir a la sección "Gestión de Acceso a Instalaciones"
+3. Ingresar nuevo código y descripción
+4. Click en "Actualizar Contraseña"
+
+**Resultado Esperado:**
+- ✅ Se actualiza la contraseña actual
+- ✅ Se muestra mensaje de éxito
+- ✅ El historial refleja el cambio
+- ✅ La nueva contraseña es visible inmediatamente para los miembros
+
+**Status:** 🟢 OK
+**Resultado Actual:** ✅ Cambio de contraseña e historial funcionando correctamente.
+
 **Notas:**

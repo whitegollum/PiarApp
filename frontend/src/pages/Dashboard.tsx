@@ -28,7 +28,7 @@ interface InvitacionPendiente {
 }
 
 export default function Dashboard() {
-  const { usuario, logout, isLoading } = useAuth()
+  const { usuario, isLoading } = useAuth()
   const [clubs, setClubs] = useState<Club[]>([])
   const [invitaciones, setInvitaciones] = useState<InvitacionPendiente[]>([])
   const [cargandoClubs, setCargandoClubs] = useState(true)

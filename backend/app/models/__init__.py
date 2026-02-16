@@ -6,3 +6,5 @@ from app.models.invitacion import Invitacion
 from app.models.noticia import Noticia
 from app.models.evento import Evento
 from app.models.asistencia import AsistenciaEvento
+from app.models.comentario import Comentario
+from app.models.instalacion import ContrasenaInstalacion

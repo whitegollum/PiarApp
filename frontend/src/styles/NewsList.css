@@ -1,8 +1,11 @@
 .news-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
   margin-top: 1rem;
+  max-width: 800px; /* Optional: limit width for readability on wide screens */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .news-card {

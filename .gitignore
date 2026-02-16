@@ -7,4 +7,8 @@
 
 # Local DB
 *.db
-backend/piar.db
+backend/data/*.db
+
+# Build artifacts
+frontend/dist/
+

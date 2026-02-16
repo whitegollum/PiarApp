@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar'
 import '../styles/Forms.css'
 
 export default function CreateClub() {
-  const { usuario, logout } = useAuth()
+  const { usuario } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -52,7 +52,7 @@ export default function CreateClub() {
     setLoading(true)
 
     try {
-      const result = await APIService.post('/clubes', formData)
+      const result = await APIService.post<{ id: number }>('/clubes', formData)
       navigate(`/clubes/${result.id}`)
     } catch (error) {
       setError('Error al crear club: ' + (error as Error).message)
@@ -68,7 +68,7 @@ export default function CreateClub() {
 
   return (
     <div className="form-layout">
-      <Navbar usuario={usuario} onLogout={logout} />
+      <Navbar />
 
       <main className="form-main">
         <div className="form-container">

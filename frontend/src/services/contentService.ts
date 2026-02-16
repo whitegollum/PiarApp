@@ -1,5 +1,5 @@
 import { APIService } from './api';
-import { Noticia, NoticiaCreate, NoticiaUpdate, Evento, EventoCreate, EventoUpdate, Asistencia } from '../types/models';
+import { Noticia, NoticiaCreate, NoticiaUpdate, Evento, EventoCreate, EventoUpdate, Asistencia, Comentario } from '../types/models';
 
 export const NewsService = {
   getAll: async (clubId: number, skip: number = 0, limit: number = 10): Promise<Noticia[]> => {
@@ -20,6 +20,18 @@ export const NewsService = {
 
   delete: async (clubId: number, noticiaId: number): Promise<void> => {
     return APIService.delete(`/clubes/${clubId}/noticias/${noticiaId}`);
+  },
+
+  getComments: async (clubId: number, noticiaId: number): Promise<Comentario[]> => {
+    return APIService.get<Comentario[]>(`/clubes/${clubId}/noticias/${noticiaId}/comentarios`);
+  },
+
+  postComment: async (clubId: number, noticiaId: number, contenido: string): Promise<Comentario> => {
+    return APIService.post<Comentario>(`/clubes/${clubId}/noticias/${noticiaId}/comentarios`, { contenido });
+  },
+
+  deleteComment: async (clubId: number, noticiaId: number, comentarioId: number): Promise<void> => {
+    return APIService.delete(`/clubes/${clubId}/noticias/${noticiaId}/comentarios/${comentarioId}`);
   }
 };
 

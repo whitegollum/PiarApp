@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
 import APIService from '../services/api'
 import '../styles/Auth.css'
 
@@ -10,7 +9,6 @@ interface RegisterResponse {
     email: string
     nombre_completo: string
   }
-  mensaje: string
 }
 
 export default function Register() {
@@ -57,7 +55,7 @@ export default function Register() {
     setLoading(true)
 
     try {
-      const response = await APIService.post<RegisterResponse>('/auth/registro', {
+      await APIService.post<RegisterResponse>('/auth/registro', {
         nombre_completo: formData.nombre_completo,
         email: formData.email,
         password: formData.password

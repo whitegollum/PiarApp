@@ -16,10 +16,11 @@ Este documento centraliza el estado actual y las bases del proyecto. Sirve como 
 - Control de acceso por rol (RBAC) en API y UI.
 - Pagina de edicion de clubes.
 - Rol de superadministrador.
+- **Contraseña de Instalaciones:** Backend y Frontend (Vista Socios + Gestión Admin).
+- Sistema de comentarios en noticias.
 
 ### Pendiente inmediato
 - Integracion completa de Google OAuth en frontend.
-- Sistema de comentarios en noticias y eventos.
 - Testing automatizado (pytest, React tests, E2E).
 - Deployment (Docker, CI/CD).
 
@@ -44,10 +45,10 @@ Este documento centraliza el estado actual y las bases del proyecto. Sirve como 
 
 | Documento | Enfoque | Cuando usarlo |
 |---|---|---|
-| [README.md](README.md) | Resumen ejecutivo del producto | Para entender el proyecto en 2 minutos |
+| [README.md](../README.md) | Resumen ejecutivo del producto | Para entender el proyecto en 2 minutos |
 | [FUNCTIONAL_SPECS.md](FUNCTIONAL_SPECS.md) | Requisitos funcionales | Para implementar features y validar alcance |
 | [TECHNICAL_REQUIREMENTS.md](TECHNICAL_REQUIREMENTS.md) | Arquitectura y modelo de datos | Para cambios estructurales o integraciones |
-| [frontend/UX_STANDARDS.md](frontend/UX_STANDARDS.md) | Reglas UX/UI | Para crear o ajustar pantallas |
+| [frontend/UX_STANDARDS.md](../frontend/UX_STANDARDS.md) | Reglas UX/UI | Para crear o ajustar pantallas |
 | [TESTING_PLAN.md](TESTING_PLAN.md) | Plan de pruebas | Para verificar releases |
 | [DEVELOPMENT_PHASES.md](DEVELOPMENT_PHASES.md) | Roadmap historico | Para contexto de largo plazo |
 
@@ -57,7 +58,7 @@ Este documento centraliza el estado actual y las bases del proyecto. Sirve como 
 
 ### Antes de tocar codigo
 - Revisar alcance funcional en [FUNCTIONAL_SPECS.md](FUNCTIONAL_SPECS.md).
-- Confirmar reglas de UI en [frontend/UX_STANDARDS.md](frontend/UX_STANDARDS.md).
+- Confirmar reglas de UI en [frontend/UX_STANDARDS.md](../frontend/UX_STANDARDS.md).
 - Validar impactos de datos en [TECHNICAL_REQUIREMENTS.md](TECHNICAL_REQUIREMENTS.md).
 
 ### Durante el trabajo
@@ -75,12 +76,14 @@ Este documento centraliza el estado actual y las bases del proyecto. Sirve como 
 
 ```
 piarApp/
-├── README.md
-├── DOCUMENTATION.md
-├── FUNCTIONAL_SPECS.md
-├── TECHNICAL_REQUIREMENTS.md
-├── TESTING_PLAN.md
-├── DEVELOPMENT_PHASES.md
+├── docs/
+│   ├── DOCUMENTATION.md
+│   ├── FUNCTIONAL_SPECS.md
+│   ├── TECHNICAL_REQUIREMENTS.md
+│   ├── TESTING_PLAN.md
+│   └── DEVELOPMENT_PHASES.md
 ├── backend/
-└── frontend/
+│   └── data/
+├── frontend/
+└── README.md
 ```

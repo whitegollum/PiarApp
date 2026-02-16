@@ -11,6 +11,19 @@ Este documento describe detalladamente las funcionalidades del sistema
 
 **Descripción:** Sistema de autenticación con múltiples opciones.
 
+#### Flujo de Instalación Inicial
+**Objetivo:** Permitir la configuración del primer administrador del sistema de forma segura y sencilla.
+
+- **Check Automático:** Al cargar la aplicación, se verifica si existen usuarios en la base de datos.
+- **Redirección:** Si no hay usuarios, se redirige automáticamente a `/auth/setup-inicial`.
+- **Formulario de Setup:**
+  - Pide: Nombre Completo, Email, Contraseña (y confirmación).
+  - Crea el usuario con rol de **Super Administrador**.
+  - Inicia sesión automáticamente.
+- **Seguridad:**
+  - El endpoint de creación solo funciona si `Count(Usuarios) == 0`.
+  - Validación de contraseña segura.
+
 #### Métodos disponibles
 
 - Registro/Login tradicional (email + contraseña)

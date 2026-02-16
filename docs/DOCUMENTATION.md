@@ -18,6 +18,7 @@ Este documento centraliza el estado actual y las bases del proyecto. Sirve como 
 - Rol de superadministrador.
 - **Contraseña de Instalaciones:** Backend y Frontend (Vista Socios + Gestión Admin).
 - Sistema de comentarios en noticias.
+- **Setup Inicial:** Pantalla de bienvenida para crear el primer administrador si no existen usuarios.
 
 ### Pendiente inmediato
 - Integracion completa de Google OAuth en frontend.

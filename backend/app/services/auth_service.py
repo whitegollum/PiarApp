@@ -47,6 +47,32 @@ class AuthService:
         return usuario
     
     @staticmethod
+    def registrar_primer_admin(
+        db: Session,
+        usuario_create: UsuarioCreate
+    ) -> Optional[Usuario]:
+        """Registra el primer usuario como superadmin si no existen usuarios"""
+        # Verificar que no existen usuarios
+        count = db.query(Usuario).count()
+        if count > 0:
+            return None
+        
+        # Crear nuevo usuario admin
+        usuario = Usuario(
+            email=usuario_create.email,
+            nombre_completo=usuario_create.nombre_completo,
+            contraseña_hash=AuthUtils.hash_password(usuario_create.password),
+            email_verificado=True,
+            activo=True,
+            es_superadmin=True
+        )
+        
+        db.add(usuario)
+        db.commit()
+        db.refresh(usuario)
+        return usuario
+    
+    @staticmethod
     def registrar_desde_invitacion(
         db: Session,
         usuario_create: UsuarioCreateDesdeInvitacion

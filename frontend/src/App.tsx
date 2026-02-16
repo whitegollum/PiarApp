@@ -1,14 +1,16 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
+import APIService from './services/api'
+import { useEffect } from 'react'
 
 // Páginas de autenticación
 import Login from './pages/Login'
+import FirstAccess from './pages/FirstAccess'
 import Register from './pages/Register'
 import AcceptInvitation from './pages/AcceptInvitation'
 
-// Páginas protegidas
 import Dashboard from './pages/Dashboard'
 import ClubDetail from './pages/ClubDetail'
 import ClubEdit from './pages/ClubEdit'
@@ -26,15 +28,46 @@ import EditEvent from './pages/EditEvent'
 import AdminClubs from './pages/admin/AdminClubs'
 import ClubDocumentacion from './pages/ClubDocumentacion'
 
+// Componente para verificar configuración inicial
+const SetupCheck = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    const checkSetup = async () => {
+      // Evitar loop infinito si ya estamos en la página de setup
+      if (location.pathname === '/auth/setup-inicial') return
+
+      try {
+        const response = await APIService.get<{ setup_required: boolean }>('/auth/setup-required', { skipAuth: true })
+        
+        if (response && response.setup_required) {
+          console.log("Redirigiendo a configuración inicial...")
+          navigate('/auth/setup-inicial')
+        }
+      } catch (error) {
+        console.error('Error verificando estado de configuración:', error)
+      }
+    }
+
+    checkSetup()
+  }, [navigate, location.pathname])
+
+  return null
+}
+
 function App() {
+
   return (
     <AuthProvider>
       <Router>
+        <SetupCheck />
         <Routes>
           {/* Rutas de admin */}
           <Route path="/admin/clubes" element={<ProtectedRoute><AdminClubs /></ProtectedRoute>} />
 
           {/* Rutas públicas */}
+          <Route path="/auth/setup-inicial" element={<FirstAccess />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/registro" element={<Register />} />
           <Route path="/auth/aceptar-invitacion" element={<AcceptInvitation />} />

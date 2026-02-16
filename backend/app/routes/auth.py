@@ -334,3 +334,35 @@ async def cambiar_contraseña(
     db.commit()
     
     return {"message": "Contraseña actualizada exitosamente"}
+
+
+# ==================== CONFIGURACIÓN INICIAL ====================
+
+@router.get("/setup-required")
+def check_setup_required(db: Session = Depends(get_db)):
+    """Verifica si es necesario ejecutar la configuración inicial"""
+    count = db.query(Usuario).count()
+    return {"setup_required": count == 0}
+
+
+@router.post("/setup-admin", response_model=UsuarioResponse)
+def setup_first_admin(usuario: UsuarioCreate, db: Session = Depends(get_db)):
+    """Crea el primer administrador del sistema"""
+    # Verificación doble por seguridad
+    count = db.query(Usuario).count()
+    if count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail="El sistema ya ha sido inicializado"
+        )
+
+    nuevo_admin = AuthService.registrar_primer_admin(db, usuario)
+    
+    if not nuevo_admin:
+        raise HTTPException(
+            status_code=400,
+            detail="El sistema ya ha sido inicializado o el usuario no pudo ser creado"
+        )
+    
+    return nuevo_admin
+

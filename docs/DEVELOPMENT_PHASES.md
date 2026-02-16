@@ -10,6 +10,7 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
 | 1-6 | MVP Core (Auth, Clubes, Miembros) | ✅ Completado | Q4 2023 |
 | 7 | Perfiles y Gestión Avanzada | ✅ Completado | Q1 2024 |
 | 8 | Noticias y Eventos (CRUD + Asistencia API) | ✅ Completado | Feb 2026 |
+| 8.1 | Setup Inicial y Comentarios | ✅ Completado | Feb 2026 |
 | 9 | Módulos de Club + Social + OAuth UI | ⏳ Pendiente | TBD |
 | 10 | Testing y QA | ⏳ Pendiente | TBD |
 | 11 | Despliegue y DevOps | ⏳ Pendiente | TBD |
@@ -48,6 +49,16 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
     - `POST /api/clubes/{club_id}/eventos/{evento_id}/asistencia`
     - `GET /api/clubes/{club_id}/eventos/{evento_id}/asistencia`
     - `GET /api/clubes/{club_id}/eventos/{evento_id}/mi-asistencia`
+
+### Phase 8.1: Setup Inicial y Mejoras de UX
+**Objetivo:** Mejorar la experiencia de despliegue y la interacción social.
+- [x] **Setup Inicial:** Pantalla de bienvenida automática para crear el primer Super Administrador.
+    - Detección automática de base de datos vacía.
+    - Creación segura del primer usuario.
+- [x] **Comentarios:** Sistema de comentarios en noticias.
+    - Backend: Modelo `Comentario`, Endpoints CRUD.
+    - Frontend: Componente `CommentsSection`.
+- [x] **Contraseña de Instalaciones:** Gestión segura de acceso físico.
     - Incluye control de aforo y movimiento a `lista_espera` cuando aplica.
 - [x] **Seguridad:** Permisos diferenciados (Admin crea/edita, Miembros ven).
 

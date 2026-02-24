@@ -6,8 +6,10 @@ import os
 from app.config import settings
 from app.database.db import engine, Base, init_db
 
+from app.routes import admin
+
 # Importar modelos para que SQLAlchemy los registre
-from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria
+from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria, system_config
 
 # Crear tablas en la base de datos
 Base.metadata.create_all(bind=engine)
@@ -45,6 +47,7 @@ app.include_router(votaciones.router, prefix="/api/votaciones", tags=["Votacione
 app.include_router(instalaciones.router, prefix="/api", tags=["Instalaciones"]) # Updated prefix to match internal route definitions
 app.include_router(documentacion.router, prefix="/api/documentacion", tags=["Documentación"])
 app.include_router(productos.router, prefix="/api/productos", tags=["Productos"])
+app.include_router(admin.router, prefix="/api/admin", tags=["Administración"])
 
 
 @app.get("/")

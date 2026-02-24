@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useClubRole } from '../hooks/useClubRole'
 import APIService from '../services/api'
 import Navbar from '../components/Navbar'
 import FacilityManager from '../components/FacilityManager'
@@ -20,6 +21,8 @@ interface Club {
   email_contacto?: string
   telefono?: string
   sitio_web?: string
+  latitud?: number
+  longitud?: number
 }
 
 interface ClubUpdate {
@@ -31,6 +34,8 @@ interface ClubUpdate {
   color_acento?: string
   pais?: string
   region?: string
+  latitud?: number
+  longitud?: number
   email_contacto?: string
   telefono?: string
   sitio_web?: string
@@ -40,6 +45,8 @@ export default function ClubEdit() {
   const { usuario } = useAuth()
   const { clubId } = useParams<{ clubId: string }>()
   const navigate = useNavigate()
+  const { role, loading: roleLoading } = useClubRole(clubId)
+  
   const [club, setClub] = useState<Club | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -56,6 +63,8 @@ export default function ClubEdit() {
     color_acento: '#F77F00',
     pais: '',
     region: '',
+    latitud: undefined,
+    longitud: undefined,
     email_contacto: '',
     telefono: '',
     sitio_web: ''
@@ -64,6 +73,11 @@ export default function ClubEdit() {
   useEffect(() => {
     if (!usuario) {
       navigate('/auth/login')
+      return
+    }
+
+    if (!roleLoading && role !== 'administrador' && !usuario.es_superadmin) {
+      navigate(`/clubes/${clubId}`)
       return
     }
 
@@ -79,6 +93,8 @@ export default function ClubEdit() {
           color_primario: clubData.color_primario,
           color_secundario: clubData.color_secundario,
           color_acento: clubData.color_acento,
+          latitud: clubData.latitud,
+          longitud: clubData.longitud,
           pais: clubData.pais,
           region: clubData.region,
           email_contacto: clubData.email_contacto,
@@ -92,8 +108,10 @@ export default function ClubEdit() {
       }
     }
 
-    cargarClub()
-  }, [clubId, usuario, navigate])
+    if (!roleLoading) {
+      cargarClub()
+    }
+  }, [clubId, usuario, navigate, role, roleLoading])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -133,6 +151,8 @@ export default function ClubEdit() {
       if (formData.email_contacto !== club?.email_contacto) updateData.email_contacto = formData.email_contacto
       if (formData.telefono !== club?.telefono) updateData.telefono = formData.telefono
       if (formData.sitio_web !== club?.sitio_web) updateData.sitio_web = formData.sitio_web
+      if (formData.latitud !== club?.latitud) updateData.latitud = formData.latitud
+      if (formData.longitud !== club?.longitud) updateData.longitud = formData.longitud
 
       if (Object.keys(updateData).length === 0) {
         setError('No hay cambios para guardar')
@@ -396,6 +416,41 @@ export default function ClubEdit() {
                   className="form-input"
                   placeholder="https://www.club.com"
                 />
+              </div>
+            </section>
+
+            {/* Ubicación Geográfica */}
+            <section className="form-section">
+              <h2>Ubicación Geográfica</h2>
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="latitud">Latitud</label>
+                  <input
+                    type="number"
+                    step="any"
+                    id="latitud"
+                    name="latitud"
+                    value={formData.latitud || ''}
+                    onChange={(e) => setFormData({...formData, latitud: e.target.value ? parseFloat(e.target.value) : undefined})}
+                    className="form-input"
+                    placeholder="40.4168"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="longitud">Longitud</label>
+                  <input
+                    type="number"
+                    step="any"
+                    id="longitud"
+                    name="longitud"
+                    value={formData.longitud || ''}
+                    onChange={(e) => setFormData({...formData, longitud: e.target.value ? parseFloat(e.target.value) : undefined})}
+                    className="form-input"
+                    placeholder="-3.7038"
+                  />
+                </div>
               </div>
             </section>
 

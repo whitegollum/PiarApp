@@ -11,6 +11,7 @@ PiarApp es la aplicacion de la Asociacion Cerdos Voladores para gestionar su cam
 - Noticias del club con publicacion y edicion controlada por permisos.
 - Eventos con inscripcion (RSVP), aforo y gestion de asistentes.
 - Control de acceso por rol para proteger acciones sensibles.
+- Panel superadmin con configuracion SMTP y URL base para emails de invitacion.
 
 ## Documentacion
 - Vision, estado y bases del proyecto: [DOCUMENTATION.md](docs/DOCUMENTATION.md)

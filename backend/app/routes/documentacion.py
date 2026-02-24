@@ -170,3 +170,25 @@ async def descargar_carnet(
         media_type=doc.carnet_archivo_mime or "application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
+
+
+@router.get("/usuarios/{usuario_id}", response_model=DocumentacionResponse)
+async def obtener_documentacion_usuario(
+    usuario_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # TODO: Refinar permisos. Por ahora, permitimos acceso autenticado para MVP.
+    # Idealmente solo admin de club compartidos o superadmin.
+    
+    doc = db.query(DocumentacionReglamentaria).filter(
+        DocumentacionReglamentaria.usuario_id == usuario_id
+    ).first()
+
+    if not doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No hay documentacion registrada para este usuario"
+        )
+
+    return _to_response(doc)

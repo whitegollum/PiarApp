@@ -30,6 +30,8 @@ class ClubUpdate(BaseModel):
     color_acento: Optional[str] = None
     pais: Optional[str] = None
     region: Optional[str] = None
+    latitud: Optional[float] = None
+    longitud: Optional[float] = None
     email_contacto: Optional[str] = None
     telefono: Optional[str] = None
     sitio_web: Optional[str] = None
@@ -47,6 +49,8 @@ class ClubResponse(BaseModel):
     color_acento: Optional[str] = None
     pais: Optional[str] = None
     region: Optional[str] = None
+    latitud: Optional[float] = None
+    longitud: Optional[float] = None
     email_contacto: Optional[str] = None
     telefono: Optional[str] = None
     sitio_web: Optional[str] = None

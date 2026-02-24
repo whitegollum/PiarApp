@@ -17,6 +17,8 @@ Para mantener la consistencia, todas las páginas de creación y edición (formu
   - Etiquetas `<label>` claras con asterisco (*) para campos obligatorios.
   - Botones de acción en `<div className="form-actions">`.
 
+**Nota:** Las pantallas de administración que incluyan formularios (configuraciones globales, paneles superadmin) deben seguir exactamente esta estructura y reutilizar `Forms.css`.
+
 ## 2. Sistema de Estilos (CSS)
 
 La aplicación utiliza **CSS Modules/Global CSS** con variables CSS, no frameworks como Tailwind (aunque esté instalado, no se usa activamente en componentes nuevos para mantener consistencia con el legado).

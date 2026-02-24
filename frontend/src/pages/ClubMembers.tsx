@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import Navbar from '../components/Navbar'
 import APIService from '../services/api'
+import SocioService, { Socio } from '../services/socioService'
 import '../styles/ClubMembers.css'
 
 interface Miembro {
@@ -30,6 +31,7 @@ export default function ClubMembers() {
   const { usuario } = useAuth()
   const [club, setClub] = useState<Club | null>(null)
   const [miembros, setMiembros] = useState<Miembro[]>([])
+  const [socios, setSocios] = useState<Record<number, Socio>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -48,11 +50,19 @@ export default function ClubMembers() {
     try {
       setLoading(true)
       setError(null)
-      const [clubData, miembrosData] = await Promise.all([
+      const [clubData, miembrosData, sociosList] = await Promise.all([
         APIService.get<Club>(`/clubes/${clubId}`),
         APIService.get<Miembro[]>(`/clubes/${clubId}/miembros`),
+        SocioService.getSociosByClub(Number(clubId)).catch(() => []) as Promise<Socio[]>
       ])
+      
       setClub(clubData)
+      const sociosMap = sociosList.reduce<Record<number, Socio>>((acc, s) => {
+        acc[s.usuario_id] = s
+        return acc
+      }, {})
+      setSocios(sociosMap)
+
       setMiembros(miembrosData)
       setRoleSelections(
         miembrosData.reduce<Record<number, Miembro['rol']>>((acc, miembro) => {
@@ -219,11 +229,29 @@ export default function ClubMembers() {
                           {miembro.estado === 'pendiente' && '⏳ Pendiente'}
                           {miembro.estado === 'inactivo' && '× Inactivo'}
                         </span>
+                        {socios[miembro.usuario_id] ? (
+                           <span className="status-badge status-activo">Socio Activo</span>
+                        ) : (
+                           <span className="status-badge status-inactivo">No Socio</span>
+                        )}
                         {miembro.fecha_aprobacion && <small>Aprobado: {new Date(miembro.fecha_aprobacion).toLocaleDateString('es-ES')}</small>}
                       </div>
                     </div>
                     {isAdmin && (
                       <div className="member-actions">
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => {
+                              const socio = socios[miembro.usuario_id];
+                              if (socio) {
+                                  navigate(`/clubes/${clubId}/socios/${socio.id}/editar`);
+                              } else {
+                                  navigate(`/clubes/${clubId}/socios/crear?userId=${miembro.usuario_id}`);
+                              }
+                          }}
+                        >
+                          {socios[miembro.usuario_id] ? '📝 Ficha' : '➕ Ficha'}
+                        </button>
                         {miembro.usuario_id !== usuario?.id && (
                           <>
                             <select

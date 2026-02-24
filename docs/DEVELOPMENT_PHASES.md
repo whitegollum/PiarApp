@@ -88,11 +88,15 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
     - [x] Endpoints CRUD para comentarios.
     - [x] UI: Componente de sección de comentarios.
 
-- [ ] **Socios + Documentación Reglamentaria (MVP funcional pendiente):**
-    - [ ] Backend: completar rutas de `socios` (actualmente stub) y modelo/servicios asociados.
-    - [ ] Backend: endpoints de foto de carnet (subida/descarga) + validaciones.
-    - [ ] Backend: declaración de seguro RC y carnet de piloto (persistencia + auditoría).
-    - [ ] Backend: sección de ayuda (documentación/guías) más allá del placeholder.
+- [x] **Admin (Super) - Configuracion Email SMTP:**
+    - [x] Backend: endpoints para configurar y probar SMTP.
+    - [x] Frontend: panel de configuracion accesible solo a superadmins (incluye URL del frontend).
+
+- [ ] **Socios + Documentación Reglamentaria (MVP funcional en progreso):**
+    - [ ] Backend: completar rutas de `socios` (CRUD completo).
+    - [ ] Backend: endpoints de foto de carnet (LargeBinary).
+    - [ ] Backend: declaración de seguro RC y carnet de piloto (Endpoints listos, falta integración UI).
+    - [ ] Backend: sección de ayuda (documentación/guías).
     - [ ] Frontend: pantallas de socio (perfil ampliado, foto de carnet, documentación).
 
 - [x] **Contraseña de Instalaciones:**
@@ -148,6 +152,12 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
 - [ ] **Búsqueda avanzada/full-text (y opcional offline):** contenidos del club.
 - [ ] **Integración calendario del sistema (iCal/sync):** futuro.
 
+
+
+## Instrucciones para agentes
+- para cada funcionalidad implementada, debes de modificar la documentación correspondiente (README.md, TESTING_PLAN.md, UX_STANDARDS.md) para reflejar los cambios.
+- para cada endpoint nuevo o modificado, debes de actualizar la documentación de la API (puede ser un archivo aparte o sección en TECHNICAL_REQUIREMENTS.md).
+- debes crear un conjunto de pruebas unitarias y ejecutarlas contra las APIs desarrolladas, documentando los casos de prueba en TESTING_PLAN.md.
 
 ---
 **Documento Vivo** - Actualizar al completar cada hito.

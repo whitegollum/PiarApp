@@ -25,6 +25,8 @@ interface Club {
   email_contacto?: string
   telefono?: string
   sitio_web?: string
+  latitud?: number
+  longitud?: number
 }
 
 interface Miembro {
@@ -58,6 +60,7 @@ export default function ClubDetail() {
   const [noticias, setNoticias] = useState<Noticia[]>([])
   const [eventos, setEventos] = useState<Evento[]>([])
   const [instalacionPass, setInstalacionPass] = useState<ContrasenaData | null>(null)
+  const [weather, setWeather] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [tab, setTab] = useState<'resumen' | 'miembros' | 'noticias' | 'eventos'>('resumen')
@@ -92,7 +95,19 @@ export default function ClubDetail() {
         // (This might fail with 403 if not member or 404 if not set, so we handle it separately to not block page load)
         try {
           const passData = await APIService.get<ContrasenaData>(`/clubes/${id}/instalacion/password`)
-          setInstalacionPass(passData)
+          // Fetch weather if location available
+        if (clubData.latitud && clubData.longitud) {
+          try {
+            const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${clubData.latitud}&longitude=${clubData.longitud}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=Europe/Madrid`
+            const weatherRes = await fetch(weatherUrl)
+            const weatherJson = await weatherRes.json()
+            setWeather(weatherJson.current || weatherJson.current_weather)
+          } catch (e) {
+            console.error("Error fetching weather", e)
+          }
+        }
+        
+        setInstalacionPass(passData)
         } catch (err) {
           // Ignore 404 or 403 for this specific part
           console.log("No facility password available or access denied")
@@ -213,6 +228,47 @@ export default function ClubDetail() {
                     <div className="access-code-container">
                       <div className="access-code">{instalacionPass.codigo}</div>
                       <p className="access-desc">{instalacionPass.descripcion || 'Contraseña actual de las instalaciones'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Weather Widget */}
+                {weather && (
+                  <div className="weather-widget-container" style={{ 
+                    marginTop: '0', 
+                    marginBottom: '2rem',
+                    padding: '1.5rem', 
+                    background: 'linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%)', 
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+                  }}>
+                    <h3 style={{ marginTop: 0, color: '#006064', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      🌤️ Condiciones Actuales
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+                      <div className="weather-item">
+                        <span style={{ display: 'block', fontSize: '0.85rem', color: '#00838f', marginBottom: '0.25rem' }}>Viento</span>
+                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#006064' }}>
+                          {weather.wind_speed_10m ?? weather.windspeed} <span style={{ fontSize: '1rem' }}>km/h</span>
+                        </span>
+                      </div>
+                      
+                      {weather.wind_gusts_10m !== undefined && (
+                        <div className="weather-item">
+                          <span style={{ display: 'block', fontSize: '0.85rem', color: '#00838f', marginBottom: '0.25rem' }}>Ráfagas</span>
+                          <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#006064' }}>
+                            {weather.wind_gusts_10m} <span style={{ fontSize: '1rem' }}>km/h</span>
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="weather-item">
+                        <span style={{ display: 'block', fontSize: '0.85rem', color: '#00838f', marginBottom: '0.25rem' }}>Dirección</span>
+                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#006064', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ transform: `rotate(${weather.wind_direction_10m ?? weather.winddirection}deg)`, display: 'inline-block' }}>⬇</span>
+                          {weather.wind_direction_10m ?? weather.winddirection}°
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}

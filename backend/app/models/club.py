@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, JSON, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.db import Base
@@ -24,6 +24,8 @@ class Club(Base):
     # Información del club
     pais = Column(String(100), nullable=True)
     region = Column(String(100), nullable=True)
+    latitud = Column(Float, nullable=True)
+    longitud = Column(Float, nullable=True)
     email_contacto = Column(String(255), nullable=True)
     telefono = Column(String(20), nullable=True)
     sitio_web = Column(String(255), nullable=True)

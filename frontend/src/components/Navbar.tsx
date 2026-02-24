@@ -29,7 +29,7 @@ export default function Navbar() {
           <Link to="/" className="navbar-link">Dashboard</Link>
           <Link to="/clubes" className="navbar-link">Clubes</Link>
           {usuario?.es_superadmin && (
-            <Link to="/admin/clubes" className="navbar-link" style={{ color: '#ff4444' }}>Admin (Super)</Link>
+            <Link to="/admin" className="navbar-link" style={{ color: '#ff4444' }}>Admin (Super)</Link>
           )}
         </div>
 
@@ -69,11 +69,11 @@ export default function Navbar() {
                 </Link>
                 {usuario?.es_superadmin && (
                   <Link 
-                    to="/admin/clubes" 
+                    to="/admin" 
                     className="dropdown-item"
                     onClick={() => setMenuAbierto(false)}
                   >
-                    🏢 Admin Clubes
+                    🛡️ Admin (Super)
                   </Link>
                 )}
                 <hr />

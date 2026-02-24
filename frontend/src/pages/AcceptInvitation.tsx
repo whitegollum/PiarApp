@@ -20,19 +20,28 @@ export default function AcceptInvitation() {
   const token = searchParams.get('token')
 
   useEffect(() => {
-    // En producción, aquí validaríamos el token con el backend
-    // Por ahora solo simulamos que el token es válido
     if (!token) {
       setError('Token de invitación no válido')
       setLoading(false)
-    } else {
-      // Simulamos cargar datos de la invitación
-      setInvitationData({
-        club_name: 'Club de Aeromodelismo XYZ',
-        email: 'usuario@example.com'
-      })
-      setLoading(false)
+      return
     }
+
+    const loadInvitation = async () => {
+      try {
+        setLoading(true)
+        const data = await APIService.get<{ club_name: string; email: string }>(
+          `/auth/invitaciones/${token}`,
+          { skipAuth: true }
+        )
+        setInvitationData(data)
+      } catch (err: any) {
+        setError(err.message || 'El enlace de invitación no es válido o ha expirado.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadInvitation()
   }, [token])
 
   const handleAcceptInvitation = async (e: React.FormEvent) => {
@@ -110,6 +119,25 @@ export default function AcceptInvitation() {
           </div>
           <div className="auth-content">
             <p style={{ textAlign: 'center' }}>Cargando invitación...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!invitationData) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <h1>PiarAPP</h1>
+            <p>Gestión de Clubs de Aeromodelismo</p>
+          </div>
+          <div className="auth-content">
+            <h2>Invitación No Válida</h2>
+            <div className="alert alert-error">
+              {error || 'El enlace de invitación no es válido o ha expirado.'}
+            </div>
           </div>
         </div>
       </div>

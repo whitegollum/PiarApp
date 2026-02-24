@@ -34,6 +34,10 @@
 | CU-028 | Eliminar evento | 🟢 | OK |
 | CU-029 | Ver contraseña instalación (Miembro) | 🟢 | OK |
 | CU-030 | Actualizar contraseña instalación (Admin) | 🟢 | OK |
+| CU-031 | Configuracion SMTP (Superadmin) | 🟢 | OK |
+| CU-032 | Enviar email de prueba (Superadmin) | 🟢 | OK |
+| CU-033 | Bloqueo admin SMTP (No superadmin) | 🟢 | OK |
+| CU-034 | Landing invitacion muestra email | 🟢 | OK |
 
 
 ## 🔐 MÓDULO 1: AUTENTICACIÓN
@@ -1064,3 +1068,82 @@
 **Resultado Actual:** ✅ Cambio de contraseña e historial funcionando correctamente.
 
 **Notas:**
+
+---
+
+## 🛡️ MÓDULO 9: ADMINISTRACION (SUPERADMIN)
+
+### CU-031: Configuracion SMTP (Superadmin)
+**Módulo:** Administracion
+**Descripción:** Superadmin visualiza y guarda configuracion SMTP
+**Precondiciones:**
+- Usuario superadmin autenticado
+
+**Pasos:**
+1. Ir a `/admin/email`
+2. Completar servidor, puerto, remitente y URL del frontend
+3. Guardar cambios
+
+**Resultado Esperado:**
+- ✅ Se muestra la configuracion actual
+- ✅ Guardado exitoso
+- ✅ Mensaje de confirmacion
+- ✅ Los emails usan la URL configurada
+
+**Status:** 🟢 OK
+**Resultado Actual:** ✅ Configuracion guardada correctamente.
+
+---
+
+### CU-032: Enviar email de prueba (Superadmin)
+**Módulo:** Administracion
+**Descripción:** Superadmin envia email de prueba desde panel SMTP
+**Precondiciones:**
+- Usuario superadmin autenticado
+
+**Pasos:**
+1. Ir a `/admin/email`
+2. Ingresar email de destino
+3. Click en "Enviar prueba"
+
+**Resultado Esperado:**
+- ✅ Solicitud enviada
+- ✅ Mensaje de exito o aviso de configuracion no definida
+
+**Status:** 🟢 OK
+**Resultado Actual:** ✅ Endpoint responde con mensaje de exito.
+
+---
+
+### CU-033: Bloqueo admin SMTP (No superadmin)
+**Módulo:** Administracion
+**Descripción:** Usuario no superadmin no puede acceder a configuracion SMTP
+**Precondiciones:**
+- Usuario autenticado sin rol superadmin
+
+**Pasos:**
+1. Intentar acceder a `/api/admin/config/email`
+
+**Resultado Esperado:**
+- ✅ API retorna 403
+
+**Status:** 🟢 OK
+**Resultado Actual:** ✅ Acceso bloqueado correctamente.
+
+---
+
+### CU-034: Landing invitacion muestra email
+**Módulo:** Miembros / Invitaciones
+**Descripción:** La pantalla de invitacion muestra el email correcto del invitado
+**Precondiciones:**
+- Invitacion pendiente valida con token
+
+**Pasos:**
+1. Abrir enlace de invitacion (`/auth/aceptar-invitacion?token=...`)
+
+**Resultado Esperado:**
+- ✅ El email mostrado coincide con el email de la invitacion
+- ✅ El nombre del club se muestra correctamente
+
+**Status:** 🟢 OK
+**Resultado Actual:** ✅ Datos cargados desde el backend.

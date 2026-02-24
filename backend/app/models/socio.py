@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON, Text
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON, Text, LargeBinary
 from sqlalchemy.sql import func
 from app.database.db import Base
 
@@ -22,8 +22,9 @@ class Socio(Base):
     # Especialidades
     especialidades = Column(JSON, nullable=True)  # array de especialidades
     
-    # Foto de carnet
-    foto_carnet_path = Column(Text, nullable=True)
+    # Foto de carnet (almacenada como binario para MVP)
+    foto_carnet_blob = Column(LargeBinary, nullable=True)
+    foto_carnet_mime = Column(String(100), nullable=True)
     foto_carnet_fecha_subida = Column(DateTime, nullable=True)
     
     # Estado en el club

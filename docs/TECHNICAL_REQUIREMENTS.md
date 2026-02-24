@@ -85,6 +85,17 @@
   - Invitaciones: `INVITATION_TOKEN_EXPIRY_DAYS`
   - Frontend: `FRONTEND_URL`
   - Instancia global: `settings` (Pydantic Settings)
+  - Nota: estos valores se usan como fallback si no hay configuracion SMTP persistente en `system_config`.
+
+**Configuración SMTP Administrable (✅)**
+- Tabla: `system_config` (modelo `SystemConfig`)
+- Uso: configuración SMTP persistente definida por superadmin desde UI
+- Campo adicional: `frontend_url` para generar links correctos en emails
+- Endpoints:
+  - `GET /api/admin/config/email`
+  - `PUT /api/admin/config/email`
+  - `POST /api/admin/config/test-email`
+- El servicio de email utiliza estos valores si existen; en desarrollo hace log si no hay servidor configurado.
 
 **Schemas Pydantic (backend) (✅)**
 - `app/schemas/club.py`: `ClubCreate`, `ClubUpdate`, `ClubResponse`, `MiembroClubResponse`, `InvitacionClubResponse`
@@ -129,6 +140,8 @@ Protegidas (con login):
 - `/perfil`
 - `/configuracion`
 - `/admin/clubes`
+- `/admin`
+- `/admin/email`
 
 ## 3. Especificación de API (Implementada)
 
@@ -140,6 +153,7 @@ Protegidas (con login):
 - **POST /api/auth/refresh-token**: Generar nuevo access_token usando refresh_token (validez 7 días).
 - **POST /api/auth/logout**: Logout (en MVP se gestiona eliminando tokens en frontend).
 - **GET /api/auth/invitaciones/pendientes**: Ver invitaciones pendientes del usuario.
+- **GET /api/auth/invitaciones/{token}**: Obtener datos de invitación para pantalla pública.
 - **POST /api/auth/invitaciones/aceptar/{token}**: Aceptar invitación y crear membresía.
 - **GET /api/auth/usuarios/me**: Datos del usuario actual.
 - **PUT /api/auth/usuarios/me**: Actualizar perfil.
@@ -159,6 +173,11 @@ Protegidas (con login):
 - **GET /api/clubes/{club_id}/miembros**: Listar miembros activos.
 - **POST /api/clubes/{club_id}/miembros/invitar**: Invitar miembro por email (solo admin).
 - **DELETE /api/clubes/{club_id}/miembros/{usuario_id}**: Remover miembro (solo admin).
+
+### Administracion (Superadmin)
+- **GET /api/admin/config/email**: Obtener configuracion SMTP.
+- **PUT /api/admin/config/email**: Actualizar configuracion SMTP.
+- **POST /api/admin/config/test-email**: Enviar email de prueba.
 
 ### Noticias y Eventos
 - **Noticias (`app/routes/noticias.py`)**: CRUD completo. Admin crea/edita/borra. Miembros leen.
@@ -406,6 +425,8 @@ CLUBES
 ├── color_acento (HEX)
 ├── pais
 ├── region
+├── latitud (float, nullable)
+├── longitud (float, nullable)
 ├── email_contacto
 ├── teléfono
 ├── sitio_web
@@ -816,12 +837,12 @@ DOCUMENTOS_JUNTA
 - **[IMPLEMENTADO]** `PUT /api/clubes/{club_id}/miembros/{usuario_id}/rol` - Cambiar rol de miembro
 
 ### Socios
-- **[PARCIAL]** `GET /api/socios/` - Listar socios (stub)
-- **[PARCIAL]** `POST /api/socios/registro` - Registrar socio (stub)
-- **[PLANIFICADO]** `GET /api/socios/{id}` - Obtener perfil de socio
-- **[PLANIFICADO]** `PUT /api/socios/{id}` - Actualizar perfil de socio
-- **[PLANIFICADO]** `POST /api/socios/{id}/foto-carnet` - Subir foto de carnet
-- **[PLANIFICADO]** `GET /api/socios/{id}/foto-carnet` - Descargar foto de carnet
+- **[IMPLEMENTADO]** `GET /api/socios/?club_id={id}` - Listar socios de un club
+- **[IMPLEMENTADO]** `POST /api/socios/` - Registrar nuevo socio
+- **[IMPLEMENTADO]** `GET /api/socios/{id}` - Obtener perfil de socio
+- **[IMPLEMENTADO]** `PUT /api/socios/{id}` - Actualizar perfil de socio
+- **[IMPLEMENTADO]** `POST /api/socios/{id}/foto` - Subir foto de carnet
+- **[IMPLEMENTADO]** `GET /api/socios/{id}/foto` - Descargar foto de carnet
 
 ### Documentación / Seguro y Carnet
 - **[IMPLEMENTADO]** `GET /api/documentacion/ayuda` - Ver guías

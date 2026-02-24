@@ -3,14 +3,16 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.database.db import get_db
 from app.models.usuario import Usuario
+from app.models.invitacion import Invitacion
+from app.models.club import Club
 from app.schemas.auth import (
     LoginRequest, UsuarioCreate, UsuarioCreateDesdeInvitacion,
     TokenResponse, UsuarioResponse, GoogleLoginRequest,
-    InvitacionResponse, RefreshTokenRequest, UsuarioUpdate
+    InvitacionResponse, RefreshTokenRequest, UsuarioUpdate, InvitacionPublicaResponse
 )
 from app.services.auth_service import AuthService
 from app.services.google_oauth_service import GoogleOAuthService
@@ -208,6 +210,35 @@ async def ver_invitaciones_pendientes(
     )
     
     return [InvitacionResponse.model_validate(inv) for inv in invitaciones]
+
+
+@router.get("/invitaciones/{token}", response_model=InvitacionPublicaResponse)
+async def obtener_invitacion_por_token(
+    token: str,
+    db: Session = Depends(get_db)
+):
+    """Obtener datos de invitación por token (publico)"""
+    invitacion = db.query(Invitacion).filter(
+        Invitacion.token == token,
+        Invitacion.estado == "pendiente",
+        Invitacion.fecha_vencimiento > datetime.now(timezone.utc)
+    ).first()
+
+    if not invitacion:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invitación inválida o expirada"
+        )
+
+    club = db.query(Club).filter(Club.id == invitacion.club_id).first()
+    club_name = club.nombre if club else "Club"
+
+    return InvitacionPublicaResponse(
+        email=invitacion.email,
+        club_id=invitacion.club_id,
+        club_name=club_name,
+        fecha_vencimiento=invitacion.fecha_vencimiento
+    )
 
 
 @router.post("/invitaciones/aceptar/{token}", response_model=dict)

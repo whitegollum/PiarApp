@@ -118,6 +118,14 @@ class InvitacionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class InvitacionPublicaResponse(BaseModel):
+    """Response de invitación publica para pantalla de aceptacion"""
+    email: EmailStr
+    club_id: int
+    club_name: str
+    fecha_vencimiento: datetime
+
+
 class MiembroClubResponse(BaseModel):
     """Response de MiembroClub"""
     club: ClubBasicoResponse

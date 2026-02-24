@@ -99,6 +99,7 @@ Este documento describe detalladamente las funcionalidades del sistema
 
 - Logo/Imagen del club
 - Colores principales (navbar, botones, temas)
+- Ubicación Geográfica (Latitud/Longitud) para clima
 - Nombre personalizado
 - Descripción y bienvenida
 - Datos de contacto (email, teléfono)

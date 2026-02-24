@@ -16,6 +16,7 @@ import ClubDetail from './pages/ClubDetail'
 import ClubEdit from './pages/ClubEdit'
 import CreateClub from './pages/CreateClub'
 import ClubMembers from './pages/ClubMembers'
+import SocioForm from './pages/SocioForm'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 
@@ -26,6 +27,8 @@ import EditNews from './pages/EditNews'
 import CreateEvent from './pages/CreateEvent'
 import EditEvent from './pages/EditEvent'
 import AdminClubs from './pages/admin/AdminClubs'
+import AdminEmailConfig from './pages/admin/AdminEmailConfig'
+import AdminDashboard from './pages/admin/AdminDashboard'
 import ClubDocumentacion from './pages/ClubDocumentacion'
 
 // Componente para verificar configuración inicial
@@ -64,7 +67,9 @@ function App() {
         <SetupCheck />
         <Routes>
           {/* Rutas de admin */}
+          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/clubes" element={<ProtectedRoute><AdminClubs /></ProtectedRoute>} />
+          <Route path="/admin/email" element={<ProtectedRoute><AdminEmailConfig /></ProtectedRoute>} />
 
           {/* Rutas públicas */}
           <Route path="/auth/setup-inicial" element={<FirstAccess />} />
@@ -114,6 +119,23 @@ function App() {
             element={
               <ProtectedRoute>
                 <ClubMembers />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/clubes/:clubId/socios/crear"
+            element={
+              <ProtectedRoute>
+                <SocioForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clubes/:clubId/socios/:socioId/editar"
+            element={
+              <ProtectedRoute>
+                <SocioForm />
               </ProtectedRoute>
             }
           />

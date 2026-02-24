@@ -175,7 +175,8 @@ async def actualizar_club(
     allowed_fields = {
         "nombre", "descripcion", "logo_url", 
         "color_primario", "color_secundario", "color_acento",
-        "pais", "region", "email_contacto", "telefono", "sitio_web"
+        "pais", "region", "email_contacto", "telefono", "sitio_web",
+        "latitud", "longitud"
     }
     
     for field, value in update_data.items():

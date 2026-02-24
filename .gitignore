@@ -9,6 +9,11 @@
 *.db
 backend/data/*.db
 
+# Environment files
+.env
+backend/.env
+frontend/.env
+
 # Build artifacts
 frontend/dist/
 

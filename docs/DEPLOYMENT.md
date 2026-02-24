@@ -27,7 +27,7 @@ La aplicación se compone de dos servicios principales orquestados:
 1.  **Construir las imágenes e iniciar los contenedores:**
 
     ```bash
-    docker-compose up --build -d
+    docker compose up --build -d
     ```
 
     Esto descargará las dependencias, compilará el frontend y levantará ambos servicios.
@@ -40,13 +40,13 @@ La aplicación se compone de dos servicios principales orquestados:
 3.  **Ver logs:**
 
     ```bash
-    docker-compose logs -f
+    docker compose logs -f
     ```
 
 4.  **Detener los servicios:**
 
     ```bash
-    docker-compose down
+    docker compose down
     ```
 
 ## Consideraciones de Producción

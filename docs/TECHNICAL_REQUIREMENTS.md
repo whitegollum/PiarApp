@@ -149,7 +149,8 @@ Protegidas (con login):
 - **POST /api/auth/login**: Login con email/contraseña. Retorna access_token y refresh_token.
 - **POST /api/auth/registro**: Registro de nuevo usuario. Valida email único.
 - **POST /api/auth/registrarse-desde-invitacion**: Registro validando token de invitación y agregando al club.
-- **POST /api/auth/google-login**: Login con Google OAuth.
+- **POST /api/auth/google-login**: Login con Google OAuth (token de acceso a userinfo).
+- **POST /api/auth/google-oauth**: Login con Google OAuth usando code flow (backend intercambia `code` por tokens).
 - **POST /api/auth/refresh-token**: Generar nuevo access_token usando refresh_token (validez 7 días).
 - **POST /api/auth/logout**: Logout (en MVP se gestiona eliminando tokens en frontend).
 - **GET /api/auth/invitaciones/pendientes**: Ver invitaciones pendientes del usuario.
@@ -164,6 +165,8 @@ Protegidas (con login):
 - **Campo de password normalizado**: los requests de auth usan `password` (no `contraseña`) en JSON.
   - Se acepta vía Pydantic con `populate_by_name=True` para evitar inconsistencias de naming.
 - **Cliente HTTP centralizado en frontend**: `APIService` encapsula `Authorization: Bearer <access_token>`, `skipAuth` para endpoints públicos y auto-refresh en 401.
+- **OAuth Code Flow**: requiere `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_REDIRECT_URI` configurados en backend.
+- **Frontend OAuth**: requiere `VITE_GOOGLE_CLIENT_ID` y `VITE_GOOGLE_REDIRECT_URI` para iniciar el flujo desde Login/Registro.
 
 ### Gestión de Clubes (`app/routes/clubes.py`)
 - **POST /api/clubes**: Crear nuevo club (usuario se hace admin).

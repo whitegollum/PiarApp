@@ -21,9 +21,9 @@ Este documento centraliza el estado actual y las bases del proyecto. Sirve como 
 - **Setup Inicial:** Pantalla de bienvenida para crear el primer administrador si no existen usuarios.
 - **Configuracion SMTP:** Panel superadmin para configurar envio de emails, invitaciones y URL del frontend.
 - **Invitaciones:** Pantalla publica carga email y club desde token de invitacion.
+- **Google OAuth:** Login/registro con Google (backend + frontend).
 
 ### Pendiente inmediato
-- Integracion completa de Google OAuth en frontend.
 - Testing automatizado (pytest, React tests, E2E).
 - Deployment (Docker, CI/CD).
 

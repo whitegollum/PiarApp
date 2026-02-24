@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import APIService from '../services/api'
+import { startGoogleOAuth } from '../services/googleOAuth'
 import '../styles/Auth.css'
 
 interface RegisterResponse {
@@ -75,8 +76,12 @@ export default function Register() {
   }
 
   const handleGoogleSignup = () => {
-    // Implementar Google OAuth flow
-    console.log('Google signup - implementar')
+    try {
+      startGoogleOAuth()
+    } catch (err) {
+      const error = err as any
+      setError(error.message || 'No se pudo iniciar sesión con Google')
+    }
   }
 
   return (
@@ -195,7 +200,7 @@ export default function Register() {
             onClick={handleGoogleSignup}
             disabled={loading}
           >
-            🔵 Google
+            🔵 Continuar con Google
           </button>
 
           <div className="auth-footer">

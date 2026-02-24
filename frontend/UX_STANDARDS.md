@@ -50,6 +50,12 @@ La aplicación utiliza **CSS Modules/Global CSS** con variables CSS, no framewor
   - Redirigir al listado o detalle tras éxito.
   - Botón "Cancelar" siempre navega atrás (`navigate(-1)`).
 
+  ## 3.1. Botones de OAuth Social
+
+  - Ubicar el botón "Continuar con Google" debajo del formulario principal con separación visual.
+  - Mantener el ancho completo del botón para consistencia con `.btn-primary`.
+  - Usar texto claro y consistente: "Continuar con Google" (no "Login with Google").
+
 ## 4. Listados y Tarjetas
 
 Para mostrar colecciones de datos (Noticias, Eventos):

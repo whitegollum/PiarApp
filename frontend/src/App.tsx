@@ -10,6 +10,7 @@ import Login from './pages/Login'
 import FirstAccess from './pages/FirstAccess'
 import Register from './pages/Register'
 import AcceptInvitation from './pages/AcceptInvitation'
+import GoogleOAuthCallback from './pages/GoogleOAuthCallback'
 
 import Dashboard from './pages/Dashboard'
 import ClubDetail from './pages/ClubDetail'
@@ -75,6 +76,7 @@ function App() {
           <Route path="/auth/setup-inicial" element={<FirstAccess />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/registro" element={<Register />} />
+          <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
           <Route path="/auth/aceptar-invitacion" element={<AcceptInvitation />} />
 
           {/* Rutas protegidas */}

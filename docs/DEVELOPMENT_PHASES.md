@@ -108,7 +108,7 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
     - [ ] Frontend: catálogo básico de productos + panel admin de ingresos.
 
 - [ ] **Google OAuth (UI + Producción):**
-    - [ ] Frontend: implementar flujo en `Login.tsx` y `Register.tsx` (ahora es placeholder).
+    - [x] Frontend: implementar flujo en `Login.tsx` y `Register.tsx`.
     - [ ] Configuración de credenciales de producción + validaciones de vinculación/desvinculación.
 
 - [ ] **Personalización de club (UI + API):**

@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from app.schemas.auth import UsuarioResponse
 
@@ -17,8 +17,7 @@ class ContrasenaResponse(ContrasenaBase):
     creado_por: UsuarioResponse
     activa: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ContrasenaHistory(BaseModel):
     """Schema para listar el historial de contraseñas (solo admin)"""
@@ -27,6 +26,5 @@ class ContrasenaHistory(BaseModel):
     fecha_creacion: datetime
     creado_por: UsuarioResponse
     activa: bool
-    
-    class Config:
-        from_attributes = True
+
+    model_config = ConfigDict(from_attributes=True)

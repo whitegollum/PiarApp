@@ -38,6 +38,8 @@
 | CU-032 | Enviar email de prueba (Superadmin) | 🟢 | OK |
 | CU-033 | Bloqueo admin SMTP (No superadmin) | 🟢 | OK |
 | CU-034 | Landing invitacion muestra email | 🟢 | OK |
+| CU-035 | Google OAuth code flow (Backend) | 🟢 | OK |
+| CU-036 | Google OAuth login (Frontend) | ⏳ | Pendiente |
 
 
 ## 🔐 MÓDULO 1: AUTENTICACIÓN
@@ -887,6 +889,50 @@
 **Status:** ⏳ Pendiente  
 **Resultado Actual:** [Usuario reporta aquí]
 **Notas:** 
+
+---
+
+### CU-035: Google OAuth code flow (Backend)
+**Módulo:** Autenticación  
+**Descripción:** Backend intercambia `code` por tokens de Google y crea/login de usuario  
+**Precondiciones:**
+- Backend corriendo
+- Variables `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` configuradas
+
+**Pasos (test automatizado):**
+1. Ejecutar pruebas backend (`pytest`) para validar `/api/auth/google-oauth`.
+2. El test simula intercambio de code y obtención de perfil.
+
+**Resultado Esperado:**
+- ✅ Responde 200 con `usuario` y `tokens`
+- ✅ Crea o vincula usuario por email
+
+**Status:** 🟢 OK  
+**Resultado Actual:** ✅ Test automatizado agregado y validado
+
+---
+
+### CU-036: Google OAuth login (Frontend)
+**Módulo:** Autenticación  
+**Descripción:** Usuario inicia sesión con Google desde Login/Registro  
+**Precondiciones:**
+- Frontend corriendo
+- Backend con `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
+- Frontend con `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_REDIRECT_URI`
+
+**Pasos:**
+1. Ir a `/auth/login`.
+2. Click en "Continuar con Google".
+3. Completar autenticación en Google.
+4. Ser redirigido a `/auth/google/callback` y luego al dashboard.
+
+**Resultado Esperado:**
+- ✅ Redirige correctamente a Google.
+- ✅ Backend intercambia `code` y crea usuario si no existe.
+- ✅ Usuario termina autenticado en el dashboard.
+
+**Status:** ⏳ Pendiente  
+**Resultado Actual:** [Por validar]
 
 ---
 

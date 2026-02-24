@@ -5,13 +5,14 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime, timezone
 
+from app.config import settings
 from app.database.db import get_db
 from app.models.usuario import Usuario
 from app.models.invitacion import Invitacion
 from app.models.club import Club
 from app.schemas.auth import (
     LoginRequest, UsuarioCreate, UsuarioCreateDesdeInvitacion,
-    TokenResponse, UsuarioResponse, GoogleLoginRequest,
+    TokenResponse, UsuarioResponse, GoogleLoginRequest, GoogleOAuthCodeRequest,
     InvitacionResponse, RefreshTokenRequest, UsuarioUpdate, InvitacionPublicaResponse
 )
 from app.services.auth_service import AuthService
@@ -163,6 +164,64 @@ async def google_login(
     # Crear tokens
     tokens = AuthService.crear_tokens(usuario)
     
+    return {
+        "usuario": UsuarioResponse.model_validate(usuario),
+        "tokens": tokens
+    }
+
+
+@router.post("/google-oauth", response_model=dict)
+async def google_oauth_login(
+    oauth_request: GoogleOAuthCodeRequest,
+    db: Session = Depends(get_db)
+):
+    """Login con Google OAuth (code flow)"""
+
+    if not settings.google_client_id or not settings.google_client_secret:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google OAuth no está configurado"
+        )
+
+    token_data = await GoogleOAuthService.intercambiar_codigo_por_tokens(
+        oauth_request.code,
+        oauth_request.redirect_uri
+    )
+
+    if not token_data or not token_data.get("access_token"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Código de Google inválido"
+        )
+
+    user_info = await GoogleOAuthService.obtener_userinfo(
+        token_data["access_token"]
+    )
+
+    if not user_info:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No se pudo obtener el perfil de Google"
+        )
+
+    usuario = GoogleOAuthService.obtener_o_crear_usuario(db, user_info)
+
+    if not usuario:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Error al crear usuario desde Google"
+        )
+
+    GoogleOAuthService.guardar_tokens_google(
+        db,
+        usuario.id,
+        token_data["access_token"],
+        token_data.get("refresh_token"),
+        token_data.get("expires_in", 3600)
+    )
+
+    tokens = AuthService.crear_tokens(usuario)
+
     return {
         "usuario": UsuarioResponse.model_validate(usuario),
         "tokens": tokens

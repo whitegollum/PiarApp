@@ -12,7 +12,40 @@ from app.models.token_google import TokenGoogle
 class GoogleOAuthService:
     """Servicio para autenticación con Google OAuth 2.0"""
     
+    GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
     GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
+
+    @staticmethod
+    async def intercambiar_codigo_por_tokens(
+        code: str,
+        redirect_uri: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Intercambia el code de OAuth por tokens de Google"""
+        if not settings.google_client_id or not settings.google_client_secret:
+            return None
+
+        payload = {
+            "client_id": settings.google_client_id,
+            "client_secret": settings.google_client_secret,
+            "code": code,
+            "grant_type": "authorization_code",
+            "redirect_uri": redirect_uri or settings.google_redirect_uri,
+        }
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    GoogleOAuthService.GOOGLE_TOKEN_URL,
+                    data=payload,
+                    timeout=10.0
+                )
+
+                if response.status_code != 200:
+                    return None
+
+                return response.json()
+        except Exception:
+            return None
     
     @staticmethod
     async def validar_google_token(google_token: str) -> Optional[Dict[str, Any]]:
@@ -32,6 +65,11 @@ class GoogleOAuthService:
                 return user_info
         except Exception:
             return None
+
+    @staticmethod
+    async def obtener_userinfo(access_token: str) -> Optional[Dict[str, Any]]:
+        """Obtiene el perfil del usuario a partir del access token"""
+        return await GoogleOAuthService.validar_google_token(access_token)
     
     @staticmethod
     def obtener_o_crear_usuario(

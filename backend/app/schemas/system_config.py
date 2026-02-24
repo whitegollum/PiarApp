@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 from typing import Optional
 
 class EmailConfigBase(BaseModel):
@@ -15,8 +15,7 @@ class EmailConfigUpdate(EmailConfigBase):
     pass
 
 class EmailConfigResponse(EmailConfigBase):
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TestEmailRequest(BaseModel):
     to_email: EmailStr

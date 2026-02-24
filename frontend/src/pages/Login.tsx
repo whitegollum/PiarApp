@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { startGoogleOAuth } from '../services/googleOAuth'
 import APIService from '../services/api'
 import '../styles/Auth.css'
 
@@ -51,8 +52,12 @@ export default function Login() {
   }
 
   const handleGoogleLogin = () => {
-    // Implementar Google OAuth flow
-    console.log('Google login - implementar')
+    try {
+      startGoogleOAuth()
+    } catch (err) {
+      const error = err as any
+      setError(error.message || 'No se pudo iniciar sesión con Google')
+    }
   }
 
   return (
@@ -128,7 +133,7 @@ export default function Login() {
             onClick={handleGoogleLogin}
             disabled={loading}
           >
-            🔵 Google
+            🔵 Continuar con Google
           </button>
 
           <div className="auth-footer">

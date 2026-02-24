@@ -28,9 +28,6 @@ export default function Navbar() {
         <div className="navbar-menu">
           <Link to="/" className="navbar-link">Dashboard</Link>
           <Link to="/clubes" className="navbar-link">Clubes</Link>
-          {usuario?.es_superadmin && (
-            <Link to="/admin" className="navbar-link" style={{ color: '#ff4444' }}>Admin (Super)</Link>
-          )}
         </div>
 
         {/* Usuario y menú */}

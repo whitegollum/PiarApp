@@ -83,6 +83,12 @@ class GoogleLoginRequest(BaseModel):
     google_id: Optional[str] = None
 
 
+class GoogleOAuthCodeRequest(BaseModel):
+    """Request para Google OAuth code flow"""
+    code: str
+    redirect_uri: Optional[str] = None
+
+
 class InvitacionAceptarRequest(BaseModel):
     """Request para aceptar invitación a club"""
     pass  # El token viene en la URL

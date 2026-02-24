@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import SocioService, { Socio, SocioCreate, SocioUpdate } from '../services/socioService';
+import SocioService, { Socio, SocioCreate } from '../services/socioService';
 import Navbar from '../components/Navbar';
 import '../styles/Forms.css';
 

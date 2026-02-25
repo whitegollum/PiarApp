@@ -13,8 +13,27 @@ RUN npm install
 COPY . .
 
 # Construir la aplicación para producción
-# Establecer variable de entorno para la construcción (para que use paths relativos o proxy)
-ENV VITE_API_URL=/api
+# Variables en build time para Vite
+ARG VITE_API_URL
+ARG VITE_APP_NAME
+ARG VITE_APP_VERSION
+ARG VITE_GOOGLE_CLIENT_ID
+ARG VITE_GOOGLE_REDIRECT_URI
+
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_APP_NAME=${VITE_APP_NAME}
+ENV VITE_APP_VERSION=${VITE_APP_VERSION}
+ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+ENV VITE_GOOGLE_REDIRECT_URI=${VITE_GOOGLE_REDIRECT_URI}
+
+RUN printf "VITE_API_URL=%s\nVITE_APP_NAME=%s\nVITE_APP_VERSION=%s\nVITE_GOOGLE_CLIENT_ID=%s\nVITE_GOOGLE_REDIRECT_URI=%s\n" \
+	"$VITE_API_URL" \
+	"$VITE_APP_NAME" \
+	"$VITE_APP_VERSION" \
+	"$VITE_GOOGLE_CLIENT_ID" \
+	"$VITE_GOOGLE_REDIRECT_URI" \
+	> .env.production
+
 RUN npm run build
 
 # Stage 2: Serve the application with Nginx

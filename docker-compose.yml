@@ -6,8 +6,20 @@ services:
       dockerfile: Dockerfile
     container_name: piar_backend
     environment:
-      - DATABASE_URL=sqlite:///./data/piar.db
-      - SECRET_KEY=change_this_in_production_secret_key
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - SMTP_SERVER=${SMTP_SERVER}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_SENDER=${SMTP_SENDER}
+      - SMTP_SENDER_NAME=${SMTP_SENDER_NAME}
+      - SMTP_USE_TLS=${SMTP_USE_TLS}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - CORS_ORIGINS=${CORS_ORIGINS}
     volumes:
       - piar_data:/app/data
     ports:
@@ -19,9 +31,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+        VITE_APP_NAME: PiarAPP
+        VITE_APP_VERSION: 0.1.0
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
+        VITE_GOOGLE_REDIRECT_URI: ${VITE_GOOGLE_REDIRECT_URI}
     container_name: piar_frontend
-    environment:
-      - VITE_API_URL=/api
     ports:
       - "8587:80"
     depends_on:

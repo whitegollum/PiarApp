@@ -35,6 +35,7 @@ class ClubUpdate(BaseModel):
     email_contacto: Optional[str] = None
     telefono: Optional[str] = None
     sitio_web: Optional[str] = None
+    ayuda_documentacion_md: Optional[str] = None
 
 
 class ClubResponse(BaseModel):
@@ -54,6 +55,7 @@ class ClubResponse(BaseModel):
     email_contacto: Optional[str] = None
     telefono: Optional[str] = None
     sitio_web: Optional[str] = None
+    ayuda_documentacion_md: Optional[str] = None
     fecha_creacion: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -68,6 +70,11 @@ class MiembroClubCreate(BaseModel):
 class MiembroRolUpdate(BaseModel):
     """Actualizar rol de miembro"""
     rol: str = Field(..., min_length=3, max_length=50)
+
+
+class MiembroEstadoUpdate(BaseModel):
+    """Actualizar estado de miembro"""
+    estado: str = Field(..., min_length=3, max_length=20)
 
 
 class MiembroClubResponse(BaseModel):

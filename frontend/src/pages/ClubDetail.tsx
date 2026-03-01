@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import APIService from '../services/api'
+import SocioService, { Socio } from '../services/socioService'
 import { NewsService, EventService } from '../services/contentService'
 import { Noticia, Evento } from '../types/models'
 import { useClubRole } from '../hooks/useClubRole'
 import Navbar from '../components/Navbar'
 import NewsList from '../components/NewsList'
 import EventList from '../components/EventList'
+import OpenClawChat from '../components/OpenClawChat'
 import '../styles/ClubDetail.css'
 
 interface Club {
@@ -57,6 +59,8 @@ export default function ClubDetail() {
   
   const [club, setClub] = useState<Club | null>(null)
   const [miembros, setMiembros] = useState<Miembro[]>([])
+  const [socios, setSocios] = useState<Record<number, Socio>>({})
+  const [socioPhotoUrls, setSocioPhotoUrls] = useState<Record<number, string>>({})
   const [noticias, setNoticias] = useState<Noticia[]>([])
   const [eventos, setEventos] = useState<Evento[]>([])
   const [instalacionPass, setInstalacionPass] = useState<ContrasenaData | null>(null)
@@ -79,15 +83,21 @@ export default function ClubDetail() {
         const id = parseInt(clubId)
         
         // Cargar todo en paralelo
-        const [clubData, miembrosData, noticiasData, eventosData] = await Promise.all([
+        const [clubData, miembrosData, sociosList, noticiasData, eventosData] = await Promise.all([
           APIService.get<Club>(`/clubes/${id}`),
           APIService.get<Miembro[]>(`/clubes/${id}/miembros`),
+          SocioService.getSociosByClub(id).catch(() => []) as Promise<Socio[]>,
           NewsService.getAll(id, 0, 5),    // Traer últimos 5
           EventService.getAll(id, 0, 5)    // Traer últimos 5
         ])
         
         setClub(clubData)
         setMiembros(miembrosData)
+        const sociosMap = sociosList.reduce<Record<number, Socio>>((acc, socio) => {
+          acc[socio.usuario_id] = socio
+          return acc
+        }, {})
+        setSocios(sociosMap)
         setNoticias(noticiasData)
         setEventos(eventosData)
 
@@ -123,6 +133,53 @@ export default function ClubDetail() {
 
     cargarDatos()
   }, [clubId, usuario, navigate])
+
+  useEffect(() => {
+    let isActive = true
+
+    const loadPhotos = async () => {
+      const sociosWithPhoto = Object.values(socios).filter((socio) => socio.tiene_foto)
+
+      if (sociosWithPhoto.length === 0) {
+        setSocioPhotoUrls((prev) => {
+          Object.values(prev).forEach((url) => URL.revokeObjectURL(url))
+          return {}
+        })
+        return
+      }
+
+      const results = await Promise.all(
+        sociosWithPhoto.map(async (socio) => [
+          socio.usuario_id,
+          await SocioService.fetchFotoBlob(socio.id)
+        ] as const)
+      )
+
+      if (!isActive) {
+        results.forEach(([, url]) => {
+          if (url) URL.revokeObjectURL(url)
+        })
+        return
+      }
+
+      setSocioPhotoUrls((prev) => {
+        Object.values(prev).forEach((url) => URL.revokeObjectURL(url))
+        const next: Record<number, string> = {}
+        results.forEach(([userId, url]) => {
+          if (url) {
+            next[userId] = url
+          }
+        })
+        return next
+      })
+    }
+
+    loadPhotos()
+
+    return () => {
+      isActive = false
+    }
+  }, [socios])
 
   if (!usuario) return null
 
@@ -360,6 +417,10 @@ export default function ClubDetail() {
                     </div>
                   </div>
                 )}
+
+                <div style={{ marginTop: '2rem' }}>
+                  <OpenClawChat clubId={club.id} clubName={club.nombre} />
+                </div>
               </div>
             )}
 
@@ -379,9 +440,16 @@ export default function ClubDetail() {
                     <div key={miembro.id} className="miembro-item">
                       <div className="miembro-info">
                         <div className="miembro-avatar">
-                          {(miembro.usuario?.nombre_completo || miembro.usuario?.email || `Usuario #${miembro.usuario_id}`)
-                            .charAt(0)
-                            .toUpperCase()}
+                          {socioPhotoUrls[miembro.usuario_id] ? (
+                            <img
+                              src={socioPhotoUrls[miembro.usuario_id]}
+                              alt={`Foto de ${miembro.usuario?.nombre_completo || 'socio'}`}
+                            />
+                          ) : (
+                            (miembro.usuario?.nombre_completo || miembro.usuario?.email || `Usuario #${miembro.usuario_id}`)
+                              .charAt(0)
+                              .toUpperCase()
+                          )}
                         </div>
                         <div>
                           <div className="miembro-name">

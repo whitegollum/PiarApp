@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import Navbar from '../components/Navbar'
 import APIService from '../services/api'
 import SocioService, { Socio } from '../services/socioService'
+import { DocumentacionService, DocumentacionResponse } from '../services/documentacionService'
 import '../styles/ClubMembers.css'
 
 interface Miembro {
@@ -32,13 +33,18 @@ export default function ClubMembers() {
   const [club, setClub] = useState<Club | null>(null)
   const [miembros, setMiembros] = useState<Miembro[]>([])
   const [socios, setSocios] = useState<Record<number, Socio>>({})
+  const [socioPhotoUrls, setSocioPhotoUrls] = useState<Record<number, string>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [invitacionEmail, setInvitacionEmail] = useState('')
   const [enviandoInvitacion, setEnviandoInvitacion] = useState(false)
   const [roleUpdatingId, setRoleUpdatingId] = useState<number | null>(null)
-  const [roleSelections, setRoleSelections] = useState<Record<number, Miembro['rol']>>({})
+  const [estadoUpdatingId, setEstadoUpdatingId] = useState<number | null>(null)
+  const [docsUserId, setDocsUserId] = useState<number | null>(null)
+  const [docsData, setDocsData] = useState<DocumentacionResponse | null>(null)
+  const [docsLoading, setDocsLoading] = useState(false)
+  const [docsError, setDocsError] = useState<string | null>(null)
 
   useEffect(() => {
     if (clubId) {
@@ -46,13 +52,60 @@ export default function ClubMembers() {
     }
   }, [clubId])
 
+  useEffect(() => {
+    let isActive = true
+
+    const loadPhotos = async () => {
+      const sociosWithPhoto = Object.values(socios).filter((socio) => socio.tiene_foto)
+
+      if (sociosWithPhoto.length === 0) {
+        setSocioPhotoUrls((prev) => {
+          Object.values(prev).forEach((url) => URL.revokeObjectURL(url))
+          return {}
+        })
+        return
+      }
+
+      const results = await Promise.all(
+        sociosWithPhoto.map(async (socio) => [
+          socio.usuario_id,
+          await SocioService.fetchFotoBlob(socio.id)
+        ] as const)
+      )
+
+      if (!isActive) {
+        results.forEach(([, url]) => {
+          if (url) URL.revokeObjectURL(url)
+        })
+        return
+      }
+
+      setSocioPhotoUrls((prev) => {
+        Object.values(prev).forEach((url) => URL.revokeObjectURL(url))
+        const next: Record<number, string> = {}
+        results.forEach(([userId, url]) => {
+          if (url) {
+            next[userId] = url
+          }
+        })
+        return next
+      })
+    }
+
+    loadPhotos()
+
+    return () => {
+      isActive = false
+    }
+  }, [socios])
+
   const loadClubAndMembers = async () => {
     try {
       setLoading(true)
       setError(null)
       const [clubData, miembrosData, sociosList] = await Promise.all([
         APIService.get<Club>(`/clubes/${clubId}`),
-        APIService.get<Miembro[]>(`/clubes/${clubId}/miembros`),
+        APIService.get<Miembro[]>(`/clubes/${clubId}/miembros?include_inactivos=true`),
         SocioService.getSociosByClub(Number(clubId)).catch(() => []) as Promise<Socio[]>
       ])
       
@@ -64,12 +117,6 @@ export default function ClubMembers() {
       setSocios(sociosMap)
 
       setMiembros(miembrosData)
-      setRoleSelections(
-        miembrosData.reduce<Record<number, Miembro['rol']>>((acc, miembro) => {
-          acc[miembro.usuario_id] = miembro.rol
-          return acc
-        }, {})
-      )
     } catch (err) {
       setError('Error al cargar los datos del club')
       console.error(err)
@@ -105,7 +152,7 @@ export default function ClubMembers() {
   }
 
   const handleRemoveMember = async (usuarioId: number) => {
-    if (!confirm('¿Estás seguro de que deseas remover a este miembro?')) {
+    if (!confirm('¿Estás seguro de que deseas eliminar a este miembro del club?')) {
       return
     }
 
@@ -113,11 +160,74 @@ export default function ClubMembers() {
       setError(null)
       await APIService.delete(`/clubes/${clubId}/miembros/${usuarioId}`)
       await loadClubAndMembers()
-      setSuccess('Miembro removido exitosamente')
+      setSuccess('Miembro eliminado del club')
       setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
       setError('Error al remover el miembro')
       console.error(err)
+    }
+  }
+
+  const handleDeleteSocio = async (socioId: number) => {
+    if (!confirm('¿Estás seguro de que deseas eliminar a este socio? Esta acción es irreversible.')) {
+        return
+    }
+    try {
+        setError(null)
+        await SocioService.deleteSocio(socioId)
+        setSuccess('Socio eliminado exitosamente')
+        // Refresh data or remove from state
+        setSocios(prev => {
+            const newState = { ...prev }
+            const userId = Object.keys(newState).find(k => newState[Number(k)].id === socioId)
+            if (userId) delete newState[Number(userId)]
+            return newState
+        })
+        setTimeout(() => setSuccess(null), 3000)
+    } catch (err) {
+        setError('Error al eliminar socio')
+        console.error(err)
+    }
+  }
+
+  const handleOpenDocs = async (userId: number) => {
+    setDocsUserId(userId)
+    setDocsLoading(true)
+    setDocsError(null)
+    setDocsData(null)
+    try {
+        const data = await DocumentacionService.getByUser(userId)
+        setDocsData(data)
+    } catch (err) {
+        const msg = (err as Error).message
+        if (msg.includes('404')) {
+            setDocsError('No hay documentación para este usuario')
+        } else {
+            setDocsError('Error al cargar documentación')
+        }
+    } finally {
+        setDocsLoading(false)
+    }
+  }
+
+  const handleDownloadDoc = async (type: 'rc' | 'carnet') => {
+    if (!docsUserId) return
+    try {
+        let blob: Blob
+        if (type === 'rc') blob = await DocumentacionService.downloadRC(docsUserId)
+        else blob = await DocumentacionService.downloadCarnet(docsUserId)
+        
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = type === 'rc' ? 'seguro_rc' : 'carnet_piloto'
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+    } catch (err) {
+        alert('Error al descargar archivo')
+        console.error(err)
     }
   }
 
@@ -141,6 +251,72 @@ export default function ClubMembers() {
       console.error(err)
     } finally {
       setRoleUpdatingId(null)
+    }
+  }
+
+  const handleChangeEstado = async (usuarioId: number, estado: Miembro['estado']) => {
+    if (usuarioId === usuario?.id) {
+      return
+    }
+    try {
+      setError(null)
+      setEstadoUpdatingId(usuarioId)
+      await APIService.put(`/clubes/${clubId}/miembros/${usuarioId}/estado`, {
+        estado
+      })
+      setMiembros(prev => prev.map(m => (
+        m.usuario_id === usuarioId ? { ...m, estado } : m
+      )))
+      setSuccess('Estado actualizado exitosamente')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err) {
+      setError('Error al actualizar el estado')
+      console.error(err)
+    } finally {
+      setEstadoUpdatingId(null)
+    }
+  }
+
+  const handleMemberAction = async (miembro: Miembro, action: string) => {
+    if (!action) {
+      return
+    }
+
+    if (action === 'docs') {
+      await handleOpenDocs(miembro.usuario_id)
+      return
+    }
+
+    if (action === 'baja_socio') {
+      const socio = socios[miembro.usuario_id]
+      if (socio) {
+        await handleDeleteSocio(socio.id)
+      }
+      return
+    }
+
+    if (action === 'rol_admin') {
+      await handleChangeRole(miembro.usuario_id, 'administrador')
+      return
+    }
+
+    if (action === 'rol_miembro') {
+      await handleChangeRole(miembro.usuario_id, 'miembro')
+      return
+    }
+
+    if (action === 'desactivar') {
+      await handleChangeEstado(miembro.usuario_id, 'inactivo')
+      return
+    }
+
+    if (action === 'activar') {
+      await handleChangeEstado(miembro.usuario_id, 'activo')
+      return
+    }
+
+    if (action === 'eliminar') {
+      await handleRemoveMember(miembro.usuario_id)
     }
   }
 
@@ -212,88 +388,144 @@ export default function ClubMembers() {
               </div>
             ) : (
               <div className="members-list">
-                {miembros.map(miembro => (
+                {miembros.map(miembro => {
+                  const isSelf = miembro.usuario_id === usuario?.id
+                  const isAdminRole = miembro.rol === 'administrador'
+                  const hasSocio = Boolean(socios[miembro.usuario_id])
+                  const isInactive = miembro.estado === 'inactivo'
+                  const isBusy = roleUpdatingId === miembro.usuario_id || estadoUpdatingId === miembro.usuario_id
+                  const photoUrl = socioPhotoUrls[miembro.usuario_id]
+
+                  return (
                   <div key={miembro.id} className="member-item">
-                    <div className="member-avatar">
-                      {miembro.usuario?.nombre_completo.charAt(0).toUpperCase() || 'U'}
+                    <div className="member-avatar-col">
+                      <div className="member-avatar">
+                        {photoUrl ? (
+                          <img src={photoUrl} alt={`Foto de ${miembro.usuario?.nombre_completo || 'socio'}`} />
+                        ) : (
+                          miembro.usuario?.nombre_completo.charAt(0).toUpperCase() || 'U'
+                        )}
+                      </div>
+                      <span className={`member-status-mini status-${miembro.estado}`}>
+                        {miembro.estado === 'activo' && 'Activo'}
+                        {miembro.estado === 'pendiente' && 'Pendiente'}
+                        {miembro.estado === 'inactivo' && 'Inactivo'}
+                      </span>
                     </div>
                     <div className="member-info">
                       <h3>{miembro.usuario?.nombre_completo || 'Usuario desconocido'}</h3>
                       <p className="member-email">{miembro.usuario?.email || 'Sin email'}</p>
                       <div className="member-meta">
-                        <span className={`role-badge role-${miembro.rol}`}>
+                        <span
+                          className={`role-badge role-${miembro.rol}`}
+                          data-role-label={miembro.rol === 'administrador' ? 'Administrador' : 'Miembro'}
+                        >
                           {miembro.rol === 'administrador' ? '👑 Administrador' : '👤 Miembro'}
                         </span>
-                        <span className={`status-badge status-${miembro.estado}`}>
+                        <span className={`status-badge status-estado status-${miembro.estado}`}>
                           {miembro.estado === 'activo' && '✓ Activo'}
                           {miembro.estado === 'pendiente' && '⏳ Pendiente'}
                           {miembro.estado === 'inactivo' && '× Inactivo'}
                         </span>
-                        {socios[miembro.usuario_id] ? (
-                           <span className="status-badge status-activo">Socio Activo</span>
-                        ) : (
-                           <span className="status-badge status-inactivo">No Socio</span>
+                        {socios[miembro.usuario_id] && (
+                          <span className="status-badge status-activo">Socio Activo</span>
                         )}
-                        {miembro.fecha_aprobacion && <small>Aprobado: {new Date(miembro.fecha_aprobacion).toLocaleDateString('es-ES')}</small>}
                       </div>
                     </div>
                     {isAdmin && (
                       <div className="member-actions">
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => {
-                              const socio = socios[miembro.usuario_id];
-                              if (socio) {
-                                  navigate(`/clubes/${clubId}/socios/${socio.id}/editar`);
-                              } else {
-                                  navigate(`/clubes/${clubId}/socios/crear?userId=${miembro.usuario_id}`);
-                              }
+                        <select
+                          className="actions-select"
+                          defaultValue=""
+                          onChange={(e) => {
+                            const value = e.target.value
+                            e.currentTarget.value = ''
+                            handleMemberAction(miembro, value)
                           }}
+                          disabled={isBusy}
                         >
-                          {socios[miembro.usuario_id] ? '📝 Ficha' : '➕ Ficha'}
-                        </button>
-                        {miembro.usuario_id !== usuario?.id && (
-                          <>
-                            <select
-                              className="role-select"
-                              value={roleSelections[miembro.usuario_id] || miembro.rol}
-                              onChange={(e) =>
-                                setRoleSelections(prev => ({
-                                  ...prev,
-                                  [miembro.usuario_id]: e.target.value as Miembro['rol']
-                                }))
-                              }
-                              disabled={roleUpdatingId === miembro.usuario_id}
-                            >
-                              <option value="administrador">Administrador</option>
-                              <option value="miembro">Miembro</option>
-                            </select>
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => handleChangeRole(miembro.usuario_id, roleSelections[miembro.usuario_id] || miembro.rol)}
-                              disabled={roleUpdatingId === miembro.usuario_id}
-                            >
-                              🔁 Cambiar rol
-                            </button>
-                          </>
+                          <option value="" disabled>Acciones...</option>
+                          <option value="docs">Ver Docs</option>
+                          {hasSocio && <option value="baja_socio">Baja Socio</option>}
+                          {!isSelf && miembro.rol === 'miembro' && <option value="rol_admin">Cambiar a Admin</option>}
+                          {!isSelf && miembro.rol === 'administrador' && <option value="rol_miembro">Cambiar a Miembro</option>}
+                          {!isSelf && !isAdminRole && !isInactive && <option value="desactivar">Desactivar</option>}
+                          {!isSelf && !isAdminRole && isInactive && <option value="activar">Cambiar a Activo</option>}
+                          {!isSelf && !isAdminRole && isInactive && <option value="eliminar">Eliminar del club</option>}
+                        </select>
+                        {miembro.fecha_aprobacion && (
+                          <small className="approval-date approval-date-inline">
+                            Aprobado: {new Date(miembro.fecha_aprobacion).toLocaleDateString('es-ES')}
+                          </small>
                         )}
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleRemoveMember(miembro.usuario_id)}
-                          disabled={miembro.usuario_id === usuario?.id}
-                          title={miembro.usuario_id === usuario?.id ? 'No puedes removerte a ti mismo' : 'Remover miembro'}
-                        >
-                          🗑️ Remover
-                        </button>
                       </div>
                     )}
                   </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </section>
         </div>
       </div>
+
+      {docsUserId && (
+        <div className="modal-overlay" style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+            <div className="modal-content" style={{
+                backgroundColor: 'white', padding: '2rem', borderRadius: '8px',
+                maxWidth: '500px', width: '90%', maxHeight: '90vh', overflowY: 'auto',
+                position: 'relative'
+            }}>
+                <button 
+                    onClick={() => setDocsUserId(null)}
+                    style={{position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer'}}
+                >
+                    &times;
+                </button>
+                <h2>Documentación de Usuario</h2>
+                {docsLoading && <p>Cargando...</p>}
+                {docsError && <p className="alert alert-error">{docsError}</p>}
+                
+                {docsData && (
+                    <div className="docs-details">
+                        <div className="doc-section" style={{marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '1rem'}}>
+                            <h3>Seguro RC</h3>
+                            <p><strong>Número:</strong> {docsData.rc_numero || 'No registrado'}</p>
+                            <p><strong>Vencimiento:</strong> {docsData.rc_fecha_vencimiento ? new Date(docsData.rc_fecha_vencimiento).toLocaleDateString() : '-'}</p>
+                            {docsData.rc_tiene_archivo ? (
+                                <button className="btn btn-primary btn-sm" onClick={() => handleDownloadDoc('rc')}>
+                                    📥 Descargar PDF
+                                </button>
+                            ) : (
+                                <span className="badge badge-warning">Sin archivo</span>
+                            )}
+                        </div>
+                        
+                        <div className="doc-section">
+                            <h3>Carnet/Licencia</h3>
+                            <p><strong>Número:</strong> {docsData.carnet_numero || 'No registrado'}</p>
+                            <p><strong>Vencimiento:</strong> {docsData.carnet_fecha_vencimiento ? new Date(docsData.carnet_fecha_vencimiento).toLocaleDateString() : '-'}</p>
+                            {docsData.carnet_tiene_archivo ? (
+                                <button className="btn btn-primary btn-sm" onClick={() => handleDownloadDoc('carnet')}>
+                                    📥 Descargar Archivo
+                                </button>
+                            ) : (
+                                <span className="badge badge-warning">Sin archivo</span>
+                            )}
+                        </div>
+                    </div>
+                )}
+                
+                <div style={{marginTop: '2rem', textAlign: 'right'}}>
+                    <button className="btn btn-secondary" onClick={() => setDocsUserId(null)}>Cerrar</button>
+                </div>
+            </div>
+        </div>
+      )}
     </>
   )
 }

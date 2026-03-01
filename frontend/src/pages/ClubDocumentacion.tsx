@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { DocumentacionService, DocumentacionResponse } from '../services/documentacionService'
+import APIService from '../services/api'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import '../styles/ClubDetail.css'
 import '../styles/Forms.css'
 import '../styles/Documentacion.css'
@@ -13,6 +16,12 @@ interface FormState {
   carnet_numero: string
   carnet_fecha_emision: string
   carnet_fecha_vencimiento: string
+}
+
+interface ClubSummary {
+  id: number
+  nombre: string
+  ayuda_documentacion_md?: string | null
 }
 
 const emptyForm: FormState = {
@@ -42,6 +51,9 @@ export default function ClubDocumentacion() {
   const [form, setForm] = useState<FormState>(emptyForm)
   const [rcFile, setRcFile] = useState<File | null>(null)
   const [carnetFile, setCarnetFile] = useState<File | null>(null)
+  const [clubs, setClubs] = useState<ClubSummary[]>([])
+  const [selectedClubId, setSelectedClubId] = useState<number | null>(null)
+  const [helpOpen, setHelpOpen] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -51,16 +63,34 @@ export default function ClubDocumentacion() {
     try {
       setLoading(true)
       setError(null)
-      const data = await DocumentacionService.getMe()
-      setDoc(data)
-      setForm({
-        rc_numero: data.rc_numero || '',
-        rc_fecha_emision: toDateInput(data.rc_fecha_emision),
-        rc_fecha_vencimiento: toDateInput(data.rc_fecha_vencimiento),
-        carnet_numero: data.carnet_numero || '',
-        carnet_fecha_emision: toDateInput(data.carnet_fecha_emision),
-        carnet_fecha_vencimiento: toDateInput(data.carnet_fecha_vencimiento)
-      })
+      const [docResult, clubsData] = await Promise.all([
+        DocumentacionService.getMe().catch((err) => err),
+        APIService.get<ClubSummary[]>(`/clubes`)
+      ])
+      if (docResult && !(docResult instanceof Error)) {
+        setDoc(docResult)
+      } else {
+        const message = docResult instanceof Error ? docResult.message : ''
+        setDoc(null)
+        setForm(emptyForm)
+        if (message && !message.includes('404')) {
+          setError(message || 'Error al cargar documentacion')
+        }
+      }
+      setClubs(clubsData)
+      if (clubsData.length > 0 && !selectedClubId) {
+        setSelectedClubId(clubsData[0].id)
+      }
+      if (docResult && !(docResult instanceof Error)) {
+        setForm({
+          rc_numero: docResult.rc_numero || '',
+          rc_fecha_emision: toDateInput(docResult.rc_fecha_emision),
+          rc_fecha_vencimiento: toDateInput(docResult.rc_fecha_vencimiento),
+          carnet_numero: docResult.carnet_numero || '',
+          carnet_fecha_emision: toDateInput(docResult.carnet_fecha_emision),
+          carnet_fecha_vencimiento: toDateInput(docResult.carnet_fecha_vencimiento)
+        })
+      }
     } catch (err) {
       const message = (err as Error).message
       if (message.includes('404')) {
@@ -73,6 +103,13 @@ export default function ClubDocumentacion() {
       setLoading(false)
     }
   }
+
+  const selectedClub = useMemo(() => {
+    if (!selectedClubId) {
+      return null
+    }
+    return clubs.find(c => c.id === selectedClubId) || null
+  }, [clubs, selectedClubId])
 
   const handleChange = (key: keyof FormState, value: string) => {
     setForm(prev => ({
@@ -167,6 +204,37 @@ export default function ClubDocumentacion() {
 
           {error && <div className="alert alert-error">{error}</div>}
           {success && <div className="alert alert-success">{success}</div>}
+
+          {clubs.length > 0 && (
+            <div className="documentacion-club-select">
+              <label htmlFor="clubHelpSelect">Ayuda del club</label>
+              <div className="help-row">
+                <select
+                  id="clubHelpSelect"
+                  value={selectedClubId ?? ''}
+                  onChange={(e) => setSelectedClubId(Number(e.target.value))}
+                  className="form-input"
+                >
+                  {clubs.map((club) => (
+                    <option key={club.id} value={club.id}>
+                      {club.nombre}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setHelpOpen(true)}
+                  disabled={!selectedClub?.ayuda_documentacion_md}
+                >
+                  Ver ayuda
+                </button>
+              </div>
+              {!selectedClub?.ayuda_documentacion_md && (
+                <p className="help-muted">Este club no tiene ayuda configurada.</p>
+              )}
+            </div>
+          )}
 
           <form className="documentacion-form" onSubmit={handleSubmit}>
             <div className="documentacion-grid">
@@ -308,6 +376,24 @@ export default function ClubDocumentacion() {
           </form>
         </div>
       </main>
+
+      {helpOpen && selectedClub?.ayuda_documentacion_md && (
+        <div className="help-modal-overlay" onClick={() => setHelpOpen(false)}>
+          <div className="help-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="help-modal-header">
+              <h2>Ayuda de {selectedClub.nombre}</h2>
+              <button type="button" className="help-close" onClick={() => setHelpOpen(false)}>
+                ×
+              </button>
+            </div>
+            <div className="help-modal-body">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {selectedClub.ayuda_documentacion_md}
+              </ReactMarkdown>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

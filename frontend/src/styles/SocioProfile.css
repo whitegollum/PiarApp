@@ -1,0 +1,65 @@
+.socio-profile .form-row {
+  gap: 16px;
+}
+
+.socio-profile .socio-status {
+  margin-bottom: 16px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-pill.ok {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.socio-photo-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.socio-photo-preview {
+  width: 120px;
+  height: 120px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--color-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.socio-photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-placeholder {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.socio-photo-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (max-width: 600px) {
+  .socio-photo-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

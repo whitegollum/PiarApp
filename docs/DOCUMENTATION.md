@@ -9,6 +9,7 @@ Este documento centraliza el estado actual y las bases del proyecto. Sirve como 
 ### Hecho
 - Autenticacion con JWT y refresh token.
 - Gestion de clubes, miembros, invitaciones y roles por club.
+- UI de miembros con acciones centralizadas y activacion/desactivacion.
 - Perfil de usuario con edicion de datos, cambio de contrasena y descarga de datos.
 - Backend completo para noticias y eventos.
 - Frontend para visualizar y editar noticias y eventos.
@@ -22,6 +23,8 @@ Este documento centraliza el estado actual y las bases del proyecto. Sirve como 
 - **Configuracion SMTP:** Panel superadmin para configurar envio de emails, invitaciones y URL del frontend.
 - **Invitaciones:** Pantalla publica carga email y club desde token de invitacion.
 - **Google OAuth:** Login/registro con Google (backend + frontend).
+- **Chat OpenClaw:** Integración con agente de IA vía WebSocket (Backend proxy + Frontend UI).
+- **Ayuda de Documentación por Club:** Markdown configurable desde la edición del club y visible en la pantalla de documentación.
 
 ### Pendiente inmediato
 - Testing automatizado (pytest, React tests, E2E).

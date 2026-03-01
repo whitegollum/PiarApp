@@ -36,6 +36,14 @@ class Settings(BaseSettings):
     # Frontend
     frontend_url: str = "http://localhost:5173"
     
+    # OpenClaw
+    openclaw_api_key: str = ""
+    openclaw_api_url: str = "https://api.openclaw.example/v1/chat"
+    openclaw_auth_mode: str = "api_key" # "api_key" or "password"
+    openclaw_username: str = ""
+    openclaw_password: str = ""
+    openclaw_login_url: str = "https://api.openclaw.example/v1/auth/login"
+    
     # CORS
     cors_origins: List[str] = [
         "http://localhost:3000",

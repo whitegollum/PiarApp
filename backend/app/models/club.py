@@ -32,6 +32,9 @@ class Club(Base):
     redes_sociales = Column(JSON, nullable=True)  # {facebook, instagram, etc}
     zona_horaria = Column(String(50), default="Europe/Madrid")
     idioma_por_defecto = Column(String(10), default="es")
+
+    # Ayuda de documentacion (Markdown)
+    ayuda_documentacion_md = Column(Text, nullable=True)
     
     # Configuración
     estado = Column(String(20), default="inactivo")  # activo, inactivo, suspendido

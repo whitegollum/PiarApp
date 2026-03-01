@@ -64,6 +64,18 @@ Para mostrar colecciones de datos (Noticias, Eventos):
 - Imágenes con `object-fit: cover`.
 - Fechas formateadas consistentemente (`new Date().toLocaleDateString()`).
 
+### 4.1 Listado de Miembros (ClubMembers)
+- Acciones de administración deben consolidarse en un solo desplegable por usuario.
+- El desplegable muestra solo opciones permitidas (por rol/estado y evitando acciones sobre sí mismo).
+- En móvil, el avatar va en columna izquierda y el nombre/correo a la derecha.
+- El estado (Activo/Pendiente/Inactivo) se muestra como etiqueta compacta bajo el avatar en móvil.
+
+### 4.2 Perfil de Socio
+- Mostrar selector de club antes del formulario.
+- Mantener campos personales en una sola tarjeta con acciones al final.
+- La foto de carnet debe mostrar previsualizacion con placeholder si falta.
+- La carga de foto se realiza desde el mismo formulario, no en pantallas separadas.
+
 ## 5. Accesibilidad
 
 - Todos los inputs deben tener un `id` y un `label` asociado con `htmlFor`.

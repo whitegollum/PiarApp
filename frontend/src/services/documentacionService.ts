@@ -44,6 +44,33 @@ export const DocumentacionService = {
   getMe: async (): Promise<DocumentacionResponse> => {
     return APIService.get<DocumentacionResponse>(`/documentacion/me`)
   },
+  
+  getByUser: async (userId: number): Promise<DocumentacionResponse> => {
+    return APIService.get<DocumentacionResponse>(`/documentacion/usuarios/${userId}`)
+  },
+
+  downloadRC: async (userId: number): Promise<Blob> => {
+    const response = await fetch(`${API_BASE_URL}/documentacion/usuarios/${userId}/rc`, {
+      method: 'GET',
+      headers: authHeaders()
+    })
+    if (!response.ok) {
+        throw new Error('Error al descargar archivo')
+    }
+    return response.blob()
+  },
+
+  downloadCarnet: async (userId: number): Promise<Blob> => {
+    const response = await fetch(`${API_BASE_URL}/documentacion/usuarios/${userId}/carnet`, {
+      method: 'GET',
+      headers: authHeaders()
+    })
+    if (!response.ok) {
+        throw new Error('Error al descargar archivo')
+    }
+    return response.blob()
+  },
+
 
   upsertMe: async (formData: FormData): Promise<DocumentacionResponse> => {
     const response = await fetch(`${API_BASE_URL}/documentacion/me`, {

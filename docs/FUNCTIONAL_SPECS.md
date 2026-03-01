@@ -275,6 +275,10 @@ Este documento describe detalladamente las funcionalidades del sistema
 
 **Descripción:** Información para socios sobre cómo obtener y renovar documentación.
 
+**Configuración por club:**
+- El contenido se gestiona en Markdown desde la administración del club.
+- Visible en la pantalla de documentación del usuario como vínculo.
+
 #### Contenido
 
 - Guía: Cómo obtener carnet de piloto
@@ -372,6 +376,33 @@ Este documento describe detalladamente las funcionalidades del sistema
 - Filtrar por categoría
 - Búsqueda de noticias
 - Marcar como favorita
+
+---
+
+## 1.5 Asistente Virtual (OpenClaw)
+
+### Chat con el Asistente
+
+**Descripción:** Los usuarios pueden interactuar con un asistente virtual inteligente para resolver dudas sobre gestión, normativas o uso de la plataforma.
+
+#### Funcionalidades
+
+- **Chat Interactivo:** Ventana de chat flotante o dedicada disponible en la interfaz.
+- **Respuestas Contextuales:** El asistente tiene contexto sobre el club y el usuario (versión futura).
+- **Streaming de Respuesta:** Efecto de escritura en tiempo real para una mejor experiencia de usuario.
+- **Historial de Sesión:** Mantiene el contexto de la conversación durante la sesión actual.
+
+#### Integración
+
+- Conexión vía WebSocket para baja latencia.
+- Autenticación transparente usando las credenciales del usuario actual.
+- Indicadores de estado: Conectado, Escribiendo, Desconectado.
+
+#### Tipos de Consultas Soportadas
+
+- Ayuda sobre el uso de la aplicación.
+- Información general sobre aeromodelismo (vía conocimiento base del modelo).
+- Estado del sistema (operatividad del bot).
 - Comentarios en noticias
 - Notificaciones de nuevas noticias
 

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import Navbar from '../components/Navbar'
 import APIService from '../services/api'
+import SocioService, { Socio, SocioCreate, SocioUpdate } from '../services/socioService'
 import '../styles/Forms.css'
 import '../styles/Profile.css'
 
@@ -32,6 +33,36 @@ interface Club {
   fecha_creacion: string
 }
 
+interface SocioFormState {
+  nombre: string
+  email: string
+  telefono: string
+  fecha_nacimiento: string
+  direccion: string
+  especialidades: string
+}
+
+const emptySocioForm: SocioFormState = {
+  nombre: '',
+  email: '',
+  telefono: '',
+  fecha_nacimiento: '',
+  direccion: '',
+  especialidades: ''
+}
+
+const toDateInput = (value?: string): string => {
+  if (!value) return ''
+  return value.slice(0, 10)
+}
+
+const parseEspecialidades = (value: string): string[] => {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
 export default function Profile() {
   const navigate = useNavigate()
   const { usuario, updateUser } = useAuth()
@@ -41,6 +72,14 @@ export default function Profile() {
   })
   const [profileUser, setProfileUser] = useState<ProfileUser | null>(null)
   const [clubs, setClubs] = useState<Club[]>([])
+  const [selectedClubId, setSelectedClubId] = useState<number | null>(null)
+  const [socio, setSocio] = useState<Socio | null>(null)
+  const [socioForm, setSocioForm] = useState<SocioFormState>(emptySocioForm)
+  const [socioFotoFile, setSocioFotoFile] = useState<File | null>(null)
+  const [socioFotoUrl, setSocioFotoUrl] = useState<string>('')
+  const [loadingSocio, setLoadingSocio] = useState(false)
+  const [socioError, setSocioError] = useState<string | null>(null)
+  const [socioSuccess, setSocioSuccess] = useState<string | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -61,6 +100,9 @@ export default function Profile() {
         ])
         setProfileUser(profileData)
         setClubs(clubsData)
+        if (clubsData.length > 0) {
+          setSelectedClubId(prev => prev ?? clubsData[0].id)
+        }
         setFormData({
           nombre_completo: profileData.nombre_completo,
           email: profileData.email
@@ -75,6 +117,73 @@ export default function Profile() {
 
     loadProfileData()
   }, [])
+
+  useEffect(() => {
+    if (!selectedClubId || !usuario?.id) {
+      return
+    }
+
+    const loadSocio = async () => {
+      try {
+        setLoadingSocio(true)
+        setSocioError(null)
+        setSocioSuccess(null)
+        const socios = await SocioService.getSociosByClub(selectedClubId)
+        const socioMatch = socios.find((item) => item.usuario_id === usuario.id) || null
+        setSocio(socioMatch)
+        setSocioFotoFile(null)
+
+        if (socioMatch?.tiene_foto) {
+          const photo = await SocioService.fetchFotoBlob(socioMatch.id)
+          setSocioFotoUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev)
+            return photo
+          })
+        } else {
+          setSocioFotoUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev)
+            return ''
+          })
+        }
+
+        if (socioMatch) {
+          setSocioForm({
+            nombre: socioMatch.nombre,
+            email: socioMatch.email,
+            telefono: socioMatch.telefono || '',
+            fecha_nacimiento: toDateInput(socioMatch.fecha_nacimiento),
+            direccion: socioMatch.direccion || '',
+            especialidades: (socioMatch.especialidades || []).join(', ')
+          })
+        } else {
+          setSocioForm({
+            ...emptySocioForm,
+            nombre: usuario.nombre_completo || '',
+            email: usuario.email || ''
+          })
+        }
+      } catch (err) {
+        setSocioError('Error al cargar el perfil de socio')
+      } finally {
+        setLoadingSocio(false)
+      }
+    }
+
+    loadSocio()
+  }, [selectedClubId, usuario])
+
+  useEffect(() => {
+    return () => {
+      if (socioFotoUrl) {
+        URL.revokeObjectURL(socioFotoUrl)
+      }
+    }
+  }, [socioFotoUrl])
+
+  const selectedClub = useMemo(() => {
+    if (!selectedClubId) return null
+    return clubs.find((club) => club.id === selectedClubId) || null
+  }, [clubs, selectedClubId])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -171,6 +280,70 @@ export default function Profile() {
     } catch (err) {
       setError('Error al descargar datos')
       console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSocioChange = (key: keyof SocioFormState, value: string) => {
+    setSocioForm((prev) => ({
+      ...prev,
+      [key]: value
+    }))
+  }
+
+  const handleSocioSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!selectedClubId || !usuario?.id) {
+      return
+    }
+
+    try {
+      setLoading(true)
+      setSocioError(null)
+      setSocioSuccess(null)
+
+      const payload: SocioUpdate = {
+        nombre: socioForm.nombre,
+        email: socioForm.email,
+        telefono: socioForm.telefono || undefined,
+        fecha_nacimiento: socioForm.fecha_nacimiento || undefined,
+        direccion: socioForm.direccion || undefined,
+        especialidades: parseEspecialidades(socioForm.especialidades)
+      }
+
+      let savedSocio: Socio
+      if (socio) {
+        savedSocio = await SocioService.updateSocio(socio.id, payload)
+      } else {
+        const createPayload: SocioCreate = {
+          nombre: socioForm.nombre,
+          email: socioForm.email,
+          telefono: socioForm.telefono || undefined,
+          fecha_nacimiento: socioForm.fecha_nacimiento || undefined,
+          direccion: socioForm.direccion || undefined,
+          especialidades: parseEspecialidades(socioForm.especialidades),
+          club_id: selectedClubId,
+          usuario_id: usuario.id,
+          estado: 'activo'
+        }
+        savedSocio = await SocioService.createSocio(createPayload)
+      }
+
+      if (socioFotoFile) {
+        await SocioService.uploadFoto(savedSocio.id, socioFotoFile)
+        const photo = await SocioService.fetchFotoBlob(savedSocio.id)
+        setSocioFotoUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev)
+          return photo
+        })
+        setSocioFotoFile(null)
+      }
+
+      setSocio(savedSocio)
+      setSocioSuccess('Perfil de socio actualizado correctamente')
+    } catch (err) {
+      setSocioError((err as Error).message || 'Error al guardar el perfil de socio')
     } finally {
       setLoading(false)
     }
@@ -334,6 +507,147 @@ export default function Profile() {
             >
               📄 Ir a Documentacion
             </button>
+          </section>
+
+          <section className="profile-section">
+            <h2>Perfil de Socio</h2>
+            <p>Completa tu ficha ampliada y sube tu foto de carnet por club.</p>
+
+            {loadingSocio && <div className="loading">Cargando perfil de socio...</div>}
+            {socioError && <div className="alert alert-error">{socioError}</div>}
+            {socioSuccess && <div className="alert alert-success">{socioSuccess}</div>}
+
+            {!loadingSocio && clubs.length === 0 && (
+              <div className="empty-state">
+                <p>No perteneces a ningun club aun</p>
+              </div>
+            )}
+
+            {!loadingSocio && clubs.length > 0 && (
+              <div className="profile-card">
+                <div className="form-group">
+                  <label htmlFor="socioClubSelect">Club</label>
+                  <select
+                    id="socioClubSelect"
+                    className="form-input"
+                    value={selectedClubId ?? ''}
+                    onChange={(e) => setSelectedClubId(Number(e.target.value))}
+                  >
+                    {clubs.map((club) => (
+                      <option key={club.id} value={club.id}>
+                        {club.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedClub?.descripcion && (
+                    <small className="help-text">{selectedClub.descripcion}</small>
+                  )}
+                </div>
+
+                {socio && (
+                  <div className="socio-status">
+                    <span className={`status-pill ${socio.estado === 'activo' ? 'ok' : 'pending'}`}>
+                      Estado: {socio.estado}
+                    </span>
+                  </div>
+                )}
+
+                <form className="form" onSubmit={handleSocioSubmit}>
+                  <div className="form-group">
+                    <label htmlFor="socioNombre">Nombre completo</label>
+                    <input
+                      id="socioNombre"
+                      type="text"
+                      value={socioForm.nombre}
+                      onChange={(e) => handleSocioChange('nombre', e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="socioEmail">Email</label>
+                    <input
+                      id="socioEmail"
+                      type="email"
+                      value={socioForm.email}
+                      onChange={(e) => handleSocioChange('email', e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="socioTelefono">Telefono</label>
+                      <input
+                        id="socioTelefono"
+                        type="tel"
+                        value={socioForm.telefono}
+                        onChange={(e) => handleSocioChange('telefono', e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="socioNacimiento">Fecha de nacimiento</label>
+                      <input
+                        id="socioNacimiento"
+                        type="date"
+                        value={socioForm.fecha_nacimiento}
+                        onChange={(e) => handleSocioChange('fecha_nacimiento', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="socioDireccion">Direccion</label>
+                    <textarea
+                      id="socioDireccion"
+                      value={socioForm.direccion}
+                      onChange={(e) => handleSocioChange('direccion', e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="socioEspecialidades">Especialidades</label>
+                    <input
+                      id="socioEspecialidades"
+                      type="text"
+                      value={socioForm.especialidades}
+                      onChange={(e) => handleSocioChange('especialidades', e.target.value)}
+                      placeholder="Acrobacia, FPV, escala..."
+                    />
+                    <small className="help-text">Separalas con comas</small>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Foto de carnet</label>
+                    <div className="socio-photo-row">
+                      <div className="socio-photo-preview">
+                        {socioFotoUrl ? (
+                          <img src={socioFotoUrl} alt="Foto de carnet" />
+                        ) : (
+                          <div className="photo-placeholder">Sin foto</div>
+                        )}
+                      </div>
+                      <div className="socio-photo-actions">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setSocioFotoFile(e.target.files?.[0] || null)}
+                        />
+                        <small className="help-text">JPG, PNG o WebP.</small>
+                        {socioFotoFile && <small className="help-text">{socioFotoFile.name}</small>}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="form-actions">
+                    <button type="submit" className="btn btn-primary" disabled={loading}>
+                      {loading ? 'Guardando...' : 'Guardar cambios'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
           </section>
 
           {/* Sección de seguridad */}

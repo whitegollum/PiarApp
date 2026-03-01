@@ -1,1 +1,2 @@
 # Routes
+from . import chat

@@ -12,6 +12,7 @@ interface Club {
   nombre: string
   slug: string
   descripcion?: string
+  ayuda_documentacion_md?: string
   logo_url?: string
   color_primario: string
   color_secundario: string
@@ -28,6 +29,7 @@ interface Club {
 interface ClubUpdate {
   nombre?: string
   descripcion?: string
+  ayuda_documentacion_md?: string
   logo_url?: string
   color_primario?: string
   color_secundario?: string
@@ -57,6 +59,7 @@ export default function ClubEdit() {
   const [formData, setFormData] = useState<ClubUpdate>({
     nombre: '',
     descripcion: '',
+    ayuda_documentacion_md: '',
     logo_url: '',
     color_primario: '#FF6B35',
     color_secundario: '#004E89',
@@ -89,6 +92,7 @@ export default function ClubEdit() {
         setFormData({
           nombre: clubData.nombre,
           descripcion: clubData.descripcion,
+          ayuda_documentacion_md: clubData.ayuda_documentacion_md,
           logo_url: clubData.logo_url,
           color_primario: clubData.color_primario,
           color_secundario: clubData.color_secundario,
@@ -142,6 +146,9 @@ export default function ClubEdit() {
       // Solo incluir campos que fueron modificados
       if (formData.nombre !== club?.nombre) updateData.nombre = formData.nombre
       if (formData.descripcion !== club?.descripcion) updateData.descripcion = formData.descripcion
+      if (formData.ayuda_documentacion_md !== club?.ayuda_documentacion_md) {
+        updateData.ayuda_documentacion_md = formData.ayuda_documentacion_md
+      }
       if (formData.logo_url !== club?.logo_url) updateData.logo_url = formData.logo_url
       if (formData.color_primario !== club?.color_primario) updateData.color_primario = formData.color_primario
       if (formData.color_secundario !== club?.color_secundario) updateData.color_secundario = formData.color_secundario
@@ -249,6 +256,19 @@ export default function ClubEdit() {
                   className="form-textarea"
                   rows={4}
                   placeholder="Describir el club..."
+                ></textarea>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="ayuda_documentacion_md">Ayuda de Documentación (Markdown)</label>
+                <textarea
+                  id="ayuda_documentacion_md"
+                  name="ayuda_documentacion_md"
+                  value={formData.ayuda_documentacion_md || ''}
+                  onChange={handleInputChange}
+                  className="form-textarea"
+                  rows={6}
+                  placeholder="Guía para socios sobre seguro RC, carnet, links útiles..."
                 ></textarea>
               </div>
 

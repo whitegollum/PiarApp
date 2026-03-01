@@ -34,6 +34,7 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
 ### Phase 7: Administración y Perfiles
 **Objetivo:** Refinar la experiencia de usuario y potenciar la gestión de miembros.
 - [x] **Gestión de Miembros (Frontend):** UI para listar, cambiar roles y expulsar miembros (`ClubMembers.tsx`).
+- [x] **Gestión de Miembros (Acciones):** Activar/desactivar miembros y menú de acciones unificado.
 - [x] **Perfil de Usuario:** Visualización y edición de datos personales (`Profile.tsx`).
 - [x] **Configuración:** Preferencias de usuario (`Settings.tsx`).
 - [x] PWA Manifest básico.
@@ -92,12 +93,18 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
     - [x] Backend: endpoints para configurar y probar SMTP.
     - [x] Frontend: panel de configuracion accesible solo a superadmins (incluye URL del frontend).
 
+- [x] **Integración OpenClaw (Chatbot):**
+    - [x] Backend: conexión WebSocket y gestión de sesiones (`club_id` + `user_id`).
+    - [x] Frontend: Widget de chat flotante con historial y formateo Markdown.
+    - [x] Renderizado de mensajes mejorado (limpieza de tags internos, estilo bot).
+
 - [ ] **Socios + Documentación Reglamentaria (MVP funcional en progreso):**
-    - [ ] Backend: completar rutas de `socios` (CRUD completo).
-    - [ ] Backend: endpoints de foto de carnet (LargeBinary).
-    - [ ] Backend: declaración de seguro RC y carnet de piloto (Endpoints listos, falta integración UI).
-    - [ ] Backend: sección de ayuda (documentación/guías).
-    - [ ] Frontend: pantallas de socio (perfil ampliado, foto de carnet, documentación).
+    - [x] Backend: completar rutas de `socios` (CRUD completo).
+    - [x] Backend: endpoints de foto de carnet (LargeBinary).
+    - [x] Backend: declaración de seguro RC y carnet de piloto (Endpoints listos, falta integración UI).
+    - [x] Backend: sección de ayuda (documentación/guías).
+    - [x] Frontend: documentación reglamentaria + ayuda Markdown por club.
+    - [x] Frontend: perfil ampliado de socio y foto de carnet.
 
 - [x] **Contraseña de Instalaciones:**
     - [x] Backend: `GET/POST` de contraseña + historial y auditoría.

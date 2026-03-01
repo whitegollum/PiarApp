@@ -192,3 +192,53 @@ async def obtener_documentacion_usuario(
         )
 
     return _to_response(doc)
+
+
+@router.get("/usuarios/{usuario_id}/rc")
+async def descargar_rc_usuario(
+    usuario_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # TODO: Refinar permisos.
+    doc = db.query(DocumentacionReglamentaria).filter(
+        DocumentacionReglamentaria.usuario_id == usuario_id
+    ).first()
+
+    if not doc or not doc.rc_archivo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No hay archivo de seguro RC"
+        )
+
+    filename = doc.rc_archivo_nombre or "seguro_rc"
+    return Response(
+        content=doc.rc_archivo,
+        media_type=doc.rc_archivo_mime or "application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+
+@router.get("/usuarios/{usuario_id}/carnet")
+async def descargar_carnet_usuario(
+    usuario_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # TODO: Refinar permisos.
+    doc = db.query(DocumentacionReglamentaria).filter(
+        DocumentacionReglamentaria.usuario_id == usuario_id
+    ).first()
+
+    if not doc or not doc.carnet_archivo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No hay archivo de carnet"
+        )
+
+    filename = doc.carnet_archivo_nombre or "carnet_piloto"
+    return Response(
+        content=doc.carnet_archivo,
+        media_type=doc.carnet_archivo_mime or "application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )

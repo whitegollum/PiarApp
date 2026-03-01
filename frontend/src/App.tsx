@@ -199,6 +199,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/perfil/socio" element={<Navigate to="/perfil" />} />
           <Route
             path="/perfil/documentacion"
             element={

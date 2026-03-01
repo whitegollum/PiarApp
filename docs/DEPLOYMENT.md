@@ -24,6 +24,24 @@ La aplicación se compone de dos servicios principales orquestados:
 
 ## Ejecución Local con Docker Compose
 
+Antes de levantar los servicios hay que proporcionar los valores de configuración que el backend y el frontend esperan. Estos se editan en `docker-compose.yml` o bien en un fichero `.env` que sea cargado por Compose (ver la sección correspondiente en el propio `docker-compose.yml`).
+
+### Variables de entorno a completar
+
+En `docker-compose.yml` encontrarás un apartado `environment:` para cada servicio. Los campos más importantes son:
+
+- `SECRET_KEY` (backend)
+  - Se utiliza para firmar las cookies JWT y otras operaciones criptográficas. Puede generarse con `python -c "import secrets; print(secrets.token_urlsafe())"`.
+- `DATABASE_URL` (backend)
+  - Dirección de la base de datos. En local suele ser `sqlite:///./data.db`; en producción se cambia a la cadena de conexión de PostgreSQL u otro SGBD.
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` (backend)
+  - Credenciales de OAuth2 para Google. El cliente sólo necesita el `GOOGLE_CLIENT_ID` al compilarse, por ello se pasa como `build-arg` al servicio `frontend` y se escribe en `.env.production` desde el Dockerfile.
+  - `GOOGLE_REDIRECT_URI` debe coincidir con la URL registrada en la consola de Google (por ejemplo `http://localhost:3000/oauth-callback`).
+- `VITE_GOOGLE_CLIENT_ID` / `VITE_API_URL` (frontend build args)
+  - Ajustes de compilación que establece Vite. En el `docker-compose.yml` se declaran bajo `build.args:` para que el `Dockerfile` pueda copiar el valor a un `.env.production` interno.
+
+> **Nota:** Si prefieres no hardcodear valores en el YAML puedes utilizar un fichero `.env` en la raíz del proyecto y referenciarlo con `env_file:` en Compose. De ese modo las mismas variables (por ejemplo `SECRET_KEY`, `GOOGLE_CLIENT_ID`, etc.) se heredan automáticamente a los contenedores.
+
 1.  **Construir las imágenes e iniciar los contenedores:**
 
     ```bash

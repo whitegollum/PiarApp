@@ -22,11 +22,37 @@ def _check_permission(db: Session, user: Usuario, club_id: int):
         MiembroClub.usuario_id == user.id,
         MiembroClub.rol == "administrador"
     ).first()
-    if not member and user.rol != "superadmin": # Asumiendo superadmin global existe
+    if not member and not user.es_superadmin:
          raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permisos para gestionar socios de este club"
         )
+
+
+def _check_permission_or_self(db: Session, user: Usuario, club_id: int, socio_user_id: int):
+    if user.es_superadmin:
+        return
+
+    member_admin = db.query(MiembroClub).filter(
+        MiembroClub.club_id == club_id,
+        MiembroClub.usuario_id == user.id,
+        MiembroClub.rol == "administrador"
+    ).first()
+    if member_admin:
+        return
+
+    if socio_user_id == user.id:
+        member = db.query(MiembroClub).filter(
+            MiembroClub.club_id == club_id,
+            MiembroClub.usuario_id == user.id
+        ).first()
+        if member:
+            return
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="No tienes permisos para gestionar socios de este club"
+    )
 
 
 @router.get("/", response_model=List[SocioResponse])
@@ -54,7 +80,7 @@ async def crear_socio(
     current_user: Usuario = Depends(get_current_user)
 ):
     """Registrar nuevo socio en club"""
-    _check_permission(db, current_user, socio_in.club_id)
+    _check_permission_or_self(db, current_user, socio_in.club_id, socio_in.usuario_id)
     
     # Verificar si ya existe
     existe = db.query(Socio).filter(
@@ -110,7 +136,7 @@ async def actualizar_socio(
     if not socio_db:
         raise HTTPException(status_code=404, detail="Socio no encontrado")
         
-    _check_permission(db, current_user, socio_db.club_id)
+    _check_permission_or_self(db, current_user, socio_db.club_id, socio_db.usuario_id)
     
     stored_data = socio_in.model_dump(exclude_unset=True)
     for key, value in stored_data.items():
@@ -133,7 +159,7 @@ async def subir_foto_socio(
     if not socio_db:
         raise HTTPException(status_code=404, detail="Socio no encontrado")
     
-    _check_permission(db, current_user, socio_db.club_id)
+    _check_permission_or_self(db, current_user, socio_db.club_id, socio_db.usuario_id)
     
     # Validar tipo de archivo (opcional)
     if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
@@ -162,3 +188,19 @@ async def obtener_foto_socio(
         content=socio_db.foto_carnet_blob, 
         media_type=socio_db.foto_carnet_mime or "image/jpeg"
     )
+
+@router.delete("/{socio_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def eliminar_socio(
+    socio_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    socio_db = db.query(Socio).filter(Socio.id == socio_id).first()
+    if not socio_db:
+        raise HTTPException(status_code=404, detail="Socio no encontrado")
+    
+    _check_permission(db, current_user, socio_db.club_id)
+    
+    db.delete(socio_db)
+    db.commit()
+    return None

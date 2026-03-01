@@ -61,6 +61,19 @@
 - **Testing**: Pytest para tests unitarios e integración
 - **API Documentation**: Swagger/OpenAPI (automático en FastAPI)
 
+### Integración IA (OpenClaw)
+
+- **Protocolo**: WebSocket (Protocolo nativo de OpenClaw/Gateway).
+- **Cliente**: `websockets` (Python async) para el backend proxy.
+- **Arquitectura**:
+  - **Frontend**: Conecta al backend de PiarApp vía HTTP (REST) para enviar mensajes (`POST /api/chat/openclaw`).
+  - **Backend**: Actúa como proxy. Recibe el mensaje REST, mantiene una conexión WebSocket persistente o bajo demanda con el servidor OpenClaw, y devuelve la respuesta.
+  - **Autenticación**: El backend se autentica contra OpenClaw usando `OPENCLAW_API_KEY` o `OPENCLAW_PASSWORD` (modo Gateway).
+- **Configuración**:
+  - `OPENCLAW_API_URL`: URL base del servicio de chat.
+  - `OPENCLAW_AUTH_MODE`: `password` o `api_key`.
+  - `OPENCLAW_PASSWORD` / `OPENCLAW_API_KEY`: Credenciales.
+
 ### Implementaciones relevantes (fases previas)
 
 **Servicio de Email (backend) (✅)**
@@ -173,9 +186,12 @@ Protegidas (con login):
 - **GET /api/clubes**: Listar clubes donde el usuario es miembro activo.
 - **GET /api/clubes/{club_id}**: Detalles del club (requiere ser miembro).
 - **PUT /api/clubes/{club_id}**: Actualizar club (solo admin).
+  - Campo adicional: `ayuda_documentacion_md` (Markdown con ayuda por club).
 - **GET /api/clubes/{club_id}/miembros**: Listar miembros activos.
+  - Query opcional: `include_inactivos=true` (solo admins; otros usuarios siguen viendo solo activos).
 - **POST /api/clubes/{club_id}/miembros/invitar**: Invitar miembro por email (solo admin).
-- **DELETE /api/clubes/{club_id}/miembros/{usuario_id}**: Remover miembro (solo admin).
+- **PUT /api/clubes/{club_id}/miembros/{usuario_id}/estado**: Cambiar estado de miembro (`activo` | `inactivo`) (solo admin).
+- **DELETE /api/clubes/{club_id}/miembros/{usuario_id}**: Eliminar miembro del club (solo admin).
 
 ### Administracion (Superadmin)
 - **GET /api/admin/config/email**: Obtener configuracion SMTP.

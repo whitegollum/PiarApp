@@ -35,7 +35,7 @@ app.add_middleware(
 )
 
 # Importar rutas
-from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos
+from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, chat
 
 # Incluir routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Autenticación"])
@@ -48,6 +48,7 @@ app.include_router(instalaciones.router, prefix="/api", tags=["Instalaciones"]) 
 app.include_router(documentacion.router, prefix="/api/documentacion", tags=["Documentación"])
 app.include_router(productos.router, prefix="/api/productos", tags=["Productos"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Administración"])
+app.include_router(chat.router, prefix="/api", tags=["Chat"])
 
 
 @app.get("/")

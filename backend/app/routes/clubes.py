@@ -7,7 +7,7 @@ from app.models.usuario import Usuario
 from app.models.club import Club
 from app.models.miembro_club import MiembroClub
 from app.models.noticia import Noticia
-from app.schemas.club import ClubCreate, ClubUpdate, ClubResponse, MiembroClubResponse, MiembroRolUpdate
+from app.schemas.club import ClubCreate, ClubUpdate, ClubResponse, MiembroClubResponse, MiembroRolUpdate, MiembroEstadoUpdate
 from app.schemas.noticia import NoticiaResponse
 from app.services.invitacion_service import InvitacionService
 from app.routes.auth import get_current_user
@@ -176,7 +176,7 @@ async def actualizar_club(
         "nombre", "descripcion", "logo_url", 
         "color_primario", "color_secundario", "color_acento",
         "pais", "region", "email_contacto", "telefono", "sitio_web",
-        "latitud", "longitud"
+        "latitud", "longitud", "ayuda_documentacion_md"
     }
     
     for field, value in update_data.items():
@@ -194,6 +194,7 @@ async def actualizar_club(
 @router.get("/{club_id}/miembros", response_model=list)
 async def listar_miembros(
     club_id: int,
+    include_inactivos: bool = False,
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -211,10 +212,21 @@ async def listar_miembros(
             detail="No tienes acceso a este club"
         )
     
-    miembros = db.query(MiembroClub).filter(
-        MiembroClub.club_id == club_id,
-        MiembroClub.estado == "activo"
-    ).all()
+    miembros_query = db.query(MiembroClub).filter(
+        MiembroClub.club_id == club_id
+    )
+    if not include_inactivos:
+        miembros_query = miembros_query.filter(MiembroClub.estado == "activo")
+    else:
+        miembro_admin = db.query(MiembroClub).filter(
+            MiembroClub.usuario_id == current_user.id,
+            MiembroClub.club_id == club_id,
+            MiembroClub.rol == "administrador"
+        ).first()
+        if not miembro_admin:
+            miembros_query = miembros_query.filter(MiembroClub.estado == "activo")
+
+    miembros = miembros_query.all()
     
     return [MiembroClubResponse.model_validate(m) for m in miembros]
 
@@ -349,11 +361,56 @@ async def remover_miembro(
             detail="Miembro no encontrado"
         )
     
-    # Marcar como inactivo en lugar de eliminar
-    miembro.estado = "inactivo"
+    # Eliminar miembro del club
+    db.delete(miembro)
     db.commit()
-    
-    return {"message": "Miembro removido del club"}
+
+    return {"message": "Miembro eliminado del club"}
+
+
+@router.put("/{club_id}/miembros/{usuario_id}/estado", response_model=dict)
+async def actualizar_estado_miembro(
+    club_id: int,
+    usuario_id: int,
+    estado_update: MiembroEstadoUpdate,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Actualizar estado de un miembro (solo administradores)"""
+
+    miembro_admin = db.query(MiembroClub).filter(
+        MiembroClub.usuario_id == current_user.id,
+        MiembroClub.club_id == club_id,
+        MiembroClub.rol == "administrador"
+    ).first()
+
+    if not miembro_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo administradores pueden cambiar el estado"
+        )
+
+    if estado_update.estado not in ["activo", "inactivo"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Estado inválido"
+        )
+
+    miembro = db.query(MiembroClub).filter(
+        MiembroClub.usuario_id == usuario_id,
+        MiembroClub.club_id == club_id
+    ).first()
+
+    if not miembro:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Miembro no encontrado"
+        )
+
+    miembro.estado = estado_update.estado
+    db.commit()
+
+    return {"message": "Estado actualizado"}
 
 
 @router.put("/{club_id}/miembros/{usuario_id}/rol", response_model=dict)

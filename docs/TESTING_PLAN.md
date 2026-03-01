@@ -40,6 +40,12 @@
 | CU-034 | Landing invitacion muestra email | 🟢 | OK |
 | CU-035 | Google OAuth code flow (Backend) | 🟢 | OK |
 | CU-036 | Google OAuth login (Frontend) | ⏳ | Pendiente |
+| CU-037 | Chat con Asistente (OpenClaw) | 🟢 | OK |
+| CU-038 | Cambiar estado miembro (Admin) | ⏳ | Pendiente |
+| CU-039 | Acciones por rol en Miembros (UI) | ⏳ | Pendiente |
+| CU-040 | Listar miembros incluyendo inactivos | ⏳ | Pendiente |
+| CU-041 | Ayuda de documentación por club (Markdown) | ⏳ | Pendiente |
+| CU-042 | Perfil ampliado de socio y foto de carnet | ⏳ | Pendiente |
 
 
 ## 🔐 MÓDULO 1: AUTENTICACIÓN
@@ -508,6 +514,121 @@
 **Status:** 🟢 OK  
 **Resultado Actual:** ✅ Rol actualizado via endpoint y reflejado en listado
 **Notas:** 
+
+---
+
+### CU-038: Cambiar Estado de Miembro (Admin)
+**Módulo:** Miembros
+**Descripción:** Administrador activa o desactiva un miembro del club
+**Precondiciones:**
+- Usuario admin del club
+- Miembro con estado activo
+
+**Pasos:**
+1. Ir a la vista de miembros del club
+2. Abrir el desplegable de acciones del miembro
+3. Seleccionar "Desactivar"
+4. Verificar estado "Inactivo" y que aparezca el menú de activar/eliminar
+5. Seleccionar "Cambiar a Activo"
+
+**Resultado Esperado:**
+- ✅ Estado cambia a inactivo/activo según selección
+- ✅ El desplegable muestra solo opciones válidas
+
+**Status:** ⏳ Pendiente
+**Resultado Actual:** [Por ejecutar]
+**Notas:**
+
+---
+
+### CU-039: Acciones por Rol en Miembros (UI)
+**Módulo:** Miembros
+**Descripción:** Las acciones disponibles se ajustan por rol y estado
+**Precondiciones:**
+- Usuario admin del club
+- Hay miembros con rol admin, miembro y estados activo/inactivo
+
+**Pasos:**
+1. Abrir la vista de miembros
+2. Verificar que un admin no muestre opciones de desactivar/eliminar
+3. Verificar que "Cambiar a Admin" solo aparezca si el rol es miembro
+4. Verificar que "Cambiar a Miembro" solo aparezca si el rol es admin
+
+**Resultado Esperado:**
+- ✅ Solo se muestran acciones permitidas por rol/estado
+
+**Status:** ⏳ Pendiente
+**Resultado Actual:** [Por ejecutar]
+**Notas:**
+
+---
+
+### CU-040: Listar Miembros Incluyendo Inactivos
+**Módulo:** Miembros
+**Descripción:** Admin puede listar miembros incluyendo inactivos
+**Precondiciones:**
+- Usuario admin
+- Existe al menos un miembro inactivo
+
+**Pasos:**
+1. Llamar `GET /api/clubes/{club_id}/miembros?include_inactivos=true`
+2. Verificar que se incluyan miembros inactivos
+
+**Resultado Esperado:**
+- ✅ Se listan miembros activos e inactivos
+
+**Status:** ⏳ Pendiente
+**Resultado Actual:** [Por ejecutar]
+**Notas:**
+
+---
+
+### CU-041: Ayuda de Documentación por Club (Markdown)
+**Módulo:** Clubes / Documentación
+**Descripción:** Admin configura ayuda en Markdown y el usuario la ve desde su documentación
+**Precondiciones:**
+- Usuario admin del club
+- Usuario miembro con acceso a documentación
+
+**Pasos:**
+1. En edición del club, completar el campo "Ayuda de Documentación (Markdown)" con contenido
+2. Guardar cambios
+3. Ir a la pantalla de documentación del usuario
+4. Seleccionar el club en el selector de ayuda
+5. Hacer clic en "Ver ayuda"
+
+**Resultado Esperado:**
+- ✅ Se muestra el contenido renderizado en Markdown
+- ✅ El link/botón está disponible solo si existe ayuda
+
+**Status:** ⏳ Pendiente
+**Resultado Actual:** [Por ejecutar]
+**Notas:**
+
+---
+
+### CU-042: Perfil Ampliado de Socio y Foto de Carnet
+**Módulo:** Socios
+**Descripción:** Usuario completa su ficha de socio y sube foto de carnet
+**Precondiciones:**
+- Usuario autenticado y miembro de un club
+- Acceso a la pantalla de perfil
+
+**Pasos:**
+1. Ir a Perfil → "Perfil de Socio"
+2. Seleccionar un club en el selector
+3. Completar nombre, email, telefono, direccion y especialidades
+4. Subir una imagen en "Foto de carnet"
+5. Guardar cambios
+
+**Resultado Esperado:**
+- ✅ Se crea o actualiza el perfil de socio
+- ✅ La foto se muestra en previsualizacion tras guardar
+- ✅ El estado del socio permanece visible
+
+**Status:** ⏳ Pendiente
+**Resultado Actual:** [Por ejecutar]
+**Notas:**
 
 ---
 
@@ -1193,3 +1314,31 @@
 
 **Status:** 🟢 OK
 **Resultado Actual:** ✅ Datos cargados desde el backend.
+
+
+---
+
+##  MÓDULO 6: INTELIGENCIA ARTIFICIAL
+
+### CU-037: Chat con Asistente (OpenClaw)
+**Módulo:** IA
+**Descripción:** Usuario envía un mensaje al asistente y recibe respuesta
+**Precondiciones:**
+- Backend configurado con credenciales OpenClaw válidas
+- Servidor OpenClaw accesible
+
+**Pasos:**
+1. Login en la aplicación
+2. Abrir widget de chat (si disponible) o ir a sección de ayuda
+3. Escribir 'Hola, ¿estás operativo?'
+4. Enviar mensaje
+
+**Resultado Esperado:**
+-  Mensaje del usuario aparece en el chat
+-  Indicador de 'Escribiendo...' visible
+-  Respuesta del bot se recibe y renderiza correctamente
+-  No hay errores de conexión WebSocket en consola del backend
+
+**Status:**  OK
+**Resultado Actual:**  Integración probada con tests de integración (test_openclaw.py) y manual
+**Notas:** Configurado en modo Gateway Client con autenticación por contraseña.

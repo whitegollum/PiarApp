@@ -40,8 +40,8 @@ services:
         VITE_API_URL: /api
         VITE_APP_NAME: PiarAPP
         VITE_APP_VERSION: 0.1.0
-        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
-        VITE_GOOGLE_REDIRECT_URI: ${VITE_GOOGLE_REDIRECT_URI}
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+        VITE_GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
     container_name: piar_frontend
     ports:
       - "8587:80"
@@ -89,7 +89,7 @@ services:
       TZ: Europe/Madrid
       OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
       BRAVE_API_KEY: "${BRAVE_API_KEY:-}"
-      OPENCLAW_GATEWAY_PASSWORD: "${OPENCLAW_GATEWAY_PASSWORD}"
+      OPENCLAW_GATEWAY_PASSWORD: "${OPENCLAW_PASSWORD}"
     image: openclaw:latest
     expose:
       - "18789"

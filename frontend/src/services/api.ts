@@ -113,7 +113,7 @@ export class APIService {
   /**
    * Realiza un DELETE request
    */
-  static async delete<T>(endpoint: string, options?: FetchOptions): Promise<T> {
+  static async delete<T = void>(endpoint: string, options?: FetchOptions): Promise<T> {
     const response = await this.request(endpoint, {
       ...options,
       method: 'DELETE'
@@ -122,6 +122,11 @@ export class APIService {
     if (!response.ok) {
       const error = await response.json()
       throw new Error(error.detail || `HTTP ${response.status}`)
+    }
+
+    // Si la respuesta está vacía (204 No Content), devolver undefined
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
+      return undefined as T
     }
 
     return response.json() as Promise<T>

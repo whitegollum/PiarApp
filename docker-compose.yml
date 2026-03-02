@@ -82,14 +82,16 @@ services:
   #     ]
 
   openclaw-gateway-piara:
+    build:
+      context: ./openclaw
     container_name: openclawPiara
     environment:
       HOME: /data
       PNPM_STORE_DIR: /data/.pnpm-store
       TZ: Europe/Madrid
-      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
-      BRAVE_API_KEY: "${BRAVE_API_KEY:-}"
-      OPENCLAW_GATEWAY_PASSWORD: "${OPENCLAW_PASSWORD}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY}"
+      BRAVE_API_KEY: "${BRAVE_API_KEY}"
+      OPENCLAW_GATEWAY_PASSWORD: "${OPENCLAW_GATEWAY_PASSWORD}"
     image: openclaw:latest
     expose:
       - "18789"

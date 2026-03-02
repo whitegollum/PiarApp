@@ -48,7 +48,7 @@ const SocioService = {
     return APIService.get<Socio>(`/socios/${socioId}`);
   },
   deleteSocio: async (socioId: number): Promise<void> => {
-    return APIService.request(`/socios/${socioId}`, { method: 'DELETE' });
+    await APIService.delete<void>(`/socios/${socioId}`);
   },
   createSocio: async (data: SocioCreate): Promise<Socio> => {
     return APIService.post<Socio>(`/socios/`, data);

@@ -153,7 +153,7 @@ export default function ClubDocumentacion() {
     try {
       const result = type === 'rc'
         ? await DocumentacionService.downloadRc()
-        : await DocumentacionService.downloadCarnet()
+        : await DocumentacionService.downloadMyCarnet()
 
       const url = window.URL.createObjectURL(result.blob)
       const anchor = document.createElement('a')

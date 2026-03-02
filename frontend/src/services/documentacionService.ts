@@ -102,7 +102,7 @@ export const DocumentacionService = {
     return { blob, filename }
   },
 
-  downloadCarnet: async (): Promise<{ blob: Blob; filename: string }> => {
+  downloadMyCarnet: async (): Promise<{ blob: Blob; filename: string }> => {
     const response = await fetch(`${API_BASE_URL}/documentacion/me/carnet`, {
       headers: {
         ...authHeaders()

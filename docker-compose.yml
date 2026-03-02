@@ -20,6 +20,11 @@ services:
       - SMTP_USE_TLS=${SMTP_USE_TLS}
       - FRONTEND_URL=${FRONTEND_URL}
       - CORS_ORIGINS=${CORS_ORIGINS}
+      - OPENCLAW_API_KEY=${OPENCLAW_API_KEY}
+      - OPENCLAW_API_URL=http://openclaw-gateway-piara:18789/v1/chat
+      - OPENCLAW_AUTH_MODE=${OPENCLAW_AUTH_MODE}
+      - OPENCLAW_GATEWAY_PASSWORD=${OPENCLAW_GATEWAY_PASSWORD}
+      - OPENCLAW_LOGIN_URL=http://openclaw-gateway-piara:18789/v1/login
     volumes:
       - piar_data:/app/data
     ports:
@@ -86,13 +91,15 @@ services:
       BRAVE_API_KEY: "${BRAVE_API_KEY:-}"
       OPENCLAW_GATEWAY_PASSWORD: "${OPENCLAW_GATEWAY_PASSWORD}"
     image: openclaw:latest
-    ports:
-      - '18789:18789'
+    expose:
+      - "18789"
     restart: unless-stopped
     stdin_open: True
     tty: True
     volumes:
       - /mnt/apps/clawdbot/data:/app/data
+    networks:
+      - piar-network
 
 networks:
   piar-network:

@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "deviceId": "978ff04d0bf1d0998b4d9f8c3f2f89ca798a39360d99b20453fc8e76e52e126b",
+  "deviceId": "xxxx",
   "tokens": {
     "operator": {
-      "token": "QfMzSp-rUkLc8pcoCw_p6ZH9kviMPfWKDvc2HstpLa0",
+      "token": "xxxxx",
       "role": "operator",
       "scopes": [
         "operator.read"

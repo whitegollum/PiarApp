@@ -7,6 +7,32 @@ from ..models.usuario import Usuario
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
+@router.get("/openclaw/debug")
+async def debug_openclaw_connection(
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Diagnostica la conexión a OpenClaw y retorna información detallada.
+    Útil para depurar problemas de conexión en producción.
+    **Solo accesible para superadministradores.**
+    """
+    # Verificar que el usuario sea superadmin
+    if not current_user.es_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo los superadministradores pueden acceder al diagnóstico de OpenClaw"
+        )
+    
+    try:
+        diagnosis = await openclaw_service.diagnose_connection()
+        return diagnosis
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Diagnostic failed: {str(e)}",
+            "steps": [{"step": "initialization", "status": "error", "details": str(e)}]
+        }
+
 @router.get("/openclaw/history", response_model=List[Dict[str, Any]])
 async def get_chat_history_route(
     club_id: int = None,

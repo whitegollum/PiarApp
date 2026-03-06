@@ -184,6 +184,34 @@
   }
 }
 
+/* Botón de warning para acciones de prueba */
+.btn-warning {
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background-color: #f57c00;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 152, 0, 0.3);
+}
+
+.btn-warning:disabled {
+  background-color: #ffb74d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .club-edit-main {

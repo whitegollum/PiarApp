@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import APIService from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import '../styles/OpenClawChat.css';
 
 interface Message {
@@ -17,12 +18,17 @@ interface OpenClawChatProps {
 }
 
 export default function OpenClawChat({ clubId, clubName }: OpenClawChatProps) {
+  const { usuario } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   // Check if there are user messages to decide initial state (if persisted in future)
   const [isExpanded, setIsExpanded] = useState(false);
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
+  const [showDebugModal, setShowDebugModal] = useState(false);
+  const [debugResults, setDebugResults] = useState<any>(null);
+  const [isDebugging, setIsDebugging] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -44,6 +50,23 @@ export default function OpenClawChat({ clubId, clubName }: OpenClawChatProps) {
     // Clean up internal tags like [[reply_to_current]]
     return text.replace(/\[\[.*?\]\]/g, '').trim();
   };
+
+  // Verificar conexión cuando se expande el chat
+  useEffect(() => {
+    if (isExpanded) {
+      const checkConnection = async () => {
+        try {
+          // Intenta hacer una petición simple para verificar conectividad
+          await APIService.get(`/chat/openclaw/history?limit=1&club_id=${clubId}`);
+          setConnectionStatus('online');
+        } catch (error) {
+          console.error('OpenClaw connection check failed:', error);
+          setConnectionStatus('offline');
+        }
+      };
+      checkConnection();
+    }
+  }, [isExpanded, clubId]);
 
   useEffect(() => {
     if (isExpanded && !hasLoadedHistory) {
@@ -144,6 +167,9 @@ export default function OpenClawChat({ clubId, clubName }: OpenClawChatProps) {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botMessage]);
+      
+      // Actualizar estado de conexión como online si la respuesta fue exitosa
+      setConnectionStatus('online');
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage: Message = {
@@ -153,8 +179,30 @@ export default function OpenClawChat({ clubId, clubName }: OpenClawChatProps) {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
+      
+      // Actualizar estado de conexión como offline si hubo error
+      setConnectionStatus('offline');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const runDiagnostic = async () => {
+    setIsDebugging(true);
+    setShowDebugModal(true);
+    setDebugResults(null);
+    
+    try {
+      const result = await APIService.get('/chat/openclaw/debug');
+      setDebugResults(result);
+    } catch (error: any) {
+      setDebugResults({
+        success: false,
+        error: error.message || 'Failed to run diagnostic',
+        steps: [{ step: 'request_error', status: 'error', details: error.toString() }]
+      });
+    } finally {
+      setIsDebugging(false);
     }
   };
 
@@ -167,21 +215,35 @@ export default function OpenClawChat({ clubId, clubName }: OpenClawChatProps) {
               <div className="openclaw-avatar">🤖</div>
               <div className="openclaw-title">
                 <h3>OpenClaw Bot</h3>
-                <span className="openclaw-status">En línea</span>
+                <span className={`openclaw-status status-${connectionStatus}`}>
+                  {connectionStatus === 'online' && '🟢 En línea'}
+                  {connectionStatus === 'offline' && '🔴 Sin conexión'}
+                  {connectionStatus === 'checking' && '🟡 Verificando...'}
+                </span>
               </div>
             </div>
-            <button className="minimize-btn" onClick={handleCollapse} title="Minimizar chat">
-              −
-            </button>
+            <div className="header-actions">
+              {usuario?.es_superadmin && (
+                <button 
+                  className="debug-btn" 
+                  onClick={runDiagnostic} 
+                  title="Diagnóstico de conexión (Solo superadmins)"
+                  disabled={isDebugging}
+                >
+                  🔧
+                </button>
+              )}
+              <button className="minimize-btn" onClick={handleCollapse} title="Minimizar chat">
+                −
+              </button>
+            </div>
           </div>
       
           <div className="openclaw-messages">
             {messages.map((msg) => (
               <div key={msg.id} className={`message ${msg.sender}`}>
                 <div className="message-content">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {msg.text}
-                  </ReactMarkdown>
+                  {React.createElement(ReactMarkdown as any, { remarkPlugins: [remarkGfm], children: msg.text })}
                 </div>
                 <div className="message-time">
                   {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -213,6 +275,81 @@ export default function OpenClawChat({ clubId, clubName }: OpenClawChatProps) {
           ➤
         </button>
       </form>
+
+      {/* Debug Modal */}
+      {showDebugModal && (
+        <div className="debug-modal-overlay" onClick={() => setShowDebugModal(false)}>
+          <div className="debug-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="debug-modal-header">
+              <h3>🔧 Diagnóstico de Conexión OpenClaw</h3>
+              <button onClick={() => setShowDebugModal(false)}>×</button>
+            </div>
+            <div className="debug-modal-body">
+              {isDebugging && (
+                <div className="debug-loading">
+                  <div className="spinner"></div>
+                  <p>Ejecutando diagnóstico...</p>
+                </div>
+              )}
+              
+              {debugResults && (
+                <div className="debug-results">
+                  <div className={`debug-summary ${debugResults.success ? 'success' : 'error'}`}>
+                    <strong>Estado:</strong> {debugResults.success ? '✅ Conexión exitosa' : '❌ Error en conexión'}
+                    {debugResults.error && <div className="error-message">Error: {debugResults.error}</div>}
+                  </div>
+
+                  {debugResults.config && (
+                    <div className="debug-section">
+                      <h4>📋 Configuración</h4>
+                      <ul>
+                        <li><strong>URL:</strong> {debugResults.config.ws_url}</li>
+                        <li><strong>Auth Mode:</strong> {debugResults.config.auth_mode}</li>
+                        <li><strong>Password configurada:</strong> {debugResults.config.has_password ? '✅ Sí' : '❌ No'}</li>
+                        <li><strong>API Key configurada:</strong> {debugResults.config.has_api_key ? '✅ Sí' : '❌ No'}</li>
+                        {debugResults.config.client_id && (
+                          <li><strong>Client ID:</strong> {debugResults.config.client_id}</li>
+                        )}
+                        {debugResults.config.protocol_version && (
+                          <li><strong>Protocol Version:</strong> {debugResults.config.protocol_version}</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
+                  {debugResults.steps && debugResults.steps.length > 0 && (
+                    <div className="debug-section">
+                      <h4>🔍 Pasos de Diagnóstico</h4>
+                      <div className="debug-steps">
+                        {debugResults.steps.map((step: any, index: number) => (
+                          <div key={index} className={`debug-step ${step.status}`}>
+                            <div className="step-header">
+                              <span className="step-icon">
+                                {step.status === 'ok' ? '✅' : '❌'}
+                              </span>
+                              <span className="step-name">{step.step}</span>
+                            </div>
+                            <div className="step-details">{step.details}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="debug-actions">
+                    <button className="btn-secondary" onClick={() => setShowDebugModal(false)}>
+                      Cerrar
+                    </button>
+                    <button className="btn-primary" onClick={runDiagnostic} disabled={isDebugging}>
+                      Volver a ejecutar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -51,6 +51,14 @@ interface ContrasenaData {
   fecha_creacion: string
 }
 
+interface RecentContentItem {
+  tipo: "noticia" | "evento" | "producto"
+  id: number
+  titulo: string
+  descripcion: string | null
+  fecha: string
+}
+
 export default function ClubDetail() {
   const { usuario } = useAuth()
   const { clubId } = useParams<{ clubId: string }>()
@@ -63,13 +71,28 @@ export default function ClubDetail() {
   const [socioPhotoUrls, setSocioPhotoUrls] = useState<Record<number, string>>({})
   const [noticias, setNoticias] = useState<Noticia[]>([])
   const [eventos, setEventos] = useState<Evento[]>([])
+  const [contenidoReciente, setContenidoReciente] = useState<RecentContentItem[]>([])
   const [instalacionPass, setInstalacionPass] = useState<ContrasenaData | null>(null)
   const [weather, setWeather] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [tab, setTab] = useState<'resumen' | 'miembros' | 'noticias' | 'eventos'>('resumen')
+  const [tab, setTab] = useState<'resumen' | 'miembros' | 'noticias' | 'eventos' | 'productos'>('resumen')
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   
   const canEdit = role === 'administrador' || usuario?.es_superadmin;
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (dropdownOpen && !target.closest('.club-actions-dropdown')) {
+        setDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [dropdownOpen])
 
   useEffect(() => {
     if (!usuario || !clubId) {
@@ -83,12 +106,13 @@ export default function ClubDetail() {
         const id = parseInt(clubId)
         
         // Cargar todo en paralelo
-        const [clubData, miembrosData, sociosList, noticiasData, eventosData] = await Promise.all([
+        const [clubData, miembrosData, sociosList, noticiasData, eventosData, contenidoRecienteData] = await Promise.all([
           APIService.get<Club>(`/clubes/${id}`),
           APIService.get<Miembro[]>(`/clubes/${id}/miembros`),
           SocioService.getSociosByClub(id).catch(() => []) as Promise<Socio[]>,
           NewsService.getAll(id, 0, 5),    // Traer últimos 5
-          EventService.getAll(id, 0, 5)    // Traer últimos 5
+          EventService.getAll(id, 0, 5),    // Traer últimos 5
+          APIService.get<RecentContentItem[]>(`/clubes/${id}/contenido-reciente`).catch(() => [])
         ])
         
         setClub(clubData)
@@ -100,6 +124,7 @@ export default function ClubDetail() {
         setSocios(sociosMap)
         setNoticias(noticiasData)
         setEventos(eventosData)
+        setContenidoReciente(contenidoRecienteData)
 
         // Try to fetch facility password if member
         // (This might fail with 403 if not member or 404 if not set, so we handle it separately to not block page load)
@@ -220,24 +245,82 @@ export default function ClubDetail() {
         <div className="club-detail-container">
           {/* Header del club */}
           <div className="club-detail-header">
-            <button 
-              className="btn btn-back"
-              onClick={() => navigate('/')}
-            >
-              ← Volver
-            </button>
             <div className="club-info">
               <div className="club-title-row">
                 <div>
                   <h1>{club.nombre}</h1>
                   <p className="club-slug">{club.slug}</p>
                 </div>
-                <button 
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => navigate(`/clubes/${clubId}/editar`)}
-                >
-                  ✏️ Editar
-                </button>
+                <div className="club-actions-dropdown">
+                  <button 
+                    className="btn btn-secondary btn-sm dropdown-trigger"
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                  >
+                    ⚙️ Acciones ▾
+                  </button>
+                  {dropdownOpen && (
+                    <div className="dropdown-menu">
+                      {canEdit && (
+                        <button 
+                          className="dropdown-item"
+                          onClick={() => {
+                            navigate(`/clubes/${clubId}/editar`)
+                            setDropdownOpen(false)
+                          }}
+                        >
+                          ✏️ Editar Club
+                        </button>
+                      )}
+                      <button 
+                        className="dropdown-item"
+                        onClick={() => {
+                          navigate(`/clubes/${clubId}/miembros`)
+                          setDropdownOpen(false)
+                        }}
+                      >
+                        👥 Administrar miembros
+                      </button>
+                      <button 
+                        className="dropdown-item"
+                        onClick={() => {
+                          navigate(`/clubes/${clubId}/noticias/crear`)
+                          setDropdownOpen(false)
+                        }}
+                      >
+                        📰 Añadir noticia
+                      </button>
+                      <button 
+                        className="dropdown-item"
+                        onClick={() => {
+                          navigate(`/clubes/${clubId}/eventos/crear`)
+                          setDropdownOpen(false)
+                        }}
+                      >
+                        📅 Añadir evento
+                      </button>
+                      {canEdit && (
+                        <button 
+                          className="dropdown-item"
+                          onClick={() => {
+                            navigate(`/clubes/${clubId}/productos/admin`)
+                            setDropdownOpen(false)
+                          }}
+                        >
+                          🛒 Administrar Productos
+                        </button>
+                      )}
+                      <button 
+                        className="dropdown-item"
+                        onClick={() => {
+                          setDropdownOpen(false)
+                          // TODO: Navegar a editar contraseña
+                        }}
+                      >
+                        🔒 Editar contraseña de acceso
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               {club.descripcion && (
                 <p className="club-description">{club.descripcion}</p>
@@ -270,6 +353,12 @@ export default function ClubDetail() {
               onClick={() => setTab('eventos')}
             >
               Eventos ({eventos.length})
+            </button>
+            <button
+              className={`tab ${tab === 'productos' ? 'active' : ''}`}
+              onClick={() => navigate(`/clubes/${clubId}/productos`)}
+            >
+              🛒 Tienda
             </button>
           </div>
 
@@ -330,46 +419,48 @@ export default function ClubDetail() {
                   </div>
                 )}
 
-                <div className="stats-grid">
-                  <div className="stat-card">
-                    <div className="stat-value">{miembros.length}</div>
-                    <div className="stat-label">Miembros</div>
-                  </div>
-                  <div className="stat-card">
-                    <div className="stat-value">{noticias.length}</div>
-                    <div className="stat-label">Noticias</div>
-                  </div>
-                  <div className="stat-card">
-                    <div className="stat-value">{eventos.length}</div>
-                    <div className="stat-label">Eventos</div>
-                  </div>
-                </div>
-                {canEdit && (
-                  <div className="action-buttons">
-                    <button 
-                      className="btn btn-secondary"
-                      onClick={() => navigate(`/clubes/${clubId}/editar`)}
-                    >
-                      ✏️ Editar Club
-                    </button>
-                    <button 
-                      className="btn btn-primary"
-                      onClick={() => navigate(`/clubes/${clubId}/miembros`)}
-                    >
-                      👥 Administrar Miembros
-                    </button>
-                    <button 
-                      className="btn btn-outline"
-                      onClick={() => navigate(`/clubes/${clubId}/noticias/crear`)}
-                    >
-                      + Noticia
-                    </button>
-                    <button 
-                      className="btn btn-outline"
-                      onClick={() => navigate(`/clubes/${clubId}/eventos/crear`)}
-                    >
-                      + Evento
-                    </button>
+                {/* Novedades Recientes */}
+                {contenidoReciente.length > 0 && (
+                  <div className="recent-content-section">
+                    <h3 className="recent-content-header">🆕 Novedades Recientes</h3>
+                    <div className="recent-content-grid">
+                      {contenidoReciente.map((item) => {
+                        const badgeEmoji = item.tipo === 'noticia' ? '📰' : item.tipo === 'evento' ? '📅' : '🛒'
+                        const badgeColor = item.tipo === 'noticia' ? '#2196F3' : item.tipo === 'evento' ? '#4CAF50' : '#FF9800'
+                        
+                        return (
+                          <div
+                            key={`${item.tipo}-${item.id}`}
+                            className="recent-content-card"
+                            onClick={() => {
+                              if (item.tipo === 'noticia') {
+                                navigate(`/clubes/${clubId}/noticias`)
+                              } else if (item.tipo === 'evento') {
+                                navigate(`/clubes/${clubId}/eventos`)
+                              } else if (item.tipo === 'producto') {
+                                navigate(`/clubes/${clubId}/productos`)
+                              }
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="recent-content-badge" style={{ backgroundColor: badgeColor }}>
+                              {badgeEmoji} {item.tipo === 'noticia' ? 'Noticia' : item.tipo === 'evento' ? 'Evento' : 'Producto'}
+                            </div>
+                            <h4 className="recent-content-title">{item.titulo}</h4>
+                            {item.descripcion && (
+                              <p className="recent-content-description">{item.descripcion}</p>
+                            )}
+                            <div className="recent-content-date">
+                              {new Date(item.fecha).toLocaleDateString('es-ES', { 
+                                day: 'numeric', 
+                                month: 'short', 
+                                year: 'numeric' 
+                              })}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
                 )}
 

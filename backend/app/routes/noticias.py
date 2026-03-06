@@ -1,6 +1,8 @@
 """Endpoints de gestión de noticias"""
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 from sqlalchemy.orm import Session
+import logging
+import json
 
 from app.database.db import get_db
 from app.models.usuario import Usuario
@@ -14,6 +16,7 @@ from app.routes.auth import get_current_user
 from datetime import datetime
 from typing import List # Added
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -27,6 +30,10 @@ async def crear_noticia(
     db: Session = Depends(get_db)
 ):
     """Crear nueva noticia en el club (solo administradores)"""
+    
+    # Log datos recibidos
+    logger.info(f"[CREATE NOTICIA] Club ID: {club_id}, User: {current_user.email}")
+    logger.info(f"[CREATE NOTICIA] Data: {noticia_create.model_dump()}")
     
     # Verificar que el usuario es administrador del club
     miembro_admin = db.query(MiembroClub).filter(
@@ -59,7 +66,9 @@ async def crear_noticia(
         imagen_url=noticia_create.imagen_url,
         visible_para=noticia_create.visible_para,
         permite_comentarios=noticia_create.permite_comentarios,
-        autor_id=current_user.id
+        autor_id=current_user.id,
+        estado="publicada",
+        fecha_publicacion=datetime.now()
     )
     
     db.add(nueva_noticia)

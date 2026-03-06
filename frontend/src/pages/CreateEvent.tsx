@@ -40,17 +40,51 @@ const CreateEvent: React.FC = () => {
         setError(null);
 
         try {
+            // Combine date + time into ISO datetime strings
+            const fechaInicioDatetime = formData.fecha_inicio + 'T' + (formData.hora_inicio || '00:00:00');
+            const fechaFinDatetime = formData.fecha_fin 
+                ? formData.fecha_fin + 'T' + (formData.hora_fin || '23:59:59')
+                : null;
+
             const payload: any = {
-                ...formData,
-                aforo_maximo: formData.aforo_maximo ? parseInt(formData.aforo_maximo) : undefined,
+                nombre: formData.nombre,
+                descripcion: formData.descripcion,
+                tipo: formData.tipo,
+                fecha_inicio: fechaInicioDatetime,
+                fecha_fin: fechaFinDatetime,
+                ubicacion: formData.ubicacion || null,
+                aforo_maximo: formData.aforo_maximo ? parseInt(formData.aforo_maximo) : null,
                 requisitos: formData.requisitos ? { notas: formData.requisitos } : {},
             };
 
+            console.log('Sending event data:', payload);
             await EventService.create(parseInt(clubId), payload);
             navigate(`/clubes/${clubId}/eventos`);
-        } catch (err) {
-            setError('Error al crear el evento. Verifica los datos.');
-            console.error(err);
+        } catch (err: any) {
+            // Handle validation errors from backend
+            if (err.response?.data?.detail && Array.isArray(err.response.data.detail)) {
+                const validationErrors = err.response.data.detail
+                    .map((e: any) => {
+                        const field = e.loc?.[1] || 'campo';
+                        const fieldNames: Record<string, string> = {
+                            'nombre': 'Nombre',
+                            'descripcion': 'Descripción',
+                            'fecha_inicio': 'Fecha Inicio',
+                            'fecha_fin': 'Fecha Fin',
+                            'ubicacion': 'Ubicación',
+                            'aforo_maximo': 'Aforo máximo'
+                        };
+                        const fieldName = fieldNames[field] || field;
+                        return `${fieldName}: ${e.msg}`;
+                    })
+                    .join(', ');
+                setError(validationErrors);
+            } else {
+                const errorMsg = err.response?.data?.detail || err.message || 'Error al crear el evento. Verifica los datos.';
+                setError(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
+            }
+            console.error('Error creating event:', err);
+            console.error('Error response:', err.response?.data);
         } finally {
             setLoading(false);
         }
@@ -76,8 +110,11 @@ const CreateEvent: React.FC = () => {
                                 id="nombre"
                                 name="nombre"
                                 required
+                                minLength={5}
+                                maxLength={200}
                                 value={formData.nombre}
                                 onChange={handleChange}
+                                placeholder="Nombre del evento (mínimo 5 caracteres)"
                             />
                         </div>
 
@@ -160,9 +197,12 @@ const CreateEvent: React.FC = () => {
                                 id="descripcion"
                                 name="descripcion"
                                 required
+                                minLength={10}
+                                maxLength={10000}
                                 rows={4}
                                 value={formData.descripcion}
                                 onChange={handleChange}
+                                placeholder="Descripción del evento (mínimo 10 caracteres)"
                             />
                         </div>
 

@@ -24,12 +24,6 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Links principales */}
-        <div className="navbar-menu">
-          <Link to="/" className="navbar-link">Dashboard</Link>
-          <Link to="/clubes" className="navbar-link">Clubes</Link>
-        </div>
-
         {/* Usuario y menú */}
         <div className="navbar-end">
           <div className="user-menu">

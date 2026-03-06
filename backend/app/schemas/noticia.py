@@ -1,5 +1,5 @@
 """Esquemas para Noticia"""
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Optional
 from datetime import datetime
 from app.schemas.club import UsuarioBasicoResponse
@@ -9,10 +9,18 @@ class NoticiaCreate(BaseModel):
     """Crear nueva noticia"""
     titulo: str = Field(..., min_length=5, max_length=200)
     contenido: str = Field(..., min_length=10, max_length=10000)
-    categoria: Optional[str] = "general"
-    imagen_url: Optional[str] = None
-    visible_para: Optional[str] = "socios"
-    permite_comentarios: Optional[bool] = True
+    categoria: Optional[str] = Field(default="general")
+    imagen_url: Optional[str] = Field(default=None)
+    visible_para: str = Field(default="socios")
+    permite_comentarios: bool = Field(default=True)
+    
+    @field_validator('imagen_url', 'categoria', mode='before')
+    @classmethod
+    def empty_string_to_none(cls, v):
+        """Convert empty string to None"""
+        if v == "" or v is None:
+            return None
+        return v
 
 
 class NoticiaUpdate(BaseModel):

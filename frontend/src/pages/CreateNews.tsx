@@ -13,9 +13,9 @@ const CreateNews: React.FC = () => {
   const [formData, setFormData] = useState({
     titulo: '',
     contenido: '',
-    categoria: 'General',
+    categoria: 'general',
     imagen_url: '',
-    visible_para: 'publico', // Default visibility
+    visible_para: 'socios', // Default visibility
     permite_comentarios: true
   });
 
@@ -43,11 +43,38 @@ const CreateNews: React.FC = () => {
     setError(null);
 
     try {
-      await NewsService.create(parseInt(clubId), formData);
+      // Prepare data - convert empty strings to undefined for optional fields
+      const dataToSend = {
+        ...formData,
+        imagen_url: formData.imagen_url.trim() === '' ? undefined : formData.imagen_url
+      };
+      
+      console.log('Sending news data:', dataToSend);
+      await NewsService.create(parseInt(clubId), dataToSend);
       navigate(`/clubes/${clubId}/noticias`);
-    } catch (err) {
-      setError('Error al crear la noticia. Inténtalo de nuevo.');
-      console.error(err);
+    } catch (err: any) {
+      // Handle validation errors from backend
+      if (err.response?.data?.detail && Array.isArray(err.response.data.detail)) {
+        const validationErrors = err.response.data.detail
+          .map((e: any) => {
+            const field = e.loc?.[1] || 'campo';
+            const fieldNames: Record<string, string> = {
+              'titulo': 'Título',
+              'contenido': 'Contenido',
+              'categoria': 'Categoría',
+              'imagen_url': 'URL de Imagen'
+            };
+            const fieldName = fieldNames[field] || field;
+            return `${fieldName}: ${e.msg}`;
+          })
+          .join(', ');
+        setError(validationErrors);
+      } else {
+        const errorMsg = err.response?.data?.detail || err.message || 'Error al crear la noticia. Inténtalo de nuevo.';
+        setError(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
+      }
+      console.error('Error creating news:', err);
+      console.error('Error response:', err.response?.data);
     } finally {
       setLoading(false);
     }
@@ -73,9 +100,11 @@ const CreateNews: React.FC = () => {
                 id="titulo"
                 name="titulo"
                 required
+                minLength={5}
+                maxLength={200}
                 value={formData.titulo}
                 onChange={handleChange}
-                placeholder="Título de la noticia"
+                placeholder="Título de la noticia (mínimo 5 caracteres)"
               />
             </div>
 
@@ -87,11 +116,11 @@ const CreateNews: React.FC = () => {
                 value={formData.categoria}
                 onChange={handleChange}
               >
-                <option value="General">General</option>
-                <option value="Competicion">Competición</option>
-                <option value="Social">Social</option>
-                <option value="Avisos">Avisos</option>
-                <option value="Mantenimiento">Mantenimiento</option>
+                <option value="general">General</option>
+                <option value="competicion">Competición</option>
+                <option value="social">Social</option>
+                <option value="avisos">Avisos</option>
+                <option value="mantenimiento">Mantenimiento</option>
               </select>
             </div>
 
@@ -101,10 +130,12 @@ const CreateNews: React.FC = () => {
                 id="contenido"
                 name="contenido"
                 required
+                minLength={10}
+                maxLength={10000}
                 rows={6}
                 value={formData.contenido}
                 onChange={handleChange}
-                placeholder="Escribe el contenido de la noticia..."
+                placeholder="Escribe el contenido de la noticia (mínimo 10 caracteres)..."
               />
             </div>
 
@@ -143,7 +174,7 @@ const CreateNews: React.FC = () => {
                 onChange={handleChange}
               >
                 <option value="publico">Público</option>
-                <option value="miembros">Solo Miembros</option>
+                <option value="socios">Solo Socios</option>
               </select>
             </div>
 

@@ -14,9 +14,9 @@ const EditNews: React.FC = () => {
   const [formData, setFormData] = useState({
     titulo: '',
     contenido: '',
-    categoria: 'General',
+    categoria: 'general',
     imagen_url: '',
-    visible_para: 'publico',
+    visible_para: 'socios',
     permite_comentarios: true,
     estado: 'publicada'
   });
@@ -29,9 +29,9 @@ const EditNews: React.FC = () => {
         setFormData({
           titulo: news.titulo,
           contenido: news.contenido,
-          categoria: news.categoria || 'General',
+          categoria: news.categoria || 'general',
           imagen_url: news.imagen_url || '',
-          visible_para: news.visible_para || 'publico',
+          visible_para: news.visible_para || 'socios',
           permite_comentarios: news.permite_comentarios,
           estado: news.estado
         });
@@ -72,9 +72,29 @@ const EditNews: React.FC = () => {
     try {
       await NewsService.update(parseInt(clubId), parseInt(noticiaId), formData);
       navigate(`/clubes/${clubId}/noticias`);
-    } catch (err) {
-      setError('Error al actualizar la noticia.');
-      console.error(err);
+    } catch (err: any) {
+      // Handle validation errors from backend
+      if (err.response?.data?.detail && Array.isArray(err.response.data.detail)) {
+        const validationErrors = err.response.data.detail
+          .map((e: any) => {
+            const field = e.loc?.[1] || 'campo';
+            const fieldNames: Record<string, string> = {
+              'titulo': 'Título',
+              'contenido': 'Contenido',
+              'categoria': 'Categoría',
+              'imagen_url': 'URL de Imagen'
+            };
+            const fieldName = fieldNames[field] || field;
+            return `${fieldName}: ${e.msg}`;
+          })
+          .join(', ');
+        setError(validationErrors);
+      } else {
+        const errorMsg = err.response?.data?.detail || err.message || 'Error al actualizar la noticia.';
+        setError(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
+      }
+      console.error('Error updating news:', err);
+      console.error('Error response:', err.response?.data);
     } finally {
       setSaving(false);
     }
@@ -116,8 +136,11 @@ const EditNews: React.FC = () => {
                 id="titulo"
                 name="titulo"
                 required
+                minLength={5}
+                maxLength={200}
                 value={formData.titulo}
                 onChange={handleChange}
+                placeholder="Título de la noticia (mínimo 5 caracteres)"
               />
             </div>
 
@@ -129,11 +152,11 @@ const EditNews: React.FC = () => {
                 value={formData.categoria}
                 onChange={handleChange}
               >
-                <option value="General">General</option>
-                <option value="Competicion">Competición</option>
-                <option value="Social">Social</option>
-                <option value="Avisos">Avisos</option>
-                <option value="Mantenimiento">Mantenimiento</option>
+                <option value="general">General</option>
+                <option value="competicion">Competición</option>
+                <option value="social">Social</option>
+                <option value="avisos">Avisos</option>
+                <option value="mantenimiento">Mantenimiento</option>
               </select>
             </div>
 
@@ -143,9 +166,12 @@ const EditNews: React.FC = () => {
                 id="contenido"
                 name="contenido"
                 required
+                minLength={10}
+                maxLength={10000}
                 rows={6}
                 value={formData.contenido}
                 onChange={handleChange}
+                placeholder="Escribe el contenido de la noticia (mínimo 10 caracteres)..."
               />
             </div>
 
@@ -197,7 +223,7 @@ const EditNews: React.FC = () => {
                 onChange={handleChange}
               >
                 <option value="publico">Público</option>
-                <option value="miembros">Solo Miembros</option>
+                <option value="socios">Solo Socios</option>
               </select>
             </div>
 

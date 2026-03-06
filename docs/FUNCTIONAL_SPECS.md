@@ -630,6 +630,18 @@ Este documento describe detalladamente las funcionalidades del sistema
 
 ## 1.7 Tienda/Productos del Club
 
+> **Estado de Implementación (Marzo 2026):**  
+> ✅ **Fase 1 - CRUD Básico COMPLETADO:**  
+> - Backend: Modelo ProductoAfiliacion, endpoints CRUD completos  
+> - Frontend: Panel de administración (crear/editar/eliminar), catálogo para socios, activar/desactivar productos  
+> - Validación: HTML5 + backend (campos obligatorios, longitudes)  
+>  
+> 🔜 **Pendiente para Fase 2:**  
+> - Filtros (categoría, plataforma, búsqueda)  
+> - Estadísticas de clicks y seguimiento de ingresos  
+> - Favoritos, compartir, indicador de popularidad  
+> - Categorización y sistema de borradores  
+
 ### Publicar Productos
 
 **Descripción:** Administradores publican productos recomendados con código de referencia.

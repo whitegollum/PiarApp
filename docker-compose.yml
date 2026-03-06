@@ -23,7 +23,7 @@ services:
       - OPENCLAW_API_KEY=${OPENCLAW_API_KEY}
       - OPENCLAW_API_URL=http://openclaw-gateway-piara:18789/v1/chat
       - OPENCLAW_AUTH_MODE=${OPENCLAW_AUTH_MODE}
-      - OPENCLAW_GATEWAY_PASSWORD=${OPENCLAW_GATEWAY_PASSWORD}
+      - OPENCLAW_PASSWORD=${OPENCLAW_GATEWAY_PASSWORD}
       - OPENCLAW_LOGIN_URL=http://openclaw-gateway-piara:18789/v1/login
     volumes:
       - piar_data:/app/data
@@ -50,56 +50,33 @@ services:
     networks:
       - piar-network
 
-  # openclaw-gateway-piara:
-  #   build:
-  #     context: ./openclawPiara
-  #     dockerfile: Dockerfile
-  #   container_name: piara_openclaw
-  #   environment:
-  #     HOME: /home/node
-  #     TERM: xterm-256color
-  #     OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
-  #     CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY}
-  #     CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY}
-  #     CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE}
-  #   volumes:
-  #     - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
-  #     - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
-  #   ports:
-  #     - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
-  #     - "${OPENCLAW_BRIDGE_PORT:-18790}:18790"
-  #   init: true
-  #   restart: unless-stopped
-  #   command:
-  #     [
-  #       "node",
-  #       "dist/index.js",
-  #       "gateway",
-  #       "--bind",
-  #       "${OPENCLAW_GATEWAY_BIND:-lan}",
-  #       "--port",
-  #       "18789",
-  #     ]
+  
 
   openclaw-gateway-piara:
     build:
       context: ./openclaw
     container_name: openclawPiara
+    image: openclaw:latest
     environment:
       HOME: /data
-      PNPM_STORE_DIR: /data/.pnpm-store
       TZ: Europe/Madrid
+      OPENCLAW_DOCTOR: "0"
+      OPENCLAW_CONFIGURE: "0"
+      GATEWAY_MODE: local
       OPENAI_API_KEY: "${OPENAI_API_KEY}"
       BRAVE_API_KEY: "${BRAVE_API_KEY}"
       OPENCLAW_GATEWAY_PASSWORD: "${OPENCLAW_GATEWAY_PASSWORD}"
-    image: openclaw:latest
+      OPENCLAW_DEVICEID: "${OPENCLAW_DEVICEID}"
+      OPENCLAW_DEVICEID_TOKEN: "${OPENCLAW_DEVICEID_TOKEN}"
     expose:
       - "18789"
     restart: unless-stopped
     stdin_open: True
     tty: True
     volumes:
-      - /mnt/apps/clawdbot/data:/app/data
+      - piara_openclaw:/data
+      - ./openclaw/data/.config:/data/.config
+      - ./openclaw/data/.openclaw:/data/.openclaw
     networks:
       - piar-network
 
@@ -109,3 +86,4 @@ networks:
 
 volumes:
   piar_data:
+  piara_openclaw:

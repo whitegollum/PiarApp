@@ -2,9 +2,23 @@ import pytest
 import uuid
 import httpx
 from app.main import app
+from app.database.db import get_db
+from app.models.usuario import Usuario
+
+# Helper to set user as superadmin
+def _set_superadmin(email: str) -> None:
+    """Set a user as superadmin in the database"""
+    db = next(get_db())
+    try:
+        usuario = db.query(Usuario).filter(Usuario.email == email).first()
+        if usuario:
+            usuario.es_superadmin = True
+            db.commit()
+    finally:
+        db.close()
 
 # Helper to create a unique user and get token
-async def create_user_and_login(client, email=None):
+async def create_user_and_login(client, email=None, make_superadmin=False):
     if not email:
         email = f"user-{uuid.uuid4().hex[:8]}@example.com"
     password = "Password123!"
@@ -20,6 +34,10 @@ async def create_user_and_login(client, email=None):
     )
     assert reg_resp.status_code == 200, f"Registration failed: {reg_resp.text}"
     user_data = reg_resp.json()
+    
+    # Set as superadmin if requested
+    if make_superadmin:
+        _set_superadmin(email)
     
     # Login
     login_resp = await client.post(
@@ -58,8 +76,8 @@ async def create_club(client, token, name="Club Test"):
 async def test_noticias_crud():
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        # 1. Setup: Create User and Club
-        token, user = await create_user_and_login(client)
+        # 1. Setup: Create User and Club (user needs to be superadmin to create club)
+        token, user = await create_user_and_login(client, make_superadmin=True)
         club = await create_club(client, token)
         club_id = club["id"]
         
@@ -137,8 +155,8 @@ async def test_noticias_crud():
 async def test_noticias_permissions():
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        # Admin User
-        token_admin, _ = await create_user_and_login(client)
+        # Admin User (needs to be superadmin to create club)
+        token_admin, _ = await create_user_and_login(client, make_superadmin=True)
         club = await create_club(client, token_admin)
         club_id = club["id"]
         

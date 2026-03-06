@@ -97,3 +97,54 @@ export interface Asistencia {
 export interface AsistenciaCreate {
   estado: 'inscrito' | 'lista_espera' | 'cancelado';
 }
+
+export interface ProductoAfiliacion {
+  id: number;
+  club_id: number;
+  nombre: string;
+  descripcion?: string;
+  categoria?: string;
+  url_afiliacion: string;
+  codigo_afiliacion?: string;
+  proveedor?: string;
+  imagen_url?: string;
+  precio_referencia?: string;
+  activo: boolean;
+  orden: number;
+  destacado: boolean;
+  clicks: number;
+  fecha_creacion: string;
+  fecha_actualizacion?: string;
+  creado_por_id: number;
+}
+
+export interface ProductoAfiliacionCreate {
+  nombre: string;
+  descripcion?: string;
+  categoria?: string;
+  url_afiliacion: string;
+  codigo_afiliacion?: string;
+  proveedor?: string;
+  imagen_url?: string;
+  precio_referencia?: string;
+  activo?: boolean;
+  orden?: number;
+  destacado?: boolean;
+}
+
+export type ProductoAfiliacionUpdate = Partial<ProductoAfiliacionCreate>;
+
+export interface ProductoAfiliacionListResponse {
+  productos: ProductoAfiliacion[];
+  total: number;
+}
+
+export interface RecentContentItem {
+  tipo: "noticia" | "evento" | "producto";
+  id: number;
+  titulo: string;
+  descripcion: string | null;
+  club_id: number;
+  club_nombre: string;
+  fecha: string;
+}

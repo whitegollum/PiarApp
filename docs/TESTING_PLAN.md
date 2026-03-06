@@ -46,6 +46,16 @@
 | CU-040 | Listar miembros incluyendo inactivos | ⏳ | Pendiente |
 | CU-041 | Ayuda de documentación por club (Markdown) | ⏳ | Pendiente |
 | CU-042 | Perfil ampliado de socio y foto de carnet | ⏳ | Pendiente |
+| CU-043 | Crear producto de afiliación (Admin) | 🟢 | OK |
+| CU-044 | Ver catálogo de productos (Miembro) | 🟢 | OK |
+| CU-045 | Editar producto (Admin) | 🟢 | OK |
+| CU-046 | Eliminar producto (Admin) | 🟢 | OK |
+| CU-047 | Toggle activo/inactivo producto | 🟢 | OK |
+| CU-048 | Validación noticia (campos mínimos) | 🟢 | OK |
+| CU-049 | Validación evento (datetime) | 🟢 | OK |
+| CU-050 | Manejo errores 422 backend | 🟢 | OK |
+| CU-051 | Contenido reciente del club | 🟢 | OK |
+| CU-052 | Tests unitarios noticias | 🟢 | OK |
 
 
 ## 🔐 MÓDULO 1: AUTENTICACIÓN
@@ -1342,3 +1352,174 @@
 **Status:**  OK
 **Resultado Actual:**  Integración probada con tests de integración (test_openclaw.py) y manual
 **Notas:** Configurado en modo Gateway Client con autenticación por contraseña.
+
+**Notas:** Configurado en modo Gateway Client con autenticación por contraseña.
+
+---
+
+##  MÓDULO 7: PRODUCTOS Y TIENDA (AFILIACIÓN)
+
+### CU-043: Crear Producto de Afiliación (Admin)
+**Módulo:** Productos
+**Descripción:** Administrador del club crea un nuevo producto con enlace de afiliación
+**Precondiciones:**
+- Usuario autenticado como administrador del club
+- Estar en panel de administración de productos
+
+**Pasos:**
+1. Navegar a Club  Menú Actions  "Administrar Productos"
+2. Hacer click en "Nuevo Producto"
+3. Completar formulario:
+   - Nombre: "Radiocontrol XYZ-100" (mínimo 5 caracteres)
+   - Descripción: "Excelente radio para principiantes" (mínimo 10 caracteres)
+   - URL Afiliación: "https://amazon.com/xyz100?tag=clubrc"
+   - Precio: 150.00
+   - URL Imagen: "https://example.com/image.jpg"
+   - Activo: 
+4. Hacer click en "Crear Producto"
+
+**Resultado Esperado:**
+-  Formulario valida longitud mínima de campos
+-  No permite crear sin nombre/descripción/URL
+-  Redirige a lista de productos
+-  Producto aparece en catálogo si está activo
+-  Mensaje de éxito mostrado
+
+**Status:**  OK
+**Resultado Actual:**  Producto creado exitosamente, validación HTML5 funciona
+**Notas:** Validación client-side previene envío de datos inválidos
+
+---
+
+### CU-044: Ver Catálogo de Productos (Miembro)
+**Módulo:** Productos
+**Descripción:** Miembro del club visualiza productos disponibles
+**Precondiciones:**
+- Usuario autenticado como miembro del club
+- Club tiene productos activos
+
+**Pasos:**
+1. Navegar a Club Detail  Tab "Tienda"
+2. Visualizar grid de productos
+3. Hacer click en un producto para abrir enlace de afiliación
+
+**Resultado Esperado:**
+-  Solo productos activos son visibles
+-  Cards muestran: imagen, nombre, descripción, precio
+-  Botón "Ver Producto" abre enlace en nueva pestaña
+-  Grid responsivo (3 columnas  1 en móvil)
+-  Si no hay productos: mensaje "No hay productos disponibles"
+
+**Status:**  OK
+**Resultado Actual:**  Catálogo funciona correctamente con filtrado de productos activos
+**Notas:** Estilos consistentes con el resto de la aplicación
+
+---
+
+### CU-051: Contenido Reciente del Club
+**Módulo:** Dashboard - Contenido
+**Descripción:** Sección de novedades muestra últimas actualizaciones del club
+**Precondiciones:**
+- Usuario autenticado como miembro del club
+- Club tiene noticias, eventos o productos
+
+**Pasos:**
+1. Navegar a Club Detail  Tab "Resumen"
+2. Hacer scroll hasta sección " Novedades Recientes"
+3. Visualizar cards de contenido
+4. Hacer click en una card
+
+**Resultado Esperado:**
+-  Muestra máximo 3 elementos más recientes
+-  Incluye: última noticia, último evento, último producto
+-  Ordenados por fecha descendente
+-  Cards con badges de colores por tipo (azul/verde/naranja)
+-  Click navega a sección correspondiente (noticias/eventos/productos)
+-  Si no hay contenido: sección no se muestra
+
+**Status:**  OK
+**Resultado Actual:**  Sección funciona correctamente en club detail
+**Notas:** Movido de dashboard general a club-specific para mejor contexto
+
+---
+
+##  MÓDULO 8: VALIDACIÓN Y MANEJO DE ERRORES
+
+### CU-048: Validación de Noticia (Campos Mínimos)
+**Módulo:** Noticias - Validación
+**Descripción:** Sistema valida longitud mínima de título y contenido
+**Precondiciones:**
+- Usuario autenticado como administrador
+- Formulario de crear/editar noticia
+
+**Pasos:**
+1. Ir a "Crear Noticia"
+2. Intentar escribir título con menos de 5 caracteres (ej: "Test")
+3. Intentar escribir contenido con menos de 10 caracteres (ej: "Hola")
+4. Intentar enviar formulario
+
+**Resultado Esperado:**
+-  Navegador muestra error de validación HTML5
+-  Formulario no se envía hasta cumplir requisitos
+-  Mensajes claros: "Título (mínimo 5 caracteres)"
+-  Si llega al backend: error 422 con detalle del campo
+
+**Status:**  OK
+**Resultado Actual:**  Validación HTML5 previene envío, backend valida como respaldo
+**Notas:** Implementado con atributos `minLength` y `maxLength`
+
+---
+
+### CU-049: Validación de Evento (DateTime)
+**Módulo:** Eventos - Validación
+**Descripción:** Sistema combina fecha y hora correctamente para eventos
+**Precondiciones:**
+- Usuario autenticado como administrador
+- Formulario de crear/editar evento
+
+**Pasos:**
+1. Ir a "Crear Evento"
+2. Completar campos:
+   - Nombre: "Vuelo de Práctica"
+   - Descripción: "Sesión de vuelo para principiantes"
+   - Fecha Inicio: 2026-03-10
+   - Hora Inicio: 10:00
+   - Fecha Fin: 2026-03-10
+   - Hora Fin: 14:00
+3. Enviar formulario
+
+**Resultado Esperado:**
+-  Frontend combina fecha + hora  ISO datetime: "2026-03-10T10:00:00"
+-  Backend recibe datetime en formato correcto
+-  No hay error 422 por formato de fecha
+-  Evento se crea exitosamente
+-  Si no hay hora: usa "00:00:00" por defecto
+
+**Status:**  OK
+**Resultado Actual:**  Combinación fecha+hora funciona correctamente
+**Notas:** Resuelve problema previo de "invalid datetime separator"
+
+---
+
+### CU-052: Tests Unitarios de Noticias
+**Módulo:** Testing - Backend
+**Descripción:** Suite de tests para endpoints de noticias
+**Precondiciones:**
+- Pytest instalado
+- Base de datos de test configurada
+
+**Pasos:**
+1. Ejecutar: `pytest tests/test_noticias.py -v`
+2. Revisar resultados
+
+**Resultado Esperado:**
+-  `test_noticias_crud`: PASSED (crear, listar, obtener, actualizar, eliminar)
+-  `test_noticias_permissions`: PASSED (admin puede crear, no-miembros reciben 403)
+-  Usuario de test creado como superadmin (necesario para crear clubs)
+-  Limpieza de BD después de tests
+-  2/2 tests pasados en ~4-5 segundos
+
+**Status:**  OK
+**Resultado Actual:**  2/2 tests PASSED
+**Notas:** Tests actualizados con helper `_set_superadmin()` para permisos
+

@@ -2,49 +2,89 @@
 set -euo pipefail
 
 export HOME="${HOME:-/data}"
-export PNPM_HOME="${PNPM_HOME:-/pnpm}"
-export PATH="/data/.local/bin:/data/.npm-global/bin:${PNPM_HOME}:$PATH"
+export NPM_PREFIX="/data/.npm-global"
+export PATH="$NPM_PREFIX/bin:/data/.local/bin:$PATH"
 export CI=true
-export PNPM_DISABLE_SELF_UPDATE_CHECK=1
-export PNPM_CONFIG_REPORTER=append-only
-export PNPM_CONFIG_COLOR=false
-
-
-# Workarounds TrueNAS/overlayfs: menos concurrencia + sin hardlinks
-export PNPM_STORE_DIR="${PNPM_STORE_DIR:-/data/.pnpm-store}"
-
 
 SETUP_FLAG="/data/.openclaw_installed"
 
 if [ ! -f "$SETUP_FLAG" ]; then
-  mkdir -p "$PNPM_STORE_DIR"
-
-  # Config pnpm para evitar hardlinks y reducir carga de IO
-  pnpm config set store-dir "$PNPM_STORE_DIR"
-  pnpm config set package-import-method copy
-  pnpm config set child-concurrency 1
-
-  # si el checkout quedó a medias, limpia node_modules sin prompts
-  rm -rf /data/moltbot/node_modules || true
-
-  # Instala desde git (tu comando exacto)
-  #curl -fsSL https://molt.bot/install.sh | env CI=true bash -s -- --install-method git
-  if [ -t 0 ]; then
-    curl -fsSL https://openclaw.ai/install.sh | bash -s -- --install-method git
-  else
-    curl -fsSL https://openclaw.ai/install.sh | env CI=true bash -s -- --install-method git
+  echo "=== First-time setup: installing OpenClaw ==="
+  
+  # Configure npm to use persistent directory
+  echo "Configuring npm prefix to $NPM_PREFIX..."
+  mkdir -p "$NPM_PREFIX"
+  npm config set prefix "$NPM_PREFIX"
+  npm config set yes true
+  npm config set fund false
+  npm config set audit false
+  
+  # Install OpenClaw globally via npm
+  echo "Installing OpenClaw via npm..."
+  npm i -g openclaw --yes --no-fund --no-audit
+  
+  echo "✓ OpenClaw installed successfully"
+  
+  # Verify installation
+  echo "Verifying openclaw binary..."
+  which openclaw || echo "Warning: openclaw not found in PATH"
+  ls -la $NPM_PREFIX/bin/openclaw 2>/dev/null || echo "Binary not in $NPM_PREFIX/bin"
+  
+  # If not found, search for it
+  if ! command -v openclaw >/dev/null 2>&1; then
+    echo "ERROR: openclaw not found after installation"
+    echo "PATH: $PATH"
+    echo "Contents of $NPM_PREFIX/bin:"
+    ls -la $NPM_PREFIX/bin/ 2>/dev/null || echo "Directory not found"
+    exit 1
   fi
-
+  
   touch "$SETUP_FLAG"
-
+  echo "=== Setup complete ==="
+else
+  echo "OpenClaw already installed, skipping setup..."
+  echo "Using NPM_PREFIX: $NPM_PREFIX"
+fi
+# Verificar que openclaw está disponible
+if ! command -v openclaw >/dev/null 2>&1; then
+  echo "ERROR: openclaw command not found in PATH"
+  echo "PATH: $PATH"
+  echo "NPM_PREFIX: $NPM_PREFIX"
+  echo "Checking $NPM_PREFIX/bin:"
+  ls -la $NPM_PREFIX/bin/ 2>/dev/null || echo "Directory not found"
+  exit 1
 fi
 
 
 
-command -v openclaw >/dev/null 2>&1 || { echo "openclaw no está en PATH"; echo "$PATH"; exit 1; }
 
 
-# Arranca el gateway en foreground (proceso principal)
-exec openclaw gateway
-#exec moltbot gateway
+
+
+
+# Run onboard (skip if OPENCLAW_NO_ONBOARD is set)
+echo "=== cheking Doctor ==="
+if [ "${OPENCLAW_DOCTOR:-0}" == "1" ]; then
+echo "Running OpenClaw doctor..."
+openclaw doctor -f
+fi
+
+
+echo "=== config ==="
+if [ "${OPENCLAW_CONFIGURE:-0}" == "1" ]; then
+echo "Running OpenClaw config..."
+openclaw config
+fi
+
+
+
+
+# Arrancar gateway
+echo "=== Starting OpenClaw gateway... ==="
+exec openclaw gateway \
+  --allow-unconfigured \
+  --bind lan \
+  --port 18789 \
+
+
 

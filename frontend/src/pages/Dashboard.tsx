@@ -122,14 +122,6 @@ export default function Dashboard() {
           <section className="section clubs-section">
             <div className="section-header">
               <h2>Mis Clubes</h2>
-              {usuario.es_superadmin && (
-                <button 
-                  className="btn btn-primary"
-                  onClick={() => navigate('/admin/clubes')}
-                >
-                  ⚙️ Admin Clubes
-                </button>
-              )}
             </div>
 
             {error && (
@@ -171,15 +163,7 @@ export default function Dashboard() {
               <div className="empty-state">
                 <div className="empty-icon">🏢</div>
                 <h3>No tienes clubs aún</h3>
-                <p>Espera ser invitado a uno{usuario.es_superadmin ? ' o crea uno en la administración' : ''}</p>
-                {usuario.es_superadmin && (
-                    <button 
-                    className="btn btn-primary"
-                    onClick={() => navigate('/admin/clubes')}
-                    >
-                    Ir a Admin Clubes
-                    </button>
-                )}
+                <p>Espera ser invitado a un club</p>
               </div>
             )}
           </section>

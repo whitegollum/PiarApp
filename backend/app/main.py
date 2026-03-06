@@ -1,15 +1,24 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 import os
+import logging
 
 from app.config import settings
 from app.database.db import engine, Base, init_db
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 from app.routes import admin
 
 # Importar modelos para que SQLAlchemy los registre
-from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria, system_config
+from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria, system_config, producto
 
 # Crear tablas en la base de datos
 Base.metadata.create_all(bind=engine)
@@ -35,7 +44,7 @@ app.add_middleware(
 )
 
 # Importar rutas
-from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, chat
+from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, chat, dashboard
 
 # Incluir routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Autenticación"])
@@ -46,9 +55,10 @@ app.include_router(eventos.router, prefix="/api", tags=["Eventos"])
 app.include_router(votaciones.router, prefix="/api/votaciones", tags=["Votaciones"])
 app.include_router(instalaciones.router, prefix="/api", tags=["Instalaciones"]) # Updated prefix to match internal route definitions
 app.include_router(documentacion.router, prefix="/api/documentacion", tags=["Documentación"])
-app.include_router(productos.router, prefix="/api/productos", tags=["Productos"])
+app.include_router(productos.router, prefix="/api", tags=["Productos"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Administración"])
 app.include_router(chat.router, prefix="/api", tags=["Chat"])
+app.include_router(dashboard.router, prefix="/api", tags=["Dashboard"])
 
 
 @app.get("/")
@@ -67,9 +77,26 @@ async def health_check():
     return {"status": "healthy", "service": settings.app_name}
 
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc: RequestValidationError):
+    """Handle Pydantic validation errors with detailed information"""
+    logger.error(f"Validation error on {request.url}")
+    logger.error(f"Errors: {exc.errors()}")
+    logger.error(f"Body: {await request.body()}")
+    
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": exc.errors(),
+            "body": str(await request.body())
+        }
+    )
+
+
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
     """Global exception handler"""
+    logger.exception(f"Unhandled exception: {exc}")
     return JSONResponse(
         status_code=500,
         content={"detail": "Error interno del servidor"}

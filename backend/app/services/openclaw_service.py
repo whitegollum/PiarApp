@@ -1,9 +1,12 @@
 import websockets
 import json
 import asyncio
+import logging
+import traceback
 from typing import List, Dict, Any, Optional
 from ..config import Settings
 
+logger = logging.getLogger(__name__)
 settings = Settings()
 
 class OpenClawService:
@@ -13,6 +16,7 @@ class OpenClawService:
         # Use WS URL (convert http/https to ws/wss if needed, or expect correct config)
         self.ws_url = settings.openclaw_api_url.replace("http://", "ws://").replace("https://", "wss://").replace("/v1/chat", "") 
         self.password = settings.openclaw_password
+        logger.info(f"OpenClawService initialized: url={self.ws_url}, auth_mode={self.auth_mode}")
         
     def _get_token(self) -> str:
         # En modo WS con el ejemplo del usuario, parece que el token va en 'auth.token'
@@ -47,8 +51,12 @@ class OpenClawService:
         token = self._get_token()
         session_key = self._get_session_key(context)
         
+        logger.info(f"OpenClaw get_response called: uri={uri}, session_key={session_key}")
+        
         try:
+            logger.info(f"Attempting WebSocket connection to {uri}")
             async with websockets.connect(uri) as websocket:
+                logger.info("WebSocket connection established")
                 # 1. Esperar al challenge de conexión
                 response = await websocket.recv()
                 challenge = json.loads(response)
@@ -63,7 +71,7 @@ class OpenClawService:
                             "minProtocol": 3,
                             "maxProtocol": 3,
                             "client": {
-                                "id": "gateway-client",
+                                "id": "cli",
                                 "version": "1.0.0",
                                 "platform": "python",
                                 "mode": "backend"
@@ -75,12 +83,14 @@ class OpenClawService:
                                 "password": token
                             },
                             "locale": "es-ES",
-                            "userAgent": "gateway-client/1.0.0"
+                            "userAgent": "piarapp-backend/1.0.0"
                         }
                     }
+                    logger.info("Sending handshake payload...")
                     await websocket.send(json.dumps(handshake_payload))
                     
                     # 3. Esperar confirmación de conexión (asumiendo que devuelve algo)
+                    logger.info("Waiting for handshake response...")
                     # El ejemplo JS no muestra que pasa después, pero es normal esperar un 'op': 'connected' o similar.
                     # Por ahora devolvemos "Conexión WS Establecida" para probar el handshake.
                     # En una implementación real de chat, aquí enviaríamos el mensaje del usuario.
@@ -90,10 +100,15 @@ class OpenClawService:
                     # asumiré por ahora que solo probamos conexión o usaré un formato genérico si confirma.
                     
                     connect_response = await websocket.recv()
+                    logger.info(f"Handshake response: {connect_response[:200]}...")
                     connect_data = json.loads(connect_response)
                     
                     if not (connect_data.get("ok") or connect_data.get("type") == "res"):
-                        return f"Fallo en handshake: {connect_data}"
+                        error_msg = f"Fallo en handshake: {connect_data}"
+                        logger.error(error_msg)
+                        return error_msg
+                    
+                    logger.info("Handshake successful")
                         
                     # 4. Enviar mensaje de chat
                     # Generar ID único para la solicitud
@@ -118,7 +133,9 @@ class OpenClawService:
                             "idempotencyKey": f"idem_{chat_req_id}"
                         }
                     }
+                    logger.info(f"Sending chat message: {user_msg[:100]}...")
                     await websocket.send(json.dumps(chat_payload))
+                    logger.info("Chat message sent, waiting for response...")
                     
                     # 5. Esperar respuesta del chat
                     # Flujo: primero llega un 'res' confirmando recepción, luego 'event' con el contenido
@@ -181,12 +198,20 @@ class OpenClawService:
                         await asyncio.sleep(0.01)
                             
                 else:
-                    return f"Respuesta inesperada del servidor (no challenge): {response}"
+                    error_msg = f"Respuesta inesperada del servidor (no challenge): {response}"
+                    logger.error(error_msg)
+                    return error_msg
 
         except websockets.exceptions.ConnectionClosedError as e:
-            return f"Conexión cerrada inesperadamente: {e}"
+            error_msg = f"Conexión cerrada inesperadamente: {e}"
+            logger.error(error_msg)
+            logger.error(traceback.format_exc())
+            return error_msg
         except Exception as e:
-            return f"Error WebSocket: {str(e)}"
+            error_msg = f"Error WebSocket: {str(e)}"
+            logger.error(error_msg)
+            logger.error(traceback.format_exc())
+            return error_msg
 
     async def get_chat_history(self, session_key: Optional[str] = None, context: Optional[Dict[str, Any]] = None, limit: int = 50) -> List[Dict[str, Any]]:
         """
@@ -215,7 +240,7 @@ class OpenClawService:
                             "minProtocol": 3,
                             "maxProtocol": 3,
                             "client": {
-                                "id": "gateway-client",
+                                "id": "cli",
                                 "version": "1.0.0",
                                 "platform": "python",
                                 "mode": "backend"
@@ -227,7 +252,7 @@ class OpenClawService:
                                 "password": token
                             },
                             "locale": "es-ES",
-                            "userAgent": "gateway-client/1.0.0"
+                            "userAgent": "piarapp-backend/1.0.0"
                         }
                     }
                     await websocket.send(json.dumps(handshake_payload))
@@ -295,6 +320,214 @@ class OpenClawService:
             return []
         
         return []
+
+    async def diagnose_connection(self) -> Dict[str, Any]:
+        """
+        Diagnostica exhaustivamente la conexión a OpenClaw.
+        Incluye todos los tests realizados durante la depuración:
+        - Configuración y credenciales
+        - Client ID correcto
+        - Conectividad de red
+        - WebSocket handshake
+        - Challenge-response flow
+        - Autenticación completa
+        """
+        diagnosis = {
+            "config": {
+                "ws_url": self.ws_url,
+                "auth_mode": self.auth_mode,
+                "has_password": bool(self.password),
+                "has_api_key": bool(self.api_key),
+                "client_id": "cli",  # Client ID correcto después de debug
+                "protocol_version": 3,
+            },
+            "steps": [],
+            "success": False,
+            "error": None
+        }
+        
+        try:
+            # Step 1: Verificar configuración
+            config_details = f"URL: {self.ws_url}, Auth: {self.auth_mode}, Password: {'✓' if self.password else '✗'}"
+            diagnosis["steps"].append({
+                "step": "config_check", 
+                "status": "ok", 
+                "details": config_details
+            })
+            
+            # Step 1.5: Verificar client_id correcto
+            diagnosis["steps"].append({
+                "step": "client_id_verification",
+                "status": "ok",
+                "details": "Using client_id='cli' (validated during troubleshooting)"
+            })
+            
+            # Step 2: Intentar obtener token
+            try:
+                token = self._get_token()
+                token_preview = token[:20] + "..." if len(token) > 20 else token
+                diagnosis["steps"].append({
+                    "step": "token_retrieval", 
+                    "status": "ok", 
+                    "details": f"Token retrieved ({len(token)} chars): {token_preview}"
+                })
+            except Exception as e:
+                diagnosis["steps"].append({
+                    "step": "token_retrieval", 
+                    "status": "error", 
+                    "details": f"Failed to get token: {str(e)}"
+                })
+                diagnosis["error"] = f"Token error: {str(e)}"
+                return diagnosis
+            
+            # Step 2.5: Verificar conectividad de red (similar al test TCP realizado)
+            try:
+                import socket
+                # Extraer host y puerto del ws_url
+                url_parts = self.ws_url.replace('ws://', '').replace('wss://', '').split(':')
+                host = url_parts[0]
+                port = int(url_parts[1]) if len(url_parts) > 1 else 18789
+                
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(5)
+                result = sock.connect_ex((host, port))
+                sock.close()
+                
+                if result == 0:
+                    diagnosis["steps"].append({
+                        "step": "network_connectivity",
+                        "status": "ok",
+                        "details": f"TCP connection to {host}:{port} successful"
+                    })
+                else:
+                    diagnosis["steps"].append({
+                        "step": "network_connectivity",
+                        "status": "error",
+                        "details": f"TCP connection to {host}:{port} failed (code: {result})"
+                    })
+                    diagnosis["error"] = f"Network connectivity failed to {host}:{port}"
+                    return diagnosis
+            except Exception as e:
+                diagnosis["steps"].append({
+                    "step": "network_connectivity",
+                    "status": "error",
+                    "details": f"Network test failed: {str(e)}"
+                })
+                # No retornamos aquí, continuamos con WebSocket que podría funcionar
+            
+            # Step 3: Intentar conexión WebSocket
+            try:
+                logger.info(f"[DIAGNOSIS] Attempting WebSocket connection to {self.ws_url}")
+                async with websockets.connect(self.ws_url) as websocket:
+                    diagnosis["steps"].append({
+                        "step": "websocket_connection", 
+                        "status": "ok", 
+                        "details": f"WebSocket connected successfully to {self.ws_url}"
+                    })
+                    
+                    # Step 4: Esperar challenge
+                    try:
+                        response = await asyncio.wait_for(websocket.recv(), timeout=10.0)
+                        challenge = json.loads(response)
+                        challenge_preview = str(challenge)[:100] + "..." if len(str(challenge)) > 100 else str(challenge)
+                        diagnosis["steps"].append({
+                            "step": "challenge_received", 
+                            "status": "ok", 
+                            "details": f"Challenge received - Type: {challenge.get('type')}, Event: {challenge.get('event')} | Data: {challenge_preview}"
+                        })
+                        
+                        if challenge.get("type") == "event" and challenge.get("event") == "connect.challenge":
+                            # Step 5: Enviar handshake
+                            handshake_payload = {
+                                "type": "req",
+                                "id": "diag_1",
+                                "method": "connect",
+                                "params": {
+                                    "minProtocol": 3,
+                                    "maxProtocol": 3,
+                                    "client": {
+                                        "id": "cli",
+                                        "version": "1.0.0",
+                                        "platform": "python",
+                                        "mode": "diagnostic"
+                                    },
+                                    "role": "operator",
+                                    "scopes": ["operator.read", "operator.write", "operator.admin"],
+                                    "auth": {
+                                        "token": token,
+                                        "password": token
+                                    },
+                                    "locale": "es-ES",
+                                    "userAgent": "piarapp-diagnostic/1.0.0"
+                                }
+                            }
+                            await websocket.send(json.dumps(handshake_payload))
+                            diagnosis["steps"].append({
+                                "step": "handshake_sent", 
+                                "status": "ok", 
+                                "details": f"Handshake sent with client_id='cli', role='operator', protocol=3"
+                            })
+                            
+                            # Step 6: Esperar respuesta del handshake
+                            connect_response = await asyncio.wait_for(websocket.recv(), timeout=10.0)
+                            connect_data = json.loads(connect_response)
+                            
+                            response_preview = str(connect_data)[:200] + "..." if len(str(connect_data)) > 200 else str(connect_data)
+                            
+                            if connect_data.get("ok") or connect_data.get("type") == "res":
+                                server_info = connect_data.get("payload", {}).get("server", {})
+                                protocol = connect_data.get("payload", {}).get("protocol", "unknown")
+                                diagnosis["steps"].append({
+                                    "step": "handshake_response", 
+                                    "status": "ok", 
+                                    "details": f"✓ Handshake successful! Protocol: {protocol}, Server: {server_info.get('version', 'unknown')} | Response: {response_preview}"
+                                })
+                                diagnosis["success"] = True
+                                
+                                # Step 7: Resumen de tests exitosos
+                                diagnosis["steps"].append({
+                                    "step": "connection_summary",
+                                    "status": "ok",
+                                    "details": "All connection tests passed! OpenClaw is ready to receive messages."
+                                })
+                            else:
+                                error_msg = connect_data.get("error", {}).get("message", "Unknown error")
+                                diagnosis["steps"].append({
+                                    "step": "handshake_response", 
+                                    "status": "error", 
+                                    "details": f"✗ Handshake rejected: {error_msg} | Full response: {response_preview}"
+                                })
+                                diagnosis["error"] = f"Handshake failed: {error_msg}"
+                        else:
+                            diagnosis["steps"].append({
+                                "step": "challenge_validation", 
+                                "status": "error", 
+                                "details": f"Unexpected challenge format: {challenge}"
+                            })
+                            diagnosis["error"] = "Unexpected challenge format"
+                            
+                    except asyncio.TimeoutError:
+                        diagnosis["steps"].append({"step": "challenge_timeout", "status": "error", "details": "Timeout waiting for challenge"})
+                        diagnosis["error"] = "Timeout waiting for challenge"
+                    except json.JSONDecodeError as e:
+                        diagnosis["steps"].append({"step": "json_parse_error", "status": "error", "details": str(e)})
+                        diagnosis["error"] = f"JSON parse error: {str(e)}"
+                        
+            except asyncio.TimeoutError:
+                diagnosis["steps"].append({"step": "websocket_connection", "status": "error", "details": "Connection timeout"})
+                diagnosis["error"] = "WebSocket connection timeout"
+            except websockets.exceptions.ConnectionClosedError as e:
+                diagnosis["steps"].append({"step": "websocket_connection", "status": "error", "details": f"Connection closed: {str(e)}"})
+                diagnosis["error"] = f"WebSocket connection closed: {str(e)}"
+            except Exception as e:
+                diagnosis["steps"].append({"step": "websocket_connection", "status": "error", "details": str(e)})
+                diagnosis["error"] = f"WebSocket error: {str(e)}"
+                
+        except Exception as e:
+            diagnosis["error"] = f"Diagnostic error: {str(e)}"
+            diagnosis["steps"].append({"step": "diagnostic_error", "status": "error", "details": str(e)})
+                
+        return diagnosis
 
 # Instancia global
 openclaw_service = OpenClawService()

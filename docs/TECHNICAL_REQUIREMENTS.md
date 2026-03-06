@@ -924,13 +924,30 @@ DOCUMENTOS_JUNTA
   - Query params: filtro_año, filtro_estado, ordenar_por
   - Retorna: lista con resumen ejecutivo de cada junta
 
-### Productos/Tienda
-- **[PARCIAL]** `GET /api/productos/` - Listar productos (stub)
-- **[PLANIFICADO]** `POST /api/productos` - Crear producto (admin)
-- **[PLANIFICADO]** `GET /api/productos/{id}` - Ver detalles producto
-- **[PLANIFICADO]** `PUT /api/productos/{id}` - Editar producto (admin)
-- **[PLANIFICADO]** `GET /api/ingresos/dashboard` - Ver estadísticas (admin)
-- **[PLANIFICADO]** `GET /api/ingresos/por-producto` - Ingresos por producto (admin)
+### Productos/Tienda (Actualizado Marzo 2026)
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/productos` - Listar productos activos del club
+  - Requiere: Usuario autenticado y miembro del club
+  - Retorna: Lista de ProductoAfiliacion (solo activos para socios, todos para admins)
+  - Response: `[{id, nombre, descripcion, imagen_url, plataforma, url_afiliacion, precio_referencia, activo, fecha_creacion}]`
+- **[IMPLEMENTADO]** `POST /api/clubes/{club_id}/productos` - Crear producto (admin)
+  - Requiere: Usuario admin del club
+  - Body: `{nombre (str, 5-200 chars), descripcion (str, 10-5000 chars), imagen_url (str, optional), plataforma (str, 3-100 chars), url_afiliacion (str, required), precio_referencia (float, optional), activo (bool, default true)}`
+  - Validación: minLength/maxLength en frontend + backend, URL válida
+  - Retorna: Producto creado con ID
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/productos/{producto_id}` - Ver detalles producto
+  - Requiere: Usuario miembro del club
+  - Retorna: ProductoAfiliacion completo
+- **[IMPLEMENTADO]** `PUT /api/clubes/{club_id}/productos/{producto_id}` - Editar producto (admin)
+  - Requiere: Usuario admin del club
+  - Body: Mismos campos que POST (todos opcionales excepto nombre)
+  - Validación: Mismas reglas que creación
+  - Retorna: Producto actualizado
+- **[IMPLEMENTADO]** `DELETE /api/clubes/{club_id}/productos/{producto_id}` - Eliminar producto (admin)
+  - Requiere: Usuario admin del club
+  - Retorna: Confirmación de eliminación (soft delete marca activo=false)
+- **[PLANIFICADO]** `GET /api/clubes/{club_id}/productos/{producto_id}/stats` - Ver estadísticas de clicks (admin)
+- **[PLANIFICADO]** `GET /api/clubes/{club_id}/ingresos/dashboard` - Ver estadísticas globales (admin)
+- **[PLANIFICADO]** `GET /api/clubes/{club_id}/ingresos/por-producto` - Ingresos por producto (admin)
 
 ### Noticias
 - **[IMPLEMENTADO]** `POST /api/clubes/{club_id}/noticias` - Crear noticia (admin del club)
@@ -938,6 +955,18 @@ DOCUMENTOS_JUNTA
 - **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/noticias/{noticia_id}` - Obtener detalle
 - **[IMPLEMENTADO]** `PUT /api/clubes/{club_id}/noticias/{noticia_id}` - Editar noticia (admin o autor)
 - **[IMPLEMENTADO]** `DELETE /api/clubes/{club_id}/noticias/{noticia_id}` - Eliminar noticia (admin o autor)
+
+### Contenido Reciente del Club (Nuevo - Marzo 2026)
+- **[IMPLEMENTADO]** `GET /api/clubes/{club_id}/contenido-reciente` - Obtener contenido reciente del club
+  - Requiere: Usuario autenticado y miembro del club
+  - Retorna: Array con máximo 3 items más recientes (noticias, eventos, productos)
+  - Response: `[{tipo: "noticia"|"evento"|"producto", id, titulo, descripcion, fecha, imagen_url}]`
+  - Funcionalidad: 
+    * Combina últimas noticias, eventos y productos del club
+    * Ordenados por fecha de creación descendente
+    * Filtra solo productos activos para socios
+    * Incluye badge con color por tipo
+  - Uso: Sección "🆕 Novedades Recientes" en página de detalle del club
 
 ### Votaciones
 - **[PARCIAL]** `GET /api/votaciones/` - Listar votaciones (stub)

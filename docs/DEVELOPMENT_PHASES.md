@@ -10,8 +10,7 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
 | 1-6 | MVP Core (Auth, Clubes, Miembros) | ✅ Completado | Q4 2023 |
 | 7 | Perfiles y Gestión Avanzada | ✅ Completado | Q1 2024 |
 | 8 | Noticias y Eventos (CRUD + Asistencia API) | ✅ Completado | Feb 2026 |
-| 8.1 | Setup Inicial y Comentarios | ✅ Completado | Feb 2026 |
-| 9 | Módulos de Club + Social + OAuth UI | ⏳ Pendiente | TBD |
+| 8.1 | Setup Inicial y Comentarios | ✅ Completado | Feb 2026 || 8.2 | Tienda/Productos + Novedades + Validación | ✅ Completado | Mar 2026 || 9 | Módulos de Club + Social + OAuth UI | ⏳ Pendiente | TBD |
 | 10 | Testing y QA | ⏳ Pendiente | TBD |
 | 11 | Despliegue y DevOps | ⏳ Pendiente | TBD |
 | 12+ | Backlog Futuro (Ideas) | 💡 Ideas | TBD |
@@ -98,6 +97,47 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
     - [x] Frontend: Widget de chat flotante con historial y formateo Markdown.
     - [x] Renderizado de mensajes mejorado (limpieza de tags internos, estilo bot).
 
+### Phase 8.2: Tienda/Productos + Mejoras de Validación (Mar 2026)
+**Objetivo:** Implementar sistema de productos de afiliación, mejorar contenido reciente y validación de formularios.
+
+#### Backend
+- [x] **Productos de Afiliación:**
+    - [x] Modelo `ProductoAfiliacion` con campos: nombre, descripcion, url_afiliacion, imagen_url, precio_referencia, activo, club_id.
+    - [x] Rutas CRUD completas `/api/clubes/{club_id}/productos`.
+    - [x] Permisos: administradores pueden crear/editar, miembros pueden ver productos activos.
+- [x] **Contenido Reciente del Club:**
+    - [x] Endpoint `/api/clubes/{club_id}/contenido-reciente` que devuelve últimas noticias, eventos y productos.
+    - [x] Límite de 3 elementos ordenados por fecha descendente.
+    - [x] Verificación de membresía del usuario.
+- [x] **Validación y Logging Mejorado:**
+    - [x] Exception handler para `RequestValidationError` con logging detallado.
+    - [x] Logging configurado con `logging.basicConfig` en main.py.
+    - [x] Logger instances en rutas con mensajes informativos.
+    - [x] Pydantic v2 field validators con `mode='before'` para conversión de tipos.
+
+#### Frontend
+- [x] **Catálogo de Productos:**
+    - [x] Componente `ProductCatalog.tsx` con grid responsivo.
+    - [x] Cards de producto con imagen, nombre, descripción, precio y botón a enlace de afiliación.
+    - [x] Pestaña "Tienda" en `ClubDetail.tsx`.
+- [x] **Panel de Administración de Productos:**
+    - [x] Página `ManageProducts.tsx` con listado, crear, editar y eliminar.
+    - [x] Formularios `CreateProduct.tsx` y `EditProduct.tsx`.
+    - [x] Enlace "Administrar Productos" en menú dropdown de acciones.
+    - [x] Estilos unificados en `Products.css`.
+- [x] **Novedades Recientes:**
+    - [x] Sección en tab "resumen" de `ClubDetail.tsx` (no en dashboard general).
+    - [x] Cards clicables con badges por tipo (📰 noticia, 📅 evento, 🛒 producto).
+    - [x] Navegación directa a sección correspondiente.
+    - [x] Estilos en `ClubDetail.css`.
+- [x] **Validación de Formularios:**
+    - [x] Atributos HTML5: `minLength`, `maxLength` en campos de texto.
+    - [x] Validación de noticias: título 5-200 caracteres, contenido 10-10000 caracteres.
+    - [x] Validación de eventos: nombre 5-200 caracteres, descripción 10-10000 caracteres.
+    - [x] Manejo de errores de validación del backend con mensajes traducidos.
+    - [x] Combinación de fecha + hora para eventos (formato ISO datetime).
+    - [x] Conversión de empty strings a null para campos opcionales.
+
 - [ ] **Socios + Documentación Reglamentaria (MVP funcional en progreso):**
     - [x] Backend: completar rutas de `socios` (CRUD completo).
     - [x] Backend: endpoints de foto de carnet (LargeBinary).
@@ -110,9 +150,11 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
     - [x] Backend: `GET/POST` de contraseña + historial y auditoría.
     - [x] Frontend: vista para socios activos + panel admin para cambios.
 
-- [ ] **Tienda + Ingresos (Afiliación):**
-    - [ ] Backend: productos e ingresos (routes existen pero están stub).
-    - [ ] Frontend: catálogo básico de productos + panel admin de ingresos.
+- [x] **Tienda + Ingresos (Afiliación):**
+    - [x] Backend: CRUD completo de productos con modelo ProductoAfiliacion.
+    - [x] Frontend: catálogo de productos con grid responsivo.
+    - [x] Frontend: panel admin completo (crear, editar, eliminar, toggle activo).
+    - [x] Integración con tab "Tienda" en detalle del club.
 
 - [ ] **Google OAuth (UI + Producción):**
     - [x] Frontend: implementar flujo en `Login.tsx` y `Register.tsx`.

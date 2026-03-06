@@ -20,3 +20,10 @@ npm run dev
 3. juan@example.com / Juan123456
 4. maria@example.com / Maria123456
 5. carlos@example.com / Carlos123456
+
+
+-------------
+
+
+docker compose down; docker volume rm piarapp_piara_openclaw -f; docker compose build openclaw-gateway-piara; docker compose up openclaw-gateway-piara -d
+

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { DocumentacionService, DocumentacionResponse } from '../services/documentacionService'
@@ -387,9 +387,7 @@ export default function ClubDocumentacion() {
               </button>
             </div>
             <div className="help-modal-body">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {selectedClub.ayuda_documentacion_md}
-              </ReactMarkdown>
+              {React.createElement(ReactMarkdown as any, { remarkPlugins: [remarkGfm], children: selectedClub.ayuda_documentacion_md })}
             </div>
           </div>
         </div>

@@ -43,6 +43,19 @@ interface ClubUpdate {
   sitio_web?: string
 }
 
+interface GenerarDatosResult {
+  success: boolean
+  message: string
+  detalles: {
+    usuarios_creados: number
+    noticias_creadas: number
+    eventos_creados: number
+    productos_creados: number
+    ubicacion_actualizada: boolean
+    password_instalaciones_creada: boolean
+  }
+}
+
 export default function ClubEdit() {
   const { usuario } = useAuth()
   const { clubId } = useParams<{ clubId: string }>()
@@ -54,6 +67,7 @@ export default function ClubEdit() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [generatingData, setGeneratingData] = useState(false)
 
   // Formulario
   const [formData, setFormData] = useState<ClubUpdate>({
@@ -179,6 +193,39 @@ export default function ClubEdit() {
     }
   }
 
+  const handleGenerarDatosEjemplo = async () => {
+    if (!confirm('¿Estás seguro de que quieres generar datos de ejemplo?\n\nEsto creará:\n- 5 usuarios miembros\n- Ubicación geográfica\n- Contraseña de instalaciones\n- 5 noticias\n- 5 eventos\n- 5 productos en la tienda')) {
+      return
+    }
+
+    try {
+      setGeneratingData(true)
+      setError('')
+      setSuccess('')
+
+      const resultado = await APIService.post<GenerarDatosResult>(`/clubes/${clubId}/generar-datos-ejemplo`, {})
+      
+      setSuccess(
+        `¡Datos generados correctamente!\n` +
+        `Usuarios: ${resultado.detalles.usuarios_creados}\n` +
+        `Noticias: ${resultado.detalles.noticias_creadas}\n` +
+        `Eventos: ${resultado.detalles.eventos_creados}\n` +
+        `Productos: ${resultado.detalles.productos_creados}\n` +
+        `Ubicación: ${resultado.detalles.ubicacion_actualizada ? '✓' : '✗'}\n` +
+        `Password instalaciones: ${resultado.detalles.password_instalaciones_creada ? '✓' : '✗'}`
+      )
+      
+      // Recargar datos del club
+      setTimeout(() => {
+        window.location.reload()
+      }, 3000)
+    } catch (err: any) {
+      setError('Error al generar datos de ejemplo: ' + (err.message || 'Error desconocido'))
+    } finally {
+      setGeneratingData(false)
+    }
+  }
+
   if (!usuario) return null
 
   if (loading) {
@@ -223,6 +270,15 @@ export default function ClubEdit() {
               ← Volver
             </button>
             <h1>Editar Club</h1>
+            <button
+              className="btn btn-warning"
+              onClick={handleGenerarDatosEjemplo}
+              disabled={generatingData}
+              style={{ marginLeft: 'auto' }}
+              title="Generar datos ficticios para pruebas"
+            >
+              {generatingData ? '🔄 Generando...' : '🎲 Generar Datos de Ejemplo'}
+            </button>
           </div>
 
           {error && <div className="alert alert-error">{error}</div>}

@@ -31,6 +31,8 @@ import AdminClubs from './pages/admin/AdminClubs'
 import AdminEmailConfig from './pages/admin/AdminEmailConfig'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import ClubDocumentacion from './pages/ClubDocumentacion'
+import ProductosCatalogo from './pages/ProductosCatalogo'
+import ProductosAdmin from './pages/ProductosAdmin'
 
 // Componente para verificar configuración inicial
 const SetupCheck = () => {
@@ -187,6 +189,23 @@ function App() {
             element={
               <ProtectedRoute>
                 <EditEvent />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/clubes/:clubId/productos"
+            element={
+              <ProtectedRoute>
+                <ProductosCatalogo />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clubes/:clubId/productos/admin"
+            element={
+              <ProtectedRoute>
+                <ProductosAdmin />
               </ProtectedRoute>
             }
           />

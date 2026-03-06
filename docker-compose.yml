@@ -25,6 +25,8 @@ services:
       - OPENCLAW_AUTH_MODE=${OPENCLAW_AUTH_MODE}
       - OPENCLAW_PASSWORD=${OPENCLAW_GATEWAY_PASSWORD}
       - OPENCLAW_LOGIN_URL=http://openclaw-gateway-piara:18789/v1/login
+      - OPENCLAW_BOTUSER_ID=${OPENCLAW_BOTUSER_ID}
+      - OPENCLAW_BOTUSER_PASSWORD=${OPENCLAW_BOTUSER_PASSWORD}
     volumes:
       - piar_data:/app/data
     ports:

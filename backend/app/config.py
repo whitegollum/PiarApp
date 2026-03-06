@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     openclaw_password: str = ""
     openclaw_login_url: str = "https://api.openclaw.example/v1/auth/login"
     
+    # OpenClaw Bot User (for initial setup)
+    openclaw_botuser_id: str = ""
+    openclaw_botuser_password: str = ""
+    
     # CORS
     cors_origins: List[str] = [
         "http://localhost:3000",

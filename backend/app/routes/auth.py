@@ -4,6 +4,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime, timezone
+import os
+from pathlib import Path
 
 from app.config import settings
 from app.database.db import get_db
@@ -18,6 +20,7 @@ from app.schemas.auth import (
 from app.services.auth_service import AuthService
 from app.services.google_oauth_service import GoogleOAuthService
 from app.services.invitacion_service import InvitacionService
+from app.utils.security import AuthUtils
 from app.utils.security import AuthUtils
 
 router = APIRouter()
@@ -437,7 +440,7 @@ def check_setup_required(db: Session = Depends(get_db)):
 
 @router.post("/setup-admin", response_model=UsuarioResponse)
 def setup_first_admin(usuario: UsuarioCreate, db: Session = Depends(get_db)):
-    """Crea el primer administrador del sistema"""
+    """Crea el primer administrador del sistema y opcionalmente un usuario bot"""
     # Verificación doble por seguridad
     count = db.query(Usuario).count()
     if count > 0:
@@ -446,6 +449,7 @@ def setup_first_admin(usuario: UsuarioCreate, db: Session = Depends(get_db)):
             detail="El sistema ya ha sido inicializado"
         )
 
+    # Crear superadministrador
     nuevo_admin = AuthService.registrar_primer_admin(db, usuario)
     
     if not nuevo_admin:
@@ -453,6 +457,41 @@ def setup_first_admin(usuario: UsuarioCreate, db: Session = Depends(get_db)):
             status_code=400,
             detail="El sistema ya ha sido inicializado o el usuario no pudo ser creado"
         )
+    
+    # Crear usuario bot si están configuradas las variables de entorno
+    if settings.openclaw_botuser_id and settings.openclaw_botuser_password:
+        try:
+            # Crear usuario bot
+            bot_user = Usuario(
+                email=settings.openclaw_botuser_id,
+                nombre_completo="OpenClaw Bot",
+                contraseña_hash=AuthUtils.hash_password(settings.openclaw_botuser_password),
+                email_verificado=True,
+                activo=True,
+                es_superadmin=False
+            )
+            db.add(bot_user)
+            db.commit()
+            db.refresh(bot_user)
+            
+            # Actualizar el archivo piar_api.env
+            piar_env_path = Path(__file__).parent.parent.parent.parent / "openclaw" / "data" / ".openclaw" / "workspace" / ".secrets" / "piar_api.env"
+            
+            # Crear directorio si no existe
+            piar_env_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Escribir credenciales
+            env_content = f"""PIAR_BASE_URL=http://piar_backend:8000
+PIAR_EMAIL={settings.openclaw_botuser_id}
+PIAR_PASSWORD={settings.openclaw_botuser_password}
+"""
+            piar_env_path.write_text(env_content, encoding='utf-8')
+            
+        except Exception as e:
+            # No fallar si hay error creando el bot, solo loguear
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"No se pudo crear el usuario bot o actualizar piar_api.env: {e}")
     
     return nuevo_admin
 

@@ -17,5 +17,9 @@ frontend/.env
 # Build artifacts
 frontend/dist/
 
-device-auth.json
-device.json
+
+**/identity/
+openclaw\data\.openclaw\*.bak
+openclaw\data\.openclaw\agents\main\sessions\
+
+**/old/

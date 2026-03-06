@@ -1,7 +1,7 @@
 {
   "agent:main:club_1_user_1": {
     "sessionId": "6e3167ea-add7-4282-a6e2-5e02efb64468",
-    "updatedAt": 1772825559922,
+    "updatedAt": 1772840996145,
     "systemSent": true,
     "abortedLastRun": false,
     "chatType": "direct",
@@ -66,7 +66,7 @@
     "contextTokens": 272000,
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1772825544097,
+      "generatedAt": 1772840985310,
       "sessionId": "6e3167ea-add7-4282-a6e2-5e02efb64468",
       "sessionKey": "agent:main:club_1_user_1",
       "provider": "openai-codex",
@@ -291,11 +291,11 @@
         ]
       }
     },
-    "inputTokens": 2564,
-    "outputTokens": 447,
-    "cacheRead": 55040,
+    "inputTokens": 1916,
+    "outputTokens": 335,
+    "cacheRead": 61696,
     "cacheWrite": 0,
-    "totalTokens": 56152,
+    "totalTokens": 62623,
     "totalTokensFresh": true
   },
   "agent:main:club_1_user_14": {

@@ -17,3 +17,5 @@ frontend/.env
 # Build artifacts
 frontend/dist/
 
+device-auth.json
+device.json

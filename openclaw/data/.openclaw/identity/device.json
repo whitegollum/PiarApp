@@ -1,7 +1,0 @@
-{
-  "version": 1,
-  "deviceId": "xxxxx",
-  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\xxxx/xx=\n-----END PUBLIC KEY-----\n",
-  "privateKeyPem": "-----BEGIN PRIVATE KEY-----\xxxxxxx\n-----END PRIVATE KEY-----\n",
-  "createdAtMs": 1772755547132
-}

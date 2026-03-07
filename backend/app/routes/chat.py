@@ -7,6 +7,24 @@ from ..models.usuario import Usuario
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
+@router.get("/openclaw/status")
+async def check_openclaw_status(
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Verifica si hay conexión WebSocket activa con OpenClaw.
+    Accesible para cualquier usuario autenticado.
+    Retorna: {"connected": bool, "error": str | None}
+    """
+    try:
+        status = await openclaw_service.check_connection_status()
+        return status
+    except Exception as e:
+        return {
+            "connected": False,
+            "error": f"Status check failed: {str(e)}"
+        }
+
 @router.get("/openclaw/debug")
 async def debug_openclaw_connection(
     current_user: Usuario = Depends(get_current_user)

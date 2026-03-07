@@ -321,6 +321,62 @@ class OpenClawService:
         
         return []
 
+    async def check_connection_status(self) -> Dict[str, Any]:
+        """
+        Verifica rápidamente si hay conexión WebSocket con OpenClaw.
+        Retorna: {"connected": bool, "error": str | None}
+        """
+        try:
+            token = self._get_token()
+            async with websockets.connect(self.ws_url, open_timeout=5) as websocket:
+                # Esperar challenge
+                response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
+                challenge = json.loads(response)
+                
+                if challenge.get("type") == "event" and challenge.get("event") == "connect.challenge":
+                    # Enviar handshake mínimo
+                    handshake_payload = {
+                        "type": "req",
+                        "id": "status_check",
+                        "method": "connect",
+                        "params": {
+                            "minProtocol": 3,
+                            "maxProtocol": 3,
+                            "client": {
+                                "id": "cli",
+                                "version": "1.0.0",
+                                "platform": "python",
+                                "mode": "status_check"
+                            },
+                            "role": "operator",
+                            "scopes": ["operator.read"],
+                            "auth": {
+                                "token": token,
+                                "password": token
+                            }
+                        }
+                    }
+                    await websocket.send(json.dumps(handshake_payload))
+                    
+                    # Esperar confirmación
+                    connect_response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
+                    connect_data = json.loads(connect_response)
+                    
+                    if connect_data.get("ok") or connect_data.get("type") == "res":
+                        return {"connected": True, "error": None}
+                    else:
+                        error_msg = connect_data.get("error", {}).get("message", "Unknown error")
+                        return {"connected": False, "error": f"Handshake failed: {error_msg}"}
+                        
+                return {"connected": False, "error": "Unexpected challenge format"}
+                
+        except asyncio.TimeoutError:
+            return {"connected": False, "error": "Connection timeout"}
+        except websockets.exceptions.WebSocketException as e:
+            return {"connected": False, "error": f"WebSocket error: {str(e)}"}
+        except Exception as e:
+            return {"connected": False, "error": str(e)}
+
     async def diagnose_connection(self) -> Dict[str, Any]:
         """
         Diagnostica exhaustivamente la conexión a OpenClaw.

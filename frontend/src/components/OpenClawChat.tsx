@@ -51,20 +51,36 @@ export default function OpenClawChat({ clubId, clubName }: OpenClawChatProps) {
     return text.replace(/\[\[.*?\]\]/g, '').trim();
   };
 
-  // Verificar conexión cuando se expande el chat
+  // Verificar conexión cuando se expande el chat y periódicamente
   useEffect(() => {
     if (isExpanded) {
       const checkConnection = async () => {
         try {
-          // Intenta hacer una petición simple para verificar conectividad
-          await APIService.get(`/chat/openclaw/history?limit=1&club_id=${clubId}`);
-          setConnectionStatus('online');
+          // Verificar conexión WebSocket real con OpenClaw
+          const response: any = await APIService.get(`/chat/openclaw/status`);
+          if (response.connected) {
+            setConnectionStatus('online');
+          } else {
+            console.error('OpenClaw not connected:', response.error);
+            setConnectionStatus('offline');
+          }
         } catch (error) {
           console.error('OpenClaw connection check failed:', error);
           setConnectionStatus('offline');
         }
       };
+      
+      // Verificar inmediatamente al expandir
       checkConnection();
+      
+      // Verificar cada 30 segundos mientras está expandido
+      const intervalId = setInterval(checkConnection, 30000);
+      
+      // Limpiar intervalo cuando se colapsa o desmonta
+      return () => clearInterval(intervalId);
+    } else {
+      // Resetear a "checking" cuando se colapsa
+      setConnectionStatus('checking');
     }
   }, [isExpanded, clubId]);
 
@@ -167,9 +183,6 @@ export default function OpenClawChat({ clubId, clubName }: OpenClawChatProps) {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botMessage]);
-      
-      // Actualizar estado de conexión como online si la respuesta fue exitosa
-      setConnectionStatus('online');
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage: Message = {
@@ -179,9 +192,6 @@ export default function OpenClawChat({ clubId, clubName }: OpenClawChatProps) {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
-      
-      // Actualizar estado de conexión como offline si hubo error
-      setConnectionStatus('offline');
     } finally {
       setIsLoading(false);
     }

@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     chromium chromium-driver \
     fonts-liberation \
     libnss3 libatk-bridge2.0-0 libgtk-3-0 libxss1 libasound2 \
+    jq \
     && rm -rf /var/lib/apt/lists/*
 
 # Setup persistent directory

@@ -19,7 +19,30 @@ frontend/dist/
 
 
 **/identity/
-openclaw\data\.openclaw\*.bak
-openclaw\data\.openclaw\agents\main\sessions\
+openclaw/data/.openclaw/*.bak
+openclaw/data/.openclaw/agents/main/sessions/
 
 **/old/
+
+# OpenClaw workspace - excluir archivos temporales y sesiones
+openclaw/data/.openclaw/workspace/**
+!openclaw/data/.openclaw/workspace/
+
+# Incluir archivos de configuración importantes
+!openclaw/data/.openclaw/workspace/AGENTS.md
+!openclaw/data/.openclaw/workspace/USER.md
+!openclaw/data/.openclaw/workspace/TOOLS.md
+!openclaw/data/.openclaw/workspace/SOUL.md
+!openclaw/data/.openclaw/workspace/IDENTITY.md
+!openclaw/data/.openclaw/workspace/HEARTBEAT.md
+!openclaw/data/.openclaw/workspace/.gitignore
+
+# Incluir skills personalizados
+!openclaw/data/.openclaw/workspace/skills/
+!openclaw/data/.openclaw/workspace/skills/*/
+!openclaw/data/.openclaw/workspace/skills/piar-api-curl/
+!openclaw/data/.openclaw/workspace/skills/piar-api-curl/SKILL.md
+
+# Incluir documentación de API
+!openclaw/data/.openclaw/workspace/api_docs/
+!openclaw/data/.openclaw/workspace/api_docs/piar_openapi.json

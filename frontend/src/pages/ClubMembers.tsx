@@ -26,6 +26,23 @@ interface Club {
   nombre: string
 }
 
+interface InvitacionResponse {
+  message: string
+  invitaciones: Array<{
+    email: string
+    token: string
+    status: string
+  }>
+  errores?: Array<{
+    email: string
+    status: string
+    error: string
+  }> | null
+  total_procesados: number
+  exitosos: number
+  fallidos: number
+}
+
 export default function ClubMembers() {
   const navigate = useNavigate()
   const { clubId } = useParams<{ clubId: string }>()
@@ -137,12 +154,11 @@ export default function ClubMembers() {
 
     try {
       setEnviandoInvitacion(true)
-      const response = await APIService.post(`/clubes/${clubId}/miembros/invitar`, {
+      const data = await APIService.post<InvitacionResponse>(`/clubes/${clubId}/miembros/invitar`, {
         email: invitacionEmail,
       })
       
       // Mostrar resultados de las invitaciones
-      const data = response.data || response
       const exitosos = data.exitosos || 0
       const fallidos = data.fallidos || 0
       const errores = data.errores || []

@@ -141,6 +141,36 @@ fi
 #--------------------------------------------------------------------------------------------------------------------------
 
 
+# Crear archivo de credenciales del bot para PiarApp
+echo "=== Creating PiarApp bot credentials file ==="
+if [ -n "${OPENCLAW_BOTUSER_ID:-}" ] && [ -n "${OPENCLAW_BOTUSER_PASSWORD:-}" ]; then
+  SECRETS_DIR="/data/.openclaw/workspace/.secrets"
+  CREDENTIALS_FILE="$SECRETS_DIR/piar_api.env"
+  
+  # Crear directorio si no existe
+  mkdir -p "$SECRETS_DIR"
+  
+  # Crear archivo con credenciales (sin comillas)
+  BOTUSER_ID_CLEAN=$(echo "$OPENCLAW_BOTUSER_ID" | tr -d '"')
+  BOTUSER_PASSWORD_CLEAN=$(echo "$OPENCLAW_BOTUSER_PASSWORD" | tr -d '"')
+  
+  echo "Creating credentials file at $CREDENTIALS_FILE..."
+  cat > "$CREDENTIALS_FILE" <<EOF
+# Credenciales del bot OpenClaw para acceder a PiarApp API
+PIAR_BASE_URL=http://piar_backend:8000
+PIAR_EMAIL=$BOTUSER_ID_CLEAN
+PIAR_PASSWORD=$BOTUSER_PASSWORD_CLEAN
+EOF
+  
+  echo "✓ Bot credentials file created successfully"
+  chmod 600 "$CREDENTIALS_FILE"  # Restringir permisos por seguridad
+else
+  echo "Warning: OPENCLAW_BOTUSER_ID or OPENCLAW_BOTUSER_PASSWORD not set, skipping credentials file"
+fi
+
+#--------------------------------------------------------------------------------------------------------------------------
+
+
 # Arrancar gateway
 echo "=== Starting OpenClaw gateway... ==="
 exec openclaw gateway \

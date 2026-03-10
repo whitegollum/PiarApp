@@ -459,13 +459,18 @@ def setup_first_admin(usuario: UsuarioCreate, db: Session = Depends(get_db)):
         )
     
     # Crear usuario bot si están configuradas las variables de entorno
+    # Nota: Las credenciales se escriben automáticamente en el contenedor OpenClaw via entrypoint.sh
     if settings.openclaw_botuser_id and settings.openclaw_botuser_password:
         try:
+            # Limpiar comillas de las variables (por si vienen del .env con comillas)
+            bot_email = settings.openclaw_botuser_id.strip('"')
+            bot_password = settings.openclaw_botuser_password.strip('"')
+            
             # Crear usuario bot
             bot_user = Usuario(
-                email=settings.openclaw_botuser_id,
+                email=bot_email,
                 nombre_completo="OpenClaw Bot",
-                contraseña_hash=AuthUtils.hash_password(settings.openclaw_botuser_password),
+                contraseña_hash=AuthUtils.hash_password(bot_password),
                 email_verificado=True,
                 activo=True,
                 es_superadmin=False
@@ -474,24 +479,15 @@ def setup_first_admin(usuario: UsuarioCreate, db: Session = Depends(get_db)):
             db.commit()
             db.refresh(bot_user)
             
-            # Actualizar el archivo piar_api.env
-            piar_env_path = Path(__file__).parent.parent.parent.parent / "openclaw" / "data" / ".openclaw" / "workspace" / ".secrets" / "piar_api.env"
-            
-            # Crear directorio si no existe
-            piar_env_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            # Escribir credenciales
-            env_content = f"""PIAR_BASE_URL=http://piar_backend:8000
-PIAR_EMAIL={settings.openclaw_botuser_id}
-PIAR_PASSWORD={settings.openclaw_botuser_password}
-"""
-            piar_env_path.write_text(env_content, encoding='utf-8')
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"✓ Usuario bot OpenClaw creado: {bot_email}")
             
         except Exception as e:
             # No fallar si hay error creando el bot, solo loguear
             import logging
             logger = logging.getLogger(__name__)
-            logger.warning(f"No se pudo crear el usuario bot o actualizar piar_api.env: {e}")
+            logger.warning(f"No se pudo crear el usuario bot: {e}")
     
     return nuevo_admin
 

@@ -131,19 +131,41 @@ export default function ClubMembers() {
     setSuccess(null)
 
     if (!invitacionEmail) {
-      setError('Por favor ingresa un email')
+      setError('Por favor ingresa al menos un email')
       return
     }
 
     try {
       setEnviandoInvitacion(true)
-      await APIService.post(`/clubes/${clubId}/miembros/invitar`, {
+      const response = await APIService.post(`/clubes/${clubId}/miembros/invitar`, {
         email: invitacionEmail,
       })
       
-      setSuccess('Invitación enviada exitosamente')
+      // Mostrar resultados de las invitaciones
+      const data = response.data || response
+      const exitosos = data.exitosos || 0
+      const fallidos = data.fallidos || 0
+      const errores = data.errores || []
+      
+      if (fallidos === 0) {
+        setSuccess(`✓ ${exitosos} invitación(es) enviada(s) exitosamente`)
+      } else {
+        let mensaje = `✓ ${exitosos} invitación(es) enviada(s)`
+        if (fallidos > 0) {
+          mensaje += `\n✗ ${fallidos} fallida(s)`
+          if (errores.length > 0) {
+            const detallesErrores = errores.map((e: any) => `${e.email}: ${e.error}`).join('\n')
+            mensaje += `\n\nDetalles:\n${detallesErrores}`
+          }
+        }
+        setError(mensaje)
+      }
+      
       setInvitacionEmail('')
-      setTimeout(() => setSuccess(null), 3000)
+      setTimeout(() => {
+        setSuccess(null)
+        setError(null)
+      }, 5000)
     } catch (err) {
       setError((err as Error).message || 'Error al enviar la invitación')
     } finally {
@@ -359,8 +381,8 @@ export default function ClubMembers() {
               <form onSubmit={handleInvitarMiembro} className="invite-form">
                 <div className="form-row">
                   <input
-                    type="email"
-                    placeholder="Email del nuevo miembro"
+                    type="text"
+                    placeholder="Email(s) del/los nuevo(s) miembro(s) (separados por comas)"
                     value={invitacionEmail}
                     onChange={(e) => setInvitacionEmail(e.target.value)}
                     className="form-input"

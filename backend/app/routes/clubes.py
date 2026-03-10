@@ -17,6 +17,7 @@ from app.schemas.club import ClubCreate, ClubUpdate, ClubResponse, MiembroClubRe
 from app.schemas.noticia import NoticiaResponse
 from app.services.invitacion_service import InvitacionService
 from app.routes.auth import get_current_user
+from app.config import settings
 
 router = APIRouter()
 
@@ -65,6 +66,21 @@ async def crear_club(
     )
     
     db.add(miembro_admin)
+    
+    # Añadir el bot OpenClaw automáticamente si está configurado
+    if settings.openclaw_botuser_id:
+        bot_email = settings.openclaw_botuser_id.strip('"')
+        bot_user = db.query(Usuario).filter(Usuario.email == bot_email).first()
+        
+        if bot_user:
+            miembro_bot = MiembroClub(
+                usuario_id=bot_user.id,
+                club_id=nuevo_club.id,
+                rol="miembro",
+                estado="activo"
+            )
+            db.add(miembro_bot)
+    
     db.commit()
     db.refresh(nuevo_club)
     
@@ -244,9 +260,9 @@ async def invitar_miembro(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Invitar miembro al club (solo administradores)"""
+    """Invitar miembro(s) al club (solo administradores). Soporta múltiples emails separados por comas."""
     
-    email_a_invitar = invitacion_data.get("email")
+    emails_input = invitacion_data.get("email", "")
     rol = invitacion_data.get("rol", "miembro")
     
     # Verificar que el usuario es administrador del club
@@ -271,19 +287,48 @@ async def invitar_miembro(
             detail="Club no encontrado"
         )
     
-    # Crear invitación
-    invitacion = InvitacionService.crear_invitacion(
-        db,
-        club_id,
-        email_a_invitar,
-        rol,
-        creado_por_id=current_user.id
-    )
+    # Procesar múltiples emails si están separados por comas
+    emails_list = [email.strip() for email in emails_input.split(",") if email.strip()]
     
+    if not emails_list:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Debe proporcionar al menos un email válido"
+        )
+    
+    # Crear invitaciones para cada email
+    resultados = []
+    errores = []
+    
+    for email_a_invitar in emails_list:
+        try:
+            invitacion = InvitacionService.crear_invitacion(
+                db,
+                club_id,
+                email_a_invitar,
+                rol,
+                creado_por_id=current_user.id
+            )
+            resultados.append({
+                "email": email_a_invitar,
+                "token": invitacion.token,
+                "status": "success"
+            })
+        except Exception as e:
+            errores.append({
+                "email": email_a_invitar,
+                "status": "error",
+                "error": str(e)
+            })
+    
+    # Respuesta consolidada
     return {
-        "message": "Invitación creada exitosamente",
-        "token": invitacion.token,
-        "email": invitacion.email
+        "message": f"{len(resultados)} invitación(es) creada(s) exitosamente" + (f", {len(errores)} error(es)" if errores else ""),
+        "invitaciones": resultados,
+        "errores": errores if errores else None,
+        "total_procesados": len(emails_list),
+        "exitosos": len(resultados),
+        "fallidos": len(errores)
     }
 
 

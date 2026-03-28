@@ -20,7 +20,7 @@ export const adminService = {
         return api.put('/admin/config/email', config);
     },
 
-    sendTestEmail: async (toEmail: string): Promise<void> => {
-        await api.post('/admin/config/test-email', { to_email: toEmail });
+    sendTestEmail: async (toEmail: string): Promise<any> => {
+        return api.post('/admin/config/test-email', { to_email: toEmail });
     }
 };

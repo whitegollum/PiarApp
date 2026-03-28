@@ -2,6 +2,25 @@
 
 Este directorio contiene scripts útiles para gestionar la base de datos de PiarAPP.
 
+## update_smtp_config.py
+
+Script para actualizar la configuración SMTP desde variables de entorno. Útil cuando se despliega por primera vez o cuando se cambia la configuración en `.env` y se necesita actualizar la base de datos.
+
+### Uso
+
+```bash
+# Desde el directorio backend
+python scripts/update_smtp_config.py
+```
+
+Este script:
+- Lee las variables de entorno del archivo `.env`
+- Actualiza o crea la configuración SMTP en la base de datos
+- Muestra el antes y después de la configuración
+- **Importante:** Solo actualiza si hay una contraseña configurada en `SMTP_PASSWORD`
+
+**Nota sobre contraseñas de Google:** Las contraseñas de aplicación de Google se muestran con espacios (ej: "jfbh emfw ovco rgvu") pero deben usarse **sin espacios** en el archivo `.env`: `SMTP_PASSWORD=jfbhemfwovcorgvu`
+
 ## reset_database.py
 
 Script para limpiar o recrear la base de datos.

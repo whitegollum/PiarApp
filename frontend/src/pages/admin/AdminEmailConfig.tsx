@@ -25,6 +25,7 @@ const AdminEmailConfig = () => {
     const [testing, setTesting] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
     const [testEmail, setTestEmail] = useState('')
+    const [debugInfo, setDebugInfo] = useState<any>(null)
 
     const isBusy = isLoading || loading
 
@@ -71,11 +72,40 @@ const AdminEmailConfig = () => {
         try {
             setTesting(true)
             setMessage(null)
-            await adminService.sendTestEmail(testEmail)
+            setDebugInfo(null)
+            const result = await adminService.sendTestEmail(testEmail)
             setMessage({ type: 'success', text: `Email de prueba enviado a ${testEmail}` })
-        } catch (error) {
+            // @ts-ignore - El resultado puede tener información de debug
+            if (result?.debug) {
+                // @ts-ignore
+                setDebugInfo(result.debug)
+            }
+        } catch (error: any) {
             console.error(error)
-            setMessage({ type: 'error', text: 'Error enviando email de prueba' })
+            
+            // Intentar extraer detalles del error
+            let errorDetail = error?.response?.data?.detail
+            let errorMsg = 'Error enviando email de prueba'
+            let debugData = null
+            
+            if (errorDetail && typeof errorDetail === 'object') {
+                // El error tiene estructura detallada
+                errorMsg = errorDetail.message || errorMsg
+                debugData = {
+                    error: errorDetail.error,
+                    config: errorDetail.config,
+                    steps: [errorDetail.message]
+                }
+            } else if (errorDetail && typeof errorDetail === 'string') {
+                errorMsg = errorDetail
+            } else if (error?.message) {
+                errorMsg = error.message
+            }
+            
+            setMessage({ type: 'error', text: errorMsg })
+            if (debugData) {
+                setDebugInfo(debugData)
+            }
         } finally {
             setTesting(false)
         }
@@ -230,6 +260,66 @@ const AdminEmailConfig = () => {
                                 </button>
                             </div>
                         </div>
+
+                        {debugInfo && (
+                            <div className="debug-info" style={{
+                                marginTop: '20px',
+                                padding: '15px',
+                                backgroundColor: '#f5f5f5',
+                                borderRadius: '4px',
+                                fontSize: '13px',
+                                fontFamily: 'monospace'
+                            }}>
+                                <h3 style={{ marginTop: 0, fontSize: '14px', fontWeight: 'bold' }}>Información de depuración</h3>
+                                
+                                {debugInfo.config && (
+                                    <div style={{ marginBottom: '15px' }}>
+                                        <strong>Configuración utilizada:</strong>
+                                        <ul style={{ marginTop: '5px', paddingLeft: '20px' }}>
+                                            <li>Servidor: {debugInfo.config.smtp_server}:{debugInfo.config.smtp_port}</li>
+                                            <li>Usuario: {debugInfo.config.smtp_username}</li>
+                                            <li>Email remitente: {debugInfo.config.smtp_from_email}</li>
+                                            <li>TLS: {debugInfo.config.smtp_use_tls ? 'Sí' : 'No'}</li>
+                                            <li>SSL: {debugInfo.config.smtp_use_ssl ? 'Sí' : 'No'}</li>
+                                            <li>Contraseña: {debugInfo.config.password_configured ? '✓ Configurada' : '✗ No configurada'}</li>
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {debugInfo.steps && debugInfo.steps.length > 0 && (
+                                    <div>
+                                        <strong>Pasos ejecutados:</strong>
+                                        <ol style={{ marginTop: '5px', paddingLeft: '20px' }}>
+                                            {debugInfo.steps.map((step: string, idx: number) => (
+                                                <li key={idx}>{step}</li>
+                                            ))}
+                                        </ol>
+                                    </div>
+                                )}
+
+                                {debugInfo.error && (
+                                    <div style={{ 
+                                        marginTop: '15px',
+                                        padding: '10px',
+                                        backgroundColor: '#ffe6e6',
+                                        borderLeft: '3px solid #cc0000',
+                                        borderRadius: '3px'
+                                    }}>
+                                        <strong>Error técnico:</strong>
+                                        <div style={{ marginTop: '5px' }}>
+                                            <div><strong>Tipo:</strong> {debugInfo.error.type}</div>
+                                            <div><strong>Detalles:</strong> {debugInfo.error.details}</div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {debugInfo.timing && (
+                                    <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+                                        Tiempo total: {debugInfo.timing.total_seconds}s
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </main>

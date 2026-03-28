@@ -10,6 +10,7 @@ import Navbar from '../components/Navbar'
 import NewsList from '../components/NewsList'
 import EventList from '../components/EventList'
 import OpenClawChat from '../components/OpenClawChat'
+import RTSPViewer from '../components/RTSPViewer'
 import '../styles/ClubDetail.css'
 
 interface Club {
@@ -27,6 +28,7 @@ interface Club {
   email_contacto?: string
   telefono?: string
   sitio_web?: string
+  rtsp_url?: string
   latitud?: number
   longitud?: number
 }
@@ -509,6 +511,13 @@ export default function ClubDetail() {
                   </div>
                 )}
 
+                {/* Cámara en vivo RTSP/HLS */}
+                {club.rtsp_url && (
+                  <div style={{ marginTop: '2rem' }}>
+                    <RTSPViewer url={club.rtsp_url} title={`Cámara ${club.nombre}`} />
+                  </div>
+                )}
+
                 <div style={{ marginTop: '2rem' }}>
                   <OpenClawChat clubId={club.id} clubName={club.nombre} />
                 </div>
@@ -523,11 +532,11 @@ export default function ClubDetail() {
                     className="btn btn-sm btn-primary"
                     onClick={() => navigate(`/clubes/${clubId}/miembros`)}
                   >
-                    Ver Más →
+                    Administrar →
                   </button>
                 </div>
                 <div className="miembros-list">
-                  {miembros.slice(0, 5).map(miembro => (
+                  {miembros.map(miembro => (
                     <div key={miembro.id} className="miembro-item">
                       <div className="miembro-info">
                         <div className="miembro-avatar">

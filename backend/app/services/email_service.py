@@ -236,6 +236,68 @@ class EmailService:
         await EmailService._enviar_email(email, asunto, cuerpo_html)
     
     @staticmethod
+    async def enviar_email_test_con_debug(email: str, db: SessionLocal):
+        """Enviar email de prueba con información de depuración"""
+        import time
+        
+        debug_info = {
+            "steps": [],
+            "config": {},
+            "timing": {}
+        }
+        
+        start_time = time.time()
+        
+        # Paso 1: Leer configuración
+        debug_info["steps"].append("Leyendo configuración de base de datos...")
+        config = db.query(SystemConfig).first()
+        
+        if not config or not config.smtp_server:
+            debug_info["steps"].append("❌ No hay configuración SMTP en la base de datos")
+            raise Exception("No hay configuración SMTP. Configura primero el servidor SMTP.")
+        
+        debug_info["steps"].append("✓ Configuración encontrada")
+        debug_info["config"] = {
+            "smtp_server": config.smtp_server,
+            "smtp_port": config.smtp_port,
+            "smtp_username": config.smtp_username or "(sin usuario)",
+            "smtp_from_email": config.smtp_from_email,
+            "smtp_use_tls": config.smtp_use_tls,
+            "smtp_use_ssl": config.smtp_use_ssl,
+            "password_configured": bool(config.smtp_password)
+        }
+        
+        # Paso 2: Preparar mensaje
+        debug_info["steps"].append("Preparando mensaje de prueba...")
+        asunto = "Email de prueba - PiarAPP"
+        cuerpo_html = """
+        <html>
+            <body>
+                <h2>¡Funciona!</h2>
+                <p>Este es un email de prueba desde la configuración de PiarAPP.</p>
+                <p><small>Email enviado el """ + time.strftime("%Y-%m-%d %H:%M:%S") + """</small></p>
+            </body>
+        </html>
+        """
+        debug_info["steps"].append("✓ Mensaje preparado")
+        
+        # Paso 3: Intentar envío
+        debug_info["steps"].append(f"Conectando a {config.smtp_server}:{config.smtp_port}...")
+        
+        try:
+            await EmailService._enviar_email(email, asunto, cuerpo_html)
+            debug_info["steps"].append("✓ Email enviado correctamente")
+        except Exception as e:
+            debug_info["steps"].append(f"❌ Error al enviar: {str(e)}")
+            raise
+        
+        end_time = time.time()
+        debug_info["timing"]["total_seconds"] = round(end_time - start_time, 2)
+        debug_info["steps"].append(f"Tiempo total: {debug_info['timing']['total_seconds']}s")
+        
+        return debug_info
+    
+    @staticmethod
     async def _enviar_email(destinatario: str, asunto: str, cuerpo_html: str):
         """Enviar email usando SMTP desde BD"""
         

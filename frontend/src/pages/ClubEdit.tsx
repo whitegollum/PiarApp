@@ -22,6 +22,7 @@ interface Club {
   email_contacto?: string
   telefono?: string
   sitio_web?: string
+  rtsp_url?: string
   latitud?: number
   longitud?: number
 }
@@ -41,6 +42,7 @@ interface ClubUpdate {
   email_contacto?: string
   telefono?: string
   sitio_web?: string
+  rtsp_url?: string
 }
 
 interface GenerarDatosResult {
@@ -84,7 +86,8 @@ export default function ClubEdit() {
     longitud: undefined,
     email_contacto: '',
     telefono: '',
-    sitio_web: ''
+    sitio_web: '',
+    rtsp_url: ''
   })
 
   useEffect(() => {
@@ -117,7 +120,8 @@ export default function ClubEdit() {
           region: clubData.region,
           email_contacto: clubData.email_contacto,
           telefono: clubData.telefono,
-          sitio_web: clubData.sitio_web
+          sitio_web: clubData.sitio_web,
+          rtsp_url: clubData.rtsp_url
         })
       } catch (err) {
         setError('Error al cargar club: ' + (err as Error).message)
@@ -172,6 +176,7 @@ export default function ClubEdit() {
       if (formData.email_contacto !== club?.email_contacto) updateData.email_contacto = formData.email_contacto
       if (formData.telefono !== club?.telefono) updateData.telefono = formData.telefono
       if (formData.sitio_web !== club?.sitio_web) updateData.sitio_web = formData.sitio_web
+      if (formData.rtsp_url !== club?.rtsp_url) updateData.rtsp_url = formData.rtsp_url
       if (formData.latitud !== club?.latitud) updateData.latitud = formData.latitud
       if (formData.longitud !== club?.longitud) updateData.longitud = formData.longitud
 
@@ -492,6 +497,27 @@ export default function ClubEdit() {
                   className="form-input"
                   placeholder="https://www.club.com"
                 />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="rtsp_url">
+                  URL Cámara RTSP/HLS
+                  <span style={{ fontSize: '0.85rem', color: '#666', marginLeft: '0.5rem' }}>
+                    (opcional - mostrará cámara en vivo en página principal)
+                  </span>
+                </label>
+                <input
+                  type="url"
+                  id="rtsp_url"
+                  name="rtsp_url"
+                  value={formData.rtsp_url || ''}
+                  onChange={handleInputChange}
+                  className="form-input"
+                  placeholder="rtsp://camara.club.com/stream o https://stream.club.com/hls/live.m3u8"
+                />
+                <small style={{ color: '#666', fontSize: '0.85rem' }}>
+                  Soporta RTSP, HLS (m3u8) y URLs de streaming directas
+                </small>
               </div>
             </section>
 

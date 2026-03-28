@@ -53,6 +53,8 @@ frontend/
 │   └── manifest.json        # PWA Manifest
 ├── src/
 │   ├── components/          # Componentes React
+│   │   ├── RTSPViewer.tsx  # Reproductor cámaras RTSP/HLS
+│   │   └── ...
 │   ├── pages/               # Páginas
 │   ├── services/            # Servicios API
 │   ├── store/               # Redux/Pinia store
@@ -60,6 +62,8 @@ frontend/
 │   ├── types/               # Tipos TypeScript
 │   ├── utils/               # Utilidades
 │   ├── styles/              # CSS global
+│   │   ├── RTSPViewer.css  # Estilos reproductor
+│   │   └── ...
 │   ├── App.tsx              # Componente raíz
 │   └── index.tsx            # Punto de entrada
 ├── package.json
@@ -67,6 +71,31 @@ frontend/
 ├── tsconfig.json
 └── .env.example
 ```
+
+## Características Principales
+
+### Visualización de Cámara en Vivo
+- **Componente:** `RTSPViewer.tsx`
+- **Funcionalidad:** Reproducción de streams HLS/RTSP en navegador
+- **Tecnología:** hls.js para navegadores que no soportan HLS nativamente
+- **Formatos soportados:**
+  - HLS (m3u8) - Recomendado para streaming en vivo
+  - HTTP(S) directo - MP4/WebM
+  - Safari nativo HLS
+- **Características:**
+  - Autoplay con mute
+  - Controles HTML5 nativos
+  - Detección automática de tipo de stream
+  - Manejo de errores descriptivo
+  - Responsive design
+  - Aspect ratio 16:9
+
+### Dependencias Destacadas
+- **React Router** - Navegación SPA
+- **hls.js** - Reproducción de streams HLS
+- **Vite** - Build tool y dev server ultra-rápido
+- **TypeScript** - Tipado estático
+- **PWA Plugin** - Service worker automático
 
 ## Estado actual
 
@@ -76,6 +105,7 @@ frontend/
 - Configuracion con preferencias basicas.
 - Vista de Código de Acceso a instalaciones (Socios).
 - Gestión de acceso a instalaciones (Admin del club).
+- **Visualización de cámaras RTSP/HLS en tiempo real** (26/03/2026)
 
 ## Proximos pasos
 

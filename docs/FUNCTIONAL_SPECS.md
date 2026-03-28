@@ -872,3 +872,118 @@ Este documento describe detalladamente las funcionalidades del sistema
 - Derecho al olvido conforme normativa aplicable.
 - Separación de datos por club en el tratamiento funcional.
 
+---
+
+## 1.13 Visualización de Cámara en Vivo
+
+### Descripción General
+
+Sistema de visualización de cámaras RTSP/HLS en tiempo real integrado en la página principal de cada club. Permite a los miembros ver en directo las condiciones del campo de vuelo, actividad actual, condiciones meteorológicas visuales, etc.
+
+### Configuración de Cámara
+
+**Administradores del club pueden:**
+- Configurar URL de streaming RTSP/HLS desde el panel de edición del club
+- Actualizar o eliminar la URL en cualquier momento
+- URL almacenada en campo `rtsp_url` del modelo Club (máx. 500 caracteres)
+- Soporte para múltiples formatos de streaming
+
+**Formatos Soportados:**
+- ✅ **HLS (HTTP Live Streaming)** - Archivos .m3u8 (Recomendado)
+  - Mejor compatibilidad con navegadores
+  - Baja latencia configurable
+  - Ejemplo: `https://stream.club.com/hls/live.m3u8`
+- ✅ **HTTP(S) Directo** - Video MP4/WebM
+  - Para streams HTTP directos
+  - Ejemplo: `https://camara.club.com/stream.mp4`
+- ⚠️ **RTSP Nativo** - No soportado directamente
+  - Requiere conversión a HLS mediante servidor de streaming
+  - Usar ffmpeg, nginx-rtmp, Wowza u similar
+
+### Visualización para Miembros
+
+**Ubicación:**
+- Pestaña "Resumen" de la página principal del club
+- Posicionado al final, antes del chat OpenClaw
+- Visible solo si hay URL configurada
+
+**Características del Reproductor:**
+- Aspect ratio 16:9 automático
+- Controles HTML5 nativos:
+  - Play/Pause
+  - Control de volumen
+  - Pantalla completa
+  - Barra de progreso
+- Autoplay con mute (si permitido por navegador)
+- Indicador visual del tipo de stream (HLS, Directo, RTSP)
+- Diseño oscuro profesional
+- Responsive: Se adapta a móviles y tablets
+
+**Manejo de Errores:**
+- Mensajes descriptivos si falla la carga
+- Indicación de problemas de red o configuración
+- Sugerencias de solución según tipo de error:
+  - Error de autenticación SMTP
+  - Error de conexión al servidor
+  - Problemas TLS/SSL
+  - Timeout
+
+### Tecnologías Utilizadas
+
+**Frontend:**
+- **hls.js** - Librería para reproducción HLS en navegadores no nativos
+- Safari: Soporte HLS nativo sin librería
+- HTML5 Video API para streams directos
+
+**Backend:**
+- Campo `rtsp_url` en modelo `Club`
+- Validación de URL en schemas Pydantic
+- Almacenamiento en SQLite/PostgreSQL
+
+### Casos de Uso
+
+1. **Visualización de condiciones meteorológicas:**
+   - Cámara apuntando al cielo y campo
+   - Miembros verifican viento antes de ir al campo
+
+2. **Actividad en directo:**
+   - Ver si hay otros miembros volando
+   - Evaluar afluencia antes de desplazarse
+
+3. **Eventos y competiciones:**
+   - Retransmisión en vivo de competiciones
+   - Familiares pueden ver desde casa
+
+4. **Seguridad:**
+   - Monitoreo de instalaciones
+   - Verificación de accesos
+
+### Límites y Restricciones
+
+- **Configuración:** Solo administradores del club
+- **Visualización:** Todos los miembros del club
+- **Privacidad:** No se graban ni almacenan videos en la plataforma
+- **Rendimiento:** Depende del servidor de streaming externo
+- **Ancho de banda:** Responsabilidad del club propietario de la cámara
+
+### Recomendaciones Técnicas
+
+**Para implementar una cámara permanente:**
+1. **Cámara IP** con salida RTSP
+2. **Servidor de conversión** (ffmpeg en servidor o Raspberry Pi):
+   ```bash
+   ffmpeg -i rtsp://camara.local/stream \
+     -c:v libx264 -preset ultrafast \
+     -f hls -hls_time 2 -hls_list_size 3 \
+     output.m3u8
+   ```
+3. **Servidor web** (nginx) para servir archivos .m3u8
+4. **HTTPS:** Requerido para autoplay en navegadores modernos
+
+**Alternativas comerciales:**
+- YouTube Live (URL embed)
+- Wowza Cloud
+- Amazon CloudFront + MediaLive
+- Azure Media Services
+
+

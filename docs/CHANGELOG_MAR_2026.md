@@ -1,5 +1,79 @@
 # 📝 Changelog - Marzo 2026
 
+## Fase 8.3: Sistema de Cámara RTSP/HLS en Vivo (26/03/2026)
+
+### 🎯 Resumen
+Implementación de visualización de cámaras RTSP/HLS en tiempo real en la página principal de cada club. Los administradores pueden configurar una URL de streaming que se mostrará automáticamente a todos los miembros del club.
+
+---
+
+## 📹 Visualización de Cámara en Vivo
+
+### Backend
+**Archivos modificados:**
+- `backend/app/models/club.py` - Campo `rtsp_url` añadido al modelo Club
+- `backend/app/schemas/club.py` - Campo `rtsp_url` en `ClubUpdate` y `ClubResponse`
+- `backend/app/routes/clubes.py` - Campo `rtsp_url` añadido a `allowed_fields` en endpoint de actualización
+- `backend/migrations/2026_03_26_add_club_rtsp_url.sql` - Migración SQL para añadir columna
+
+**Migración de Base de Datos:**
+```sql
+ALTER TABLE clubes ADD COLUMN rtsp_url VARCHAR(500);
+```
+
+**Script de migración:**
+- `backend/scripts/migrate_add_rtsp_url.py` - Script Python para ejecutar migración con validación
+
+### Frontend
+**Archivos nuevos:**
+- `frontend/src/components/RTSPViewer.tsx` - Componente reproductor de video streaming
+- `frontend/src/styles/RTSPViewer.css` - Estilos del reproductor
+
+**Archivos modificados:**
+- `frontend/src/pages/ClubEdit.tsx` - Campo de configuración URL RTSP en formulario
+- `frontend/src/pages/ClubDetail.tsx` - Integración del visor en página principal
+
+**Dependencias:**
+- `hls.js` v1.x - Librería para reproducción de streams HLS
+
+**Características del RTSPViewer:**
+- ✅ Soporte HLS (archivos .m3u8) con hls.js
+- ✅ Soporte HTTP(S) directo (MP4/WebM)
+- ✅ Detección automática del tipo de stream
+- ✅ Safari nativo HLS support
+- ✅ Modo de baja latencia para streams en vivo
+- ✅ Aspect ratio 16:9
+- ✅ Controles HTML5 nativos (play/pause, volumen, fullscreen)
+- ✅ Autoplay con mute
+- ✅ Manejo de errores con mensajes descriptivos
+- ✅ Indicadores visuales de tipo de stream (HLS, Directo, RTSP)
+- ✅ Diseño responsive adaptado a móviles
+
+**Integración UI:**
+- Campo "URL Cámara RTSP/HLS" en formulario de edición del club
+- Placeholder con ejemplos de URLs soportadas
+- Texto de ayuda sobre formatos compatibles
+- Visor posicionado al final de la pestaña "Resumen", antes del chat OpenClaw
+- Diseño oscuro profesional con bordes acentuados del club
+
+**Flujo de usuario:**
+1. Admin del club va a "Editar Club"
+2. Configura URL en campo "URL Cámara RTSP/HLS" (ej: https://stream.club.com/hls/live.m3u8)
+3. Guarda cambios
+4. Cámara aparece automáticamente en página principal del club para todos los miembros
+
+**Formatos soportados:**
+- 🟢 HLS (m3u8): Recomendado para streaming en vivo
+- 🟢 HTTP(S) directo: Para URLs de video MP4/WebM
+- 🔴 RTSP nativo: No soportado por navegadores (requiere conversión a HLS)
+
+**Notas técnicas:**
+- RTSP puro no funciona en navegadores web por limitaciones de seguridad
+- Se recomienda usar un servidor de streaming (ffmpeg, nginx-rtmp, Wowza) para convertir RTSP a HLS
+- URLs de servicios como rtsp.me pueden ser temporales y están pensadas solo para pruebas
+
+---
+
 ## Fase 8.2: Sistema de Productos, Validación y Mejoras de UX
 
 ### 🎯 Resumen

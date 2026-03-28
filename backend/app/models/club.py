@@ -32,6 +32,7 @@ class Club(Base):
     redes_sociales = Column(JSON, nullable=True)  # {facebook, instagram, etc}
     zona_horaria = Column(String(50), default="Europe/Madrid")
     idioma_por_defecto = Column(String(10), default="es")
+    rtsp_url = Column(String(500), nullable=True)  # URL de cámara RTSP/HLS del club
 
     # Ayuda de documentacion (Markdown)
     ayuda_documentacion_md = Column(Text, nullable=True)

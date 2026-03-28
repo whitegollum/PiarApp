@@ -156,9 +156,9 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
     - [x] Frontend: panel admin completo (crear, editar, eliminar, toggle activo).
     - [x] Integración con tab "Tienda" en detalle del club.
 
-- [ ] **Google OAuth (UI + Producción):**
+- [x] **Google OAuth (UI + Producción):**
     - [x] Frontend: implementar flujo en `Login.tsx` y `Register.tsx`.
-    - [ ] Configuración de credenciales de producción + validaciones de vinculación/desvinculación.
+    - [x] Configuración de credenciales de producción + validaciones de vinculación/desvinculación.
 
 - [ ] **Personalización de club (UI + API):**
     - [ ] Backend: endpoints de personalización (logo/colores/tema) si se mantienen como requisito.

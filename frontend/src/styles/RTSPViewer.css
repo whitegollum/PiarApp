@@ -1,0 +1,125 @@
+.rtsp-viewer-container {
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 1.5rem 0;
+}
+
+.rtsp-viewer-header {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #ff6b35;
+}
+
+.rtsp-viewer-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.stream-type-badge {
+  background: rgba(255, 107, 53, 0.2);
+  color: #ff6b35;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 107, 53, 0.3);
+}
+
+.rtsp-viewer-content {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rtsp-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.rtsp-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: #fff;
+}
+
+.rtsp-loading .spinner {
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid #ff6b35;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.rtsp-loading p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.rtsp-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: #ffcc00;
+  text-align: center;
+}
+
+.rtsp-error .error-icon {
+  font-size: 3rem;
+}
+
+.rtsp-error p {
+  margin: 0;
+  font-size: 0.95rem;
+  max-width: 500px;
+  line-height: 1.5;
+}
+
+.rtsp-viewer-footer {
+  background: #1a1a1a;
+  padding: 0.5rem 1.5rem;
+  text-align: center;
+  border-top: 1px solid #333;
+}
+
+.rtsp-viewer-footer small {
+  color: #888;
+  font-size: 0.8rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .rtsp-viewer-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .stream-type-badge {
+    align-self: flex-start;
+  }
+}

@@ -35,6 +35,7 @@ class ClubUpdate(BaseModel):
     email_contacto: Optional[str] = None
     telefono: Optional[str] = None
     sitio_web: Optional[str] = None
+    rtsp_url: Optional[str] = None
     ayuda_documentacion_md: Optional[str] = None
 
 
@@ -55,6 +56,7 @@ class ClubResponse(BaseModel):
     email_contacto: Optional[str] = None
     telefono: Optional[str] = None
     sitio_web: Optional[str] = None
+    rtsp_url: Optional[str] = None
     ayuda_documentacion_md: Optional[str] = None
     fecha_creacion: datetime
 

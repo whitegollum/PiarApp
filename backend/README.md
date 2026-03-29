@@ -26,6 +26,21 @@ Backend de la aplicacion de gestion de clubes de aeromodelismo usando FastAPI.
 
 El servidor estará disponible en `http://localhost:8000`
 
+## Actualización de Base de Datos
+
+Si hiciste `git pull` y hay cambios en los modelos, actualiza el esquema de la BD:
+
+```bash
+# Método recomendado (con backup automático)
+python scripts/safe_migrate.py
+
+# O método manual con control total
+python scripts/migrate_schema.py --dry-run  # Ver cambios
+python scripts/migrate_schema.py            # Aplicar
+```
+
+📖 [Guía completa de actualización de BD](scripts/DB_QUICK_GUIDE.md)
+
 ## API Documentation
 
 - Swagger UI: `http://localhost:8000/docs`

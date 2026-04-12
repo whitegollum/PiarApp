@@ -31,12 +31,23 @@ from sqlalchemy.engine import Engine
 from app.config import settings
 from app.database.db import Base
 
-# Importar todos los modelos para que estén registrados en Base
-from app.models import (
-    Usuario, Club, MiembroClub, Invitacion, Noticia,
-    Evento, AsistenciaEvento, Comentario, ContrasenaInstalacion,
-    DocumentacionReglamentaria, SystemConfig, ProductoAfiliacion
-)
+# Importar TODOS los modelos para que estén registrados en Base
+from app.models.usuario import Usuario
+from app.models.club import Club
+from app.models.miembro_club import MiembroClub
+from app.models.invitacion import Invitacion
+from app.models.noticia import Noticia
+from app.models.evento import Evento
+from app.models.asistencia import AsistenciaEvento
+from app.models.comentario import Comentario
+from app.models.instalacion import ContrasenaInstalacion
+from app.models.documentacion_reglamentaria import DocumentacionReglamentaria
+from app.models.system_config import SystemConfig
+from app.models.producto import ProductoAfiliacion
+from app.models.socio import Socio
+from app.models.votacion import Votacion
+from app.models.token_google import TokenGoogle
+from app.models.alerta import Alerta
 
 
 class DatabaseMigrator:
@@ -277,17 +288,28 @@ class DatabaseMigrator:
             # Dividir por sentencias (simplificado)
             statements = [s.strip() for s in sql_content.split(';') if s.strip()]
             
+            had_errors = False
             for statement in statements:
+                # Ignorar comentarios
+                if statement.startswith('--'):
+                    continue
+                    
                 if self.dry_run:
-                    self.log(f"[DRY-RUN] {statement}")
+                    self.log(f"[DRY-RUN] {statement[:80]}...")
                 else:
                     try:
                         conn.execute(text(statement))
                         self.log(f"Ejecutado: {statement[:50]}...", "SUCCESS")
                     except Exception as e:
-                        self.log(f"Error ejecutando sentencia: {e}", "ERROR")
+                        error_msg = str(e).lower()
+                        # Ignorar errores de "ya existe" - son esperados en re-ejecuciones
+                        if 'already exists' in error_msg or 'duplicate column' in error_msg:
+                            self.log(f"OK (ya existe): {statement[:50]}...", "INFO")
+                        else:
+                            self.log(f"Error: {e}", "ERROR")
+                            had_errors = True
             
-            if not self.dry_run:
+            if not self.dry_run and not had_errors:
                 self.record_migration(migration_name, f"Migración SQL desde archivo {migration_name}")
                 self.changes.append(f"Migración SQL aplicada: {migration_name}")
     

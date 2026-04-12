@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { AlertaCountResponse, SeveridadAlerta } from '../types/alerta';
+import { AlertaCountResponse } from '../types/alerta';
 import '../styles/Alerts.css';
 
 interface AlertBadgeProps {

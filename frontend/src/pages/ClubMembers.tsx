@@ -64,7 +64,7 @@ export default function ClubMembers() {
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
   const [alertasPorUsuario, setAlertasPorUsuario] = useState<Record<number, number>>({})
-  const [loadingAlertas, setLoadingAlertas] = useState(false)
+  const [, setLoadingAlertas] = useState(false)
 
   useEffect(() => {
     if (clubId) {

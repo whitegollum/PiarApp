@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import APIService from '../services/api'
 import SocioService, { Socio } from '../services/socioService'
 import { NewsService, EventService } from '../services/contentService'
+import { alertaService } from '../services/alertaService'
 import { Noticia, Evento } from '../types/models'
 import { useClubRole } from '../hooks/useClubRole'
 import Navbar from '../components/Navbar'
@@ -79,22 +80,10 @@ export default function ClubDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [tab, setTab] = useState<'resumen' | 'miembros' | 'noticias' | 'eventos' | 'productos'>('resumen')
-  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [totalAlertas, setTotalAlertas] = useState(0)
+  const [alertasPorUsuario, setAlertasPorUsuario] = useState<Record<number, number>>({})
   
   const canEdit = role === 'administrador' || usuario?.es_superadmin;
-
-  // Cerrar dropdown al hacer clic fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      if (dropdownOpen && !target.closest('.club-actions-dropdown')) {
-        setDropdownOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [dropdownOpen])
 
   useEffect(() => {
     if (!usuario || !clubId) {
@@ -127,6 +116,20 @@ export default function ClubDetail() {
         setNoticias(noticiasData)
         setEventos(eventosData)
         setContenidoReciente(contenidoRecienteData)
+
+        // Cargar contador de alertas si es admin o superadmin
+        if (canEdit) {
+          try {
+            const contadorAlertas = await alertaService.obtenerContadorAlertas(id)
+            setTotalAlertas(contadorAlertas.total || 0)
+            
+            // Cargar alertas por usuario para badges en pestaña miembros
+            const alertasPorUsuarioData = await alertaService.obtenerAlertasPorUsuario(id)
+            setAlertasPorUsuario(alertasPorUsuarioData)
+          } catch (err) {
+            console.log('No se pudieron cargar las alertas:', err)
+          }
+        }
 
         // Try to fetch facility password if member
         // (This might fail with 403 if not member or 404 if not set, so we handle it separately to not block page load)
@@ -231,7 +234,7 @@ export default function ClubDetail() {
          <Navbar />
         <main className="club-detail-main">
           <div className="alert alert-error">{error || 'Club no encontrado'}</div>
-          <button className="btn btn-primary" onClick={() => navigate('/')}>
+          <button className="btn btn-primary" onClick={() => navigate('/', { state: { fromHomeButton: true } })}>
             Volver al Dashboard
           </button>
         </main>
@@ -241,126 +244,61 @@ export default function ClubDetail() {
 
   return (
     <>
-      <Navbar />
+      <Navbar 
+        clubName={club.nombre} 
+        clubId={clubId}
+        canEdit={canEdit}
+        totalAlertas={totalAlertas}
+      />
 
       <main className="club-detail-main">
         <div className="club-detail-container">
-          {/* Header del club */}
-          <div className="club-detail-header">
-            <div className="club-info">
-              <div className="club-title-row">
-                <div>
-                  <h1>{club.nombre}</h1>
-                  <p className="club-slug">{club.slug}</p>
-                </div>
-                <div className="club-actions-dropdown">
-                  <button 
-                    className="btn btn-secondary btn-sm dropdown-trigger"
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                  >
-                    ⚙️ Acciones ▾
-                  </button>
-                  {dropdownOpen && (
-                    <div className="dropdown-menu">
-                      {canEdit && (
-                        <button 
-                          className="dropdown-item"
-                          onClick={() => {
-                            navigate(`/clubes/${clubId}/editar`)
-                            setDropdownOpen(false)
-                          }}
-                        >
-                          ✏️ Editar Club
-                        </button>
-                      )}
-                      <button 
-                        className="dropdown-item"
-                        onClick={() => {
-                          navigate(`/clubes/${clubId}/miembros`)
-                          setDropdownOpen(false)
-                        }}
-                      >
-                        👥 Administrar miembros
-                      </button>
-                      <button 
-                        className="dropdown-item"
-                        onClick={() => {
-                          navigate(`/clubes/${clubId}/noticias/crear`)
-                          setDropdownOpen(false)
-                        }}
-                      >
-                        📰 Añadir noticia
-                      </button>
-                      <button 
-                        className="dropdown-item"
-                        onClick={() => {
-                          navigate(`/clubes/${clubId}/eventos/crear`)
-                          setDropdownOpen(false)
-                        }}
-                      >
-                        📅 Añadir evento
-                      </button>
-                      {canEdit && (
-                        <button 
-                          className="dropdown-item"
-                          onClick={() => {
-                            navigate(`/clubes/${clubId}/productos/admin`)
-                            setDropdownOpen(false)
-                          }}
-                        >
-                          🛒 Administrar Productos
-                        </button>
-                      )}
-                      <button 
-                        className="dropdown-item"
-                        onClick={() => {
-                          setDropdownOpen(false)
-                          // TODO: Navegar a editar contraseña
-                        }}
-                      >
-                        🔒 Editar contraseña de acceso
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {club.descripcion && (
-                <p className="club-description">{club.descripcion}</p>
-              )}
-            </div>
-          </div>
-
           {/* Tabs */}
           <div className="club-tabs">
             <button
               className={`tab ${tab === 'resumen' ? 'active' : ''}`}
               onClick={() => setTab('resumen')}
             >
-              Resumen
+              🏠 <span className="tab-text">Resumen</span>
             </button>
             <button
               className={`tab ${tab === 'miembros' ? 'active' : ''}`}
               onClick={() => setTab('miembros')}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
-              Miembros ({miembros.length})
+              {totalAlertas > 0 && (
+                <span
+                  style={{
+                    background: '#ff4444',
+                    color: 'white',
+                    borderRadius: '10px',
+                    padding: '2px 8px',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  🚨 {totalAlertas}
+                </span>
+              )}
+              <span>👥 <span className="tab-text">Miembros</span> ({miembros.length})</span>
             </button>
             <button
               className={`tab ${tab === 'noticias' ? 'active' : ''}`}
               onClick={() => setTab('noticias')}
             >
-              Noticias ({noticias.length})
+              📰 <span className="tab-text">Noticias</span> ({noticias.length})
             </button>
             <button
               className={`tab ${tab === 'eventos' ? 'active' : ''}`}
               onClick={() => setTab('eventos')}
             >
-              Eventos ({eventos.length})
+              📅 <span className="tab-text">Eventos</span> ({eventos.length})
             </button>
             <button
               className={`tab ${tab === 'productos' ? 'active' : ''}`}
               onClick={() => navigate(`/clubes/${clubId}/productos`)}
             >
-              🛒 Tienda
+              🛒 <span className="tab-text">Tienda</span>
             </button>
           </div>
 
@@ -467,10 +405,22 @@ export default function ClubDetail() {
                 )}
 
                 {/* Información de Contacto */}
-                {(club.pais || club.region || club.email_contacto || club.telefono || club.sitio_web) && (
+                {(club.slug || club.descripcion || club.pais || club.region || club.email_contacto || club.telefono || club.sitio_web) && (
                   <div className="contact-section">
                     <h3>Información de Contacto</h3>
                     <div className="contact-grid">
+                      {club.slug && (
+                        <div className="contact-item">
+                          <span className="contact-label">🏷️ Identificador</span>
+                          <span className="contact-value">{club.slug}</span>
+                        </div>
+                      )}
+                      {club.descripcion && (
+                        <div className="contact-item" style={{ gridColumn: '1 / -1' }}>
+                          <span className="contact-label">📝 Descripción</span>
+                          <span className="contact-value">{club.descripcion}</span>
+                        </div>
+                      )}
                       {club.pais && (
                         <div className="contact-item">
                           <span className="contact-label">🌍 País</span>
@@ -536,33 +486,60 @@ export default function ClubDetail() {
                   </button>
                 </div>
                 <div className="miembros-list">
-                  {miembros.map(miembro => (
-                    <div key={miembro.id} className="miembro-item">
-                      <div className="miembro-info">
-                        <div className="miembro-avatar">
-                          {socioPhotoUrls[miembro.usuario_id] ? (
-                            <img
-                              src={socioPhotoUrls[miembro.usuario_id]}
-                              alt={`Foto de ${miembro.usuario?.nombre_completo || 'socio'}`}
-                            />
-                          ) : (
-                            (miembro.usuario?.nombre_completo || miembro.usuario?.email || `Usuario #${miembro.usuario_id}`)
-                              .charAt(0)
-                              .toUpperCase()
-                          )}
-                        </div>
-                        <div>
-                          <div className="miembro-name">
-                            {miembro.usuario?.nombre_completo || miembro.usuario?.email || `Usuario #${miembro.usuario_id}`}
+                  {miembros.map(miembro => {
+                    const numAlertas = alertasPorUsuario[miembro.usuario_id] || 0
+                    return (
+                      <div key={miembro.id} className="miembro-item">
+                        <div className="miembro-info">
+                          <div className="miembro-avatar">
+                            {socioPhotoUrls[miembro.usuario_id] ? (
+                              <img
+                                src={socioPhotoUrls[miembro.usuario_id]}
+                                alt={`Foto de ${miembro.usuario?.nombre_completo || 'socio'}`}
+                              />
+                            ) : (
+                              (miembro.usuario?.nombre_completo || miembro.usuario?.email || `Usuario #${miembro.usuario_id}`)
+                                .charAt(0)
+                                .toUpperCase()
+                            )}
                           </div>
-                          <div className="miembro-email">Rol: {miembro.rol}</div>
+                          <div>
+                            <div className="miembro-name" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span>{miembro.usuario?.nombre_completo || miembro.usuario?.email || `Usuario #${miembro.usuario_id}`}</span>
+                              {numAlertas > 0 && (
+                                <button
+                                  onClick={() => navigate(`/admin/alertas?club=${clubId}&usuario=${miembro.usuario_id}`)}
+                                  title={`${numAlertas} alerta(s) activa(s)`}
+                                  style={{
+                                    background: '#ff4444',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    padding: '3px 8px',
+                                    fontSize: '0.7rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '3px',
+                                    transition: 'all 0.2s ease',
+                                  }}
+                                  onMouseOver={(e) => e.currentTarget.style.background = '#cc0000'}
+                                  onMouseOut={(e) => e.currentTarget.style.background = '#ff4444'}
+                                >
+                                  🚨 {numAlertas}
+                                </button>
+                              )}
+                            </div>
+                            <div className="miembro-email">Rol: {miembro.rol}</div>
+                          </div>
                         </div>
+                        <span className={`status ${miembro.estado}`}>
+                          {miembro.estado}
+                        </span>
                       </div>
-                      <span className={`status ${miembro.estado}`}>
-                        {miembro.estado}
-                      </span>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )}

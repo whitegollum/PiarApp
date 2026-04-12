@@ -45,7 +45,12 @@ En `docker-compose.yml` encontrarás un apartado `environment:` para cada servic
 1.  **Construir las imágenes e iniciar los contenedores:**
 
     ```bash
-    docker compose up --build -d
+    git pull origin main
+    docker compose down 
+    docker compose build
+    docker compose up -d
+    # Ejecutar comando en contenedor temporal
+    docker compose run --rm backend python scripts/safe_migrate.py
     ```
 
     Esto descargará las dependencias, compilará el frontend y levantará ambos servicios.

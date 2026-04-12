@@ -74,7 +74,7 @@ class OpenClawService:
                                 "id": "cli",
                                 "version": "1.0.0",
                                 "platform": "python",
-                                "mode": "backend"
+                                "mode": "client"
                             },
                             "role": "operator",
                             "scopes": ["operator.read", "operator.write", "operator.admin"],
@@ -243,7 +243,7 @@ class OpenClawService:
                                 "id": "cli",
                                 "version": "1.0.0",
                                 "platform": "python",
-                                "mode": "backend"
+                                "mode": "client"
                             },
                             "role": "operator",
                             "scopes": ["operator.read", "operator.write", "operator.admin"],

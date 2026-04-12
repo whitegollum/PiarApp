@@ -194,7 +194,7 @@ export default function Settings() {
           <div className="settings-actions">
             <button
               className="btn btn-secondary"
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/', { state: { fromHomeButton: true } })}
             >
               Cancelar
             </button>

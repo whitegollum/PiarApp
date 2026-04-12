@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import APIService from '../services/api'
 import Navbar from '../components/Navbar'
@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [error, setError] = useState('')
   const [errorInvitaciones, setErrorInvitaciones] = useState('')
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     if (!isLoading && !usuario) {
@@ -68,6 +69,16 @@ export default function Dashboard() {
       cargarDatos()
     }
   }, [usuario])
+
+  // Auto-redirigir si solo hay 1 club (excepto si viene del botón Home)
+  useEffect(() => {
+    const fromHomeButton = location.state?.fromHomeButton
+    
+    if (!cargandoClubs && clubs.length === 1 && !fromHomeButton) {
+      // Redirección automática al único club disponible
+      navigate(`/clubes/${clubs[0].id}`, { replace: true })
+    }
+  }, [clubs, cargandoClubs, location.state, navigate])
 
   const handleAceptarInvitacion = async (token: string) => {
     try {

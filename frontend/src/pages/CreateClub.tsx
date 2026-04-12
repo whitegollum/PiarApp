@@ -130,7 +130,7 @@ export default function CreateClub() {
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/', { state: { fromHomeButton: true } })}
                 disabled={loading}
               >
                 Cancelar

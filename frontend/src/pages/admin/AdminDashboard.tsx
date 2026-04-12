@@ -38,6 +38,18 @@ const AdminDashboard = () => {
                             <h3 className="admin-card-title">Configuracion email</h3>
                             <p className="admin-card-text">Configurar servidor SMTP para envio de correos.</p>
                         </Link>
+
+                        <Link to="/admin/alertas" className="admin-card">
+                            <div className="admin-card-icon">🔔</div>
+                            <h3 className="admin-card-title">Sistema de alertas</h3>
+                            <p className="admin-card-text">Gestionar alertas de documentación y notificaciones del sistema.</p>
+                        </Link>
+
+                        <Link to="/admin/database" className="admin-card">
+                            <div className="admin-card-icon">🗄️</div>
+                            <h3 className="admin-card-title">Base de datos</h3>
+                            <p className="admin-card-text">Verificar y aplicar migraciones del esquema de base de datos.</p>
+                        </Link>
                     </div>
                 </div>
             </main>

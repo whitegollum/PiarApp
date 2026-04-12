@@ -13,6 +13,13 @@ from app.models.miembro_club import MiembroClub
 from app.models.noticia import Noticia
 from app.models.evento import Evento
 from app.models.producto import ProductoAfiliacion
+from app.models.alerta import Alerta
+from app.models.documentacion_reglamentaria import DocumentacionReglamentaria
+from app.models.invitacion import Invitacion
+from app.models.instalacion import ContrasenaInstalacion
+from app.models.socio import Socio
+from app.models.votacion import Votacion
+from app.models.comentario import Comentario
 from app.schemas.club import ClubCreate, ClubUpdate, ClubResponse, MiembroClubResponse, MiembroRolUpdate, MiembroEstadoUpdate
 from app.schemas.noticia import NoticiaResponse
 from app.services.invitacion_service import InvitacionService
@@ -120,8 +127,14 @@ async def listar_clubes_usuario(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Listar clubes del usuario actual"""
+    """Listar clubes del usuario actual (o todos si es superadmin)"""
     
+    # Si es superadmin, devolver todos los clubes
+    if current_user.es_superadmin:
+        clubes = db.query(Club).order_by(Club.nombre).all()
+        return [ClubResponse.model_validate(club) for club in clubes]
+    
+    # Si no es superadmin, devolver solo los clubes donde es miembro activo
     miembros = db.query(MiembroClub).filter(
         MiembroClub.usuario_id == current_user.id,
         MiembroClub.estado == "activo"
@@ -646,10 +659,12 @@ async def generar_datos_ejemplo(
     - 5 noticias
     - 5 eventos
     - 5 productos en la tienda
+    - Documentación reglamentaria con diferentes estados de vencimiento (para probar alertas)
     
     Solo accesible para administradores del club o superadmins
     """
     from app.models.instalacion import ContrasenaInstalacion
+    from app.models.documentacion_reglamentaria import DocumentacionReglamentaria
     from datetime import timedelta
     import random
     import string
@@ -685,6 +700,7 @@ async def generar_datos_ejemplo(
         "noticias_creadas": 0,
         "eventos_creados": 0,
         "productos_creados": 0,
+        "documentacion_creada": 0,
         "ubicacion_actualizada": False,
         "password_instalaciones_creada": False
     }
@@ -732,7 +748,14 @@ async def generar_datos_ejemplo(
             ("David", "López", "david.lopez")
         ]
         
-        for nombre, apellido, username in nombres_ejemplo:
+        # Estados de documentación para probar alertas:
+        # 0: Vigente (sin alertas)
+        # 1: Por vencer pronto (warning - 20 días antes)
+        # 2: Vencido hace poco (danger - 15 días vencido)
+        # 3: Muy vencido (critical - 90 días vencido)
+        # 4: Sin documentación (para probar alertas sin docs)
+        
+        for idx, (nombre, apellido, username) in enumerate(nombres_ejemplo):
             email = f"{username}@ejemplo.com"
             # Verificar que el usuario no existe
             usuario_existe = db.query(Usuario).filter(Usuario.email == email).first()
@@ -759,6 +782,36 @@ async def generar_datos_ejemplo(
                 )
                 db.add(nuevo_miembro)
                 resultados["usuarios_creados"] += 1
+                
+                # Crear documentación reglamentaria con diferentes estados (excepto el último usuario)
+                if idx < 4:  # Primeros 4 usuarios con documentación
+                    ahora = datetime.utcnow()
+                    
+                    if idx == 0:  # Documentos vigentes (sin alertas)
+                        rc_vencimiento = ahora + timedelta(days=180)
+                        carnet_vencimiento = ahora + timedelta(days=365)
+                    elif idx == 1:  # Por vencer pronto (warning)
+                        rc_vencimiento = ahora + timedelta(days=20)
+                        carnet_vencimiento = ahora + timedelta(days=25)
+                    elif idx == 2:  # Vencido hace poco (danger)
+                        rc_vencimiento = ahora - timedelta(days=15)
+                        carnet_vencimiento = ahora - timedelta(days=10)
+                    else:  # idx == 3: Muy vencido (critical)
+                        rc_vencimiento = ahora - timedelta(days=90)
+                        carnet_vencimiento = ahora - timedelta(days=120)
+                    
+                    nueva_doc = DocumentacionReglamentaria(
+                        usuario_id=nuevo_usuario.id,
+                        rc_numero=f"RC-{random.randint(100000, 999999)}",
+                        rc_fecha_emision=ahora - timedelta(days=365),
+                        rc_fecha_vencimiento=rc_vencimiento,
+                        carnet_numero=f"PILOT-{random.randint(1000000, 9999999)}",
+                        carnet_fecha_emision=ahora - timedelta(days=730),
+                        carnet_fecha_vencimiento=carnet_vencimiento,
+                        fecha_creacion=ahora
+                    )
+                    db.add(nueva_doc)
+                    resultados["documentacion_creada"] += 1
         
         # 4. Crear 5 noticias de ejemplo
         noticias_ejemplo = [

@@ -37,6 +37,11 @@ class Club(Base):
     # Ayuda de documentacion (Markdown)
     ayuda_documentacion_md = Column(Text, nullable=True)
     
+    # Configuración de Alertas
+    alertas_documentacion_enabled = Column(Boolean, default=True)
+    alertas_dias_aviso_previo = Column(Integer, default=30)  # Días antes para warning
+    alertas_dias_critico = Column(Integer, default=60)  # Días después para critical
+    
     # Configuración
     estado = Column(String(20), default="inactivo")  # activo, inactivo, suspendido
     creador_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)

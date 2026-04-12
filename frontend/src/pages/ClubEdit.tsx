@@ -53,6 +53,7 @@ interface GenerarDatosResult {
     noticias_creadas: number
     eventos_creados: number
     productos_creados: number
+    documentacion_creada: number
     ubicacion_actualizada: boolean
     password_instalaciones_creada: boolean
   }
@@ -199,7 +200,7 @@ export default function ClubEdit() {
   }
 
   const handleGenerarDatosEjemplo = async () => {
-    if (!confirm('¿Estás seguro de que quieres generar datos de ejemplo?\n\nEsto creará:\n- 5 usuarios miembros\n- Ubicación geográfica\n- Contraseña de instalaciones\n- 5 noticias\n- 5 eventos\n- 5 productos en la tienda')) {
+    if (!confirm('¿Estás seguro de que quieres generar datos de ejemplo?\n\nEsto creará:\n- 5 usuarios miembros\n- Documentación reglamentaria con diferentes estados (para probar alertas)\n- Ubicación geográfica\n- Contraseña de instalaciones\n- 5 noticias\n- 5 eventos\n- 5 productos en la tienda')) {
       return
     }
 
@@ -213,17 +214,19 @@ export default function ClubEdit() {
       setSuccess(
         `¡Datos generados correctamente!\n` +
         `Usuarios: ${resultado.detalles.usuarios_creados}\n` +
+        `Documentación: ${resultado.detalles.documentacion_creada} registros\n` +
         `Noticias: ${resultado.detalles.noticias_creadas}\n` +
         `Eventos: ${resultado.detalles.eventos_creados}\n` +
         `Productos: ${resultado.detalles.productos_creados}\n` +
         `Ubicación: ${resultado.detalles.ubicacion_actualizada ? '✓' : '✗'}\n` +
-        `Password instalaciones: ${resultado.detalles.password_instalaciones_creada ? '✓' : '✗'}`
+        `Password instalaciones: ${resultado.detalles.password_instalaciones_creada ? '✓' : '✗'}\n\n` +
+        `💡 Tip: Visita la sección de Alertas en Admin para ver las alertas generadas por documentos vencidos.`
       )
       
       // Recargar datos del club
       setTimeout(() => {
         window.location.reload()
-      }, 3000)
+      }, 4000)
     } catch (err: any) {
       setError('Error al generar datos de ejemplo: ' + (err.message || 'Error desconocido'))
     } finally {

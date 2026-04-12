@@ -23,6 +23,7 @@ openclaw/data/.openclaw/*.bak
 openclaw/data/.openclaw/agents/main/sessions/
 
 **/old/
+**/tasks/
 
 # OpenClaw workspace - excluir archivos temporales y sesiones
 openclaw/data/.openclaw/workspace/**

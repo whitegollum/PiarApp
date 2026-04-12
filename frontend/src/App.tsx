@@ -30,6 +30,8 @@ import EditEvent from './pages/EditEvent'
 import AdminClubs from './pages/admin/AdminClubs'
 import AdminEmailConfig from './pages/admin/AdminEmailConfig'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminAlertas from './pages/admin/AdminAlertas'
+import AdminDatabase from './pages/admin/AdminDatabase'
 import ClubDocumentacion from './pages/ClubDocumentacion'
 import ProductosCatalogo from './pages/ProductosCatalogo'
 import ProductosAdmin from './pages/ProductosAdmin'
@@ -73,6 +75,8 @@ function App() {
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/clubes" element={<ProtectedRoute><AdminClubs /></ProtectedRoute>} />
           <Route path="/admin/email" element={<ProtectedRoute><AdminEmailConfig /></ProtectedRoute>} />
+          <Route path="/admin/alertas" element={<ProtectedRoute><AdminAlertas /></ProtectedRoute>} />
+          <Route path="/admin/database" element={<ProtectedRoute><AdminDatabase /></ProtectedRoute>} />
 
           {/* Rutas públicas */}
           <Route path="/auth/setup-inicial" element={<FirstAccess />} />

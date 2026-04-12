@@ -378,3 +378,96 @@ class EmailService:
         except Exception as e:
             print(f"[EMAIL SMTP ERROR] {str(e)}")
             raise e
+    
+    @staticmethod
+    async def enviar_alerta_documentacion_usuario(
+        email: str,
+        nombre: str,
+        club_nombre: str,
+        tipo_documento: str,
+        fecha_vencimiento: str,
+        severidad: str,
+        dias_diferencia: int
+    ):
+        """Enviar email de alerta de documentación vencida/por vencer"""
+        base_url = EmailService._get_frontend_url()
+        
+        # URL para actualizar documentación
+        docs_url = f"{base_url}/perfil/documentacion"
+        
+        # Colores según severidad
+        colores = {
+            "warning": "#FFC107",  # Amarillo
+            "danger": "#DC3545",   # Rojo
+            "critical": "#9C27B0"  # Morado
+        }
+        
+        color = colores.get(severidad, "#FFC107")
+        
+        # Mensajes según severidad
+        if severidad == "warning":
+            emoji = "\u26A0\uFE0F"  # ⚠️
+            titulo_principal = "Recordatorio: Documento próximo a vencer"
+            mensaje = f"Tu {tipo_documento} vence en {abs(dias_diferencia)} días (el {fecha_vencimiento})."
+            accion = "Actualiza tu documentación antes de la fecha de vencimiento para evitar restricciones de acceso."
+        elif severidad == "danger":
+            emoji = "\u274C"  # ❌
+            titulo_principal = "ATENCIÓN: Documento vencido"
+            mensaje = f"Tu {tipo_documento} venció hace {abs(dias_diferencia)} días (el {fecha_vencimiento})."
+            accion = "Es necesario que actualices tu documentación lo antes posible."
+        else:  # critical
+            emoji = "🚨"  # Sirena
+            titulo_principal = "¡URGENTE! Documento vencido desde hace más de 2 meses"
+            mensaje = f"Tu {tipo_documento} venció hace {abs(dias_diferencia)} días (el {fecha_vencimiento})."
+            accion = "Tu acceso al club puede verse restringido hasta que actualices tu documentación. Por favor, actúa de inmediato."
+        
+        asunto = f"{emoji} {club_nombre} - {titulo_principal}"
+        
+        cuerpo_html = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background-color: {color}; color: white; padding: 20px; border-radius: 5px 5px 0 0; text-align: center;">
+                        <h1 style="margin: 0; font-size: 24px;">{emoji} {titulo_principal}</h1>
+                    </div>
+                    
+                    <div style="background-color: #f8f9fa; padding: 30px; border-radius: 0 0 5px 5px;">
+                        <p>Hola <strong>{nombre}</strong>,</p>
+                        
+                        <p style="font-size: 16px; background-color: white; padding: 15px; border-left: 4px solid {color}; margin: 20px 0;">
+                            {mensaje}
+                        </p>
+                        
+                        <p>{accion}</p>
+                        
+                        <div style="margin: 30px 0; text-align: center;">
+                            <a href="{docs_url}" 
+                               style="background-color: {color}; color: white; padding: 14px 35px; 
+                                      text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                                Actualizar Mi Documentación
+                            </a>
+                        </div>
+                        
+                        <p style="color: #666; font-size: 14px;">
+                            <strong>Club:</strong> {club_nombre}<br>
+                            <strong>Documento:</strong> {tipo_documento}<br>
+                            <strong>Fecha de vencimiento:</strong> {fecha_vencimiento}
+                        </p>
+                        
+                        <p style="color: #999; font-size: 12px; margin-top: 30px;">
+                            Si ya has actualizado tu documentación, por favor ignora este mensaje. 
+                            Los cambios pueden tardar hasta 24 horas en reflejarse.
+                        </p>
+                    </div>
+                    
+                    <hr style="margin-top: 40px; border: none; border-top: 1px solid #ddd;">
+                    <p style="color: #999; font-size: 12px; text-align: center;">
+                        PiarAPP - {club_nombre}<br>
+                        {base_url}
+                    </p>
+                </div>
+            </body>
+        </html>
+        """
+        
+        await EmailService._enviar_email(email, asunto, cuerpo_html)

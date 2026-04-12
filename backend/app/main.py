@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from contextlib import asynccontextmanager
 import os
 import logging
 
@@ -15,10 +16,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-from app.routes import admin
-
 # Importar modelos para que SQLAlchemy los registre
-from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria, system_config, producto
+from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria, system_config, producto, alerta
 
 # Crear tablas en la base de datos
 Base.metadata.create_all(bind=engine)
@@ -26,12 +25,41 @@ Base.metadata.create_all(bind=engine)
 # Inicializar datos necesarios
 init_db()
 
+
+# Lifespan events para iniciar/detener el scheduler
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Gestionar ciclo de vida de la aplicación"""
+    # Startup: Iniciar scheduler
+    logger.info("🚀 Iniciando aplicación...")
+    
+    try:
+        from app.services.scheduler_service import SchedulerService
+        SchedulerService.start()
+        logger.info("✅ Scheduler de tareas programadas iniciado")
+    except Exception as e:
+        logger.error(f"❌ Error al iniciar scheduler: {e}")
+    
+    yield
+    
+    # Shutdown: Detener scheduler
+    logger.info("🛑 Deteniendo aplicación...")
+    
+    try:
+        from app.services.scheduler_service import SchedulerService
+        SchedulerService.shutdown()
+        logger.info("✅ Scheduler detenido correctamente")
+    except Exception as e:
+        logger.error(f"❌ Error al detener scheduler: {e}")
+
+
 # Crear aplicación FastAPI
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description="API de Gestión de Clubs de Aeromodelismo",
-    debug=settings.debug
+    debug=settings.debug,
+    lifespan=lifespan
 )
 
 # Configurar CORS
@@ -44,7 +72,7 @@ app.add_middleware(
 )
 
 # Importar rutas
-from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, chat, dashboard
+from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, chat, dashboard, alertas, admin
 
 # Incluir routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Autenticación"])
@@ -59,6 +87,7 @@ app.include_router(productos.router, prefix="/api", tags=["Productos"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Administración"])
 app.include_router(chat.router, prefix="/api", tags=["Chat"])
 app.include_router(dashboard.router, prefix="/api", tags=["Dashboard"])
+app.include_router(alertas.router, prefix="/api", tags=["Alertas"])
 
 
 @app.get("/")

@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar'
 import APIService from '../services/api'
 import SocioService, { Socio } from '../services/socioService'
 import { DocumentacionService, DocumentacionResponse } from '../services/documentacionService'
+import { alertaService } from '../services/alertaService'
 import '../styles/ClubMembers.css'
 
 interface Miembro {
@@ -62,6 +63,8 @@ export default function ClubMembers() {
   const [docsData, setDocsData] = useState<DocumentacionResponse | null>(null)
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
+  const [alertasPorUsuario, setAlertasPorUsuario] = useState<Record<number, number>>({})
+  const [loadingAlertas, setLoadingAlertas] = useState(false)
 
   useEffect(() => {
     if (clubId) {
@@ -134,11 +137,27 @@ export default function ClubMembers() {
       setSocios(sociosMap)
 
       setMiembros(miembrosData)
+      
+      // Cargar alertas por usuario
+      loadAlertasPorUsuario()
     } catch (err) {
       setError('Error al cargar los datos del club')
       console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadAlertasPorUsuario = async () => {
+    try {
+      setLoadingAlertas(true)
+      const alertas = await alertaService.obtenerAlertasPorUsuario(Number(clubId))
+      setAlertasPorUsuario(alertas)
+    } catch (err) {
+      console.error('Error al cargar alertas:', err)
+      // No mostrar error al usuario, solo log
+    } finally {
+      setLoadingAlertas(false)
     }
   }
 
@@ -433,6 +452,7 @@ export default function ClubMembers() {
                   const isInactive = miembro.estado === 'inactivo'
                   const isBusy = roleUpdatingId === miembro.usuario_id || estadoUpdatingId === miembro.usuario_id
                   const photoUrl = socioPhotoUrls[miembro.usuario_id]
+                  const numAlertas = alertasPorUsuario[miembro.usuario_id] || 0
 
                   return (
                   <div key={miembro.id} className="member-item">
@@ -451,7 +471,34 @@ export default function ClubMembers() {
                       </span>
                     </div>
                     <div className="member-info">
-                      <h3>{miembro.usuario?.nombre_completo || 'Usuario desconocido'}</h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <h3>{miembro.usuario?.nombre_completo || 'Usuario desconocido'}</h3>
+                        {numAlertas > 0 && (
+                          <button
+                            onClick={() => navigate(`/admin/alertas?club=${clubId}&usuario=${miembro.usuario_id}`)}
+                            className="alert-badge-button"
+                            title={`${numAlertas} alerta(s) activa(s)`}
+                            style={{
+                              background: '#ff4444',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '12px',
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 'bold',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              transition: 'all 0.2s ease',
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.background = '#cc0000'}
+                            onMouseOut={(e) => e.currentTarget.style.background = '#ff4444'}
+                          >
+                            🚨 {numAlertas}
+                          </button>
+                        )}
+                      </div>
                       <p className="member-email">{miembro.usuario?.email || 'Sin email'}</p>
                       <div className="member-meta">
                         <span

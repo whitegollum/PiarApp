@@ -224,7 +224,7 @@ export default function SocioProfile() {
           {!loading && clubs.length === 0 && (
             <div className="empty-state">
               <p>No perteneces a ningun club todavia.</p>
-              <button className="btn btn-secondary" onClick={() => navigate('/')}>Volver</button>
+              <button className="btn btn-secondary" onClick={() => navigate('/', { state: { fromHomeButton: true } })}>Volver</button>
             </div>
           )}
 

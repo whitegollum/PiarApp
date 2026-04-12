@@ -11,3 +11,4 @@ from app.models.instalacion import ContrasenaInstalacion
 from app.models.documentacion_reglamentaria import DocumentacionReglamentaria
 from app.models.system_config import SystemConfig
 from app.models.producto import ProductoAfiliacion
+from app.models.alerta import Alerta

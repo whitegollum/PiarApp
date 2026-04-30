@@ -71,11 +71,11 @@ class OpenClawService:
                             "minProtocol": 3,
                             "maxProtocol": 3,
                             "client": {
-                                "id": "cli",
+                                "id": "backend",
                                 "displayName": "PiarApp Backend",
                                 "version": "1.0.0",
                                 "platform": "node",
-                                "mode": "cli"
+                                "mode": "backend"
                             },
                             "role": "operator",
                             "scopes": ["operator.read", "operator.write", "operator.admin"],
@@ -241,11 +241,11 @@ class OpenClawService:
                             "minProtocol": 3,
                             "maxProtocol": 3,
                             "client": {
-                                "id": "cli",
+                                "id": "backend",
                                 "displayName": "PiarApp Backend",
                                 "version": "1.0.0",
                                 "platform": "node",
-                                "mode": "cli"
+                                "mode": "backend"
                             },
                             "role": "operator",
                             "scopes": ["operator.read", "operator.write", "operator.admin"],
@@ -345,11 +345,11 @@ class OpenClawService:
                             "minProtocol": 3,
                             "maxProtocol": 3,
                             "client": {
-                                "id": "cli",
+                                "id": "backend",
                                 "displayName": "PiarApp Backend",
                                 "version": "1.0.0",
                                 "platform": "node",
-                                "mode": "cli"
+                                "mode": "backend"
                             },
                             "role": "operator",
                             "scopes": ["operator.read"],
@@ -397,7 +397,7 @@ class OpenClawService:
                 "auth_mode": self.auth_mode,
                 "has_password": bool(self.password),
                 "has_api_key": bool(self.api_key),
-                "client_id": "cli",  # Client ID correcto después de debug
+                "client_id": "backend",
                 "protocol_version": 3,
             },
             "steps": [],
@@ -418,7 +418,7 @@ class OpenClawService:
             diagnosis["steps"].append({
                 "step": "client_id_verification",
                 "status": "ok",
-                "details": "Using client_id='cli' (validated during troubleshooting)"
+                "details": "Using client_id='backend', mode='backend' (loopback self-pairing bypass)"
             })
             
             # Step 2: Intentar obtener token
@@ -505,11 +505,11 @@ class OpenClawService:
                                     "minProtocol": 3,
                                     "maxProtocol": 3,
                                     "client": {
-                                        "id": "cli",
+                                        "id": "backend",
                                         "displayName": "PiarApp Backend",
                                         "version": "1.0.0",
                                         "platform": "node",
-                                        "mode": "cli"
+                                        "mode": "backend"
                                     },
                                     "role": "operator",
                                     "scopes": ["operator.read", "operator.write", "operator.admin"],
@@ -525,7 +525,7 @@ class OpenClawService:
                             diagnosis["steps"].append({
                                 "step": "handshake_sent", 
                                 "status": "ok", 
-                                "details": f"Handshake sent with client_id='cli', role='operator', protocol=3"
+                                "details": f"Handshake sent with client_id='backend', mode='backend', role='operator', protocol=3"
                             })
                             
                             # Step 6: Esperar respuesta del handshake

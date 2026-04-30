@@ -78,7 +78,7 @@ class OpenClawService:
                                 "mode": "backend"
                             },
                             "role": "operator",
-                            "scopes": ["operator.read", "operator.write", "operator.admin"],
+                            "scopes": ["operator.read", "operator.write"],
                             "auth": {
                                 "token": token,
                                 "password": token
@@ -248,7 +248,7 @@ class OpenClawService:
                                 "mode": "backend"
                             },
                             "role": "operator",
-                            "scopes": ["operator.read", "operator.write", "operator.admin"],
+                            "scopes": ["operator.read", "operator.write"],
                             "auth": {
                                 "token": token,
                                 "password": token
@@ -512,7 +512,7 @@ class OpenClawService:
                                         "mode": "backend"
                                     },
                                     "role": "operator",
-                                    "scopes": ["operator.read", "operator.write", "operator.admin"],
+                                    "scopes": ["operator.read", "operator.write"],
                                     "auth": {
                                         "token": token,
                                         "password": token

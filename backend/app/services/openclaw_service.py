@@ -71,7 +71,7 @@ class OpenClawService:
                             "minProtocol": 3,
                             "maxProtocol": 3,
                             "client": {
-                                "id": "backend",
+                                "id": "gateway-client",
                                 "displayName": "PiarApp Backend",
                                 "version": "1.0.0",
                                 "platform": "node",
@@ -241,7 +241,7 @@ class OpenClawService:
                             "minProtocol": 3,
                             "maxProtocol": 3,
                             "client": {
-                                "id": "backend",
+                                "id": "gateway-client",
                                 "displayName": "PiarApp Backend",
                                 "version": "1.0.0",
                                 "platform": "node",
@@ -345,7 +345,7 @@ class OpenClawService:
                             "minProtocol": 3,
                             "maxProtocol": 3,
                             "client": {
-                                "id": "backend",
+                                "id": "gateway-client",
                                 "displayName": "PiarApp Backend",
                                 "version": "1.0.0",
                                 "platform": "node",
@@ -397,7 +397,7 @@ class OpenClawService:
                 "auth_mode": self.auth_mode,
                 "has_password": bool(self.password),
                 "has_api_key": bool(self.api_key),
-                "client_id": "backend",
+                "client_id": "gateway-client",
                 "protocol_version": 3,
             },
             "steps": [],
@@ -418,7 +418,7 @@ class OpenClawService:
             diagnosis["steps"].append({
                 "step": "client_id_verification",
                 "status": "ok",
-                "details": "Using client_id='backend', mode='backend' (loopback self-pairing bypass)"
+                "details": "Using client_id='gateway-client', mode='backend' (loopback self-pairing bypass)"
             })
             
             # Step 2: Intentar obtener token
@@ -505,7 +505,7 @@ class OpenClawService:
                                     "minProtocol": 3,
                                     "maxProtocol": 3,
                                     "client": {
-                                        "id": "backend",
+                                        "id": "gateway-client",
                                         "displayName": "PiarApp Backend",
                                         "version": "1.0.0",
                                         "platform": "node",
@@ -525,7 +525,7 @@ class OpenClawService:
                             diagnosis["steps"].append({
                                 "step": "handshake_sent", 
                                 "status": "ok", 
-                                "details": f"Handshake sent with client_id='backend', mode='backend', role='operator', protocol=3"
+                                "details": f"Handshake sent with client_id='gateway-client', mode='backend', role='operator', protocol=3"
                             })
                             
                             # Step 6: Esperar respuesta del handshake

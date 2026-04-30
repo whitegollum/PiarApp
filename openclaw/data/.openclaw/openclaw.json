@@ -53,8 +53,7 @@
     },
     "http": {
       "endpoints": {
-        "chatCompletions": { "enabled": true },
-        "models": { "enabled": true }
+        "chatCompletions": { "enabled": true }
       }
     },
     "tailscale": {

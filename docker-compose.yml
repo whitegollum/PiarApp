@@ -5,6 +5,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: piar_backend
+    network_mode: "service:openclaw-gateway-piara"
+    depends_on:
+      - openclaw-gateway-piara
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_KEY=${SECRET_KEY}
@@ -21,18 +24,14 @@ services:
       - FRONTEND_URL=${FRONTEND_URL}
       - CORS_ORIGINS=${CORS_ORIGINS}
       - OPENCLAW_API_KEY=${OPENCLAW_API_KEY}
-      - OPENCLAW_API_URL=http://openclaw-gateway-piara:18789/v1/chat
+      - OPENCLAW_API_URL=http://127.0.0.1:18789/v1/chat
       - OPENCLAW_AUTH_MODE=${OPENCLAW_AUTH_MODE}
       - OPENCLAW_PASSWORD=${OPENCLAW_GATEWAY_PASSWORD}
-      - OPENCLAW_LOGIN_URL=http://openclaw-gateway-piara:18789/v1/login
+      - OPENCLAW_LOGIN_URL=http://127.0.0.1:18789/v1/login
       - OPENCLAW_BOTUSER_ID=${OPENCLAW_BOTUSER_ID}
       - OPENCLAW_BOTUSER_PASSWORD=${OPENCLAW_BOTUSER_PASSWORD}
     volumes:
       - piar_data:/app/data
-    ports:
-      - "8000:8000"
-    networks:
-      - piar-network
 
   frontend:
     build:
@@ -48,7 +47,7 @@ services:
     ports:
       - "8587:80"
     depends_on:
-      - backend
+      - openclaw-gateway-piara
     networks:
       - piar-network
 
@@ -78,6 +77,8 @@ services:
       OPENCLAW_ACCOUNTID: "${OPENCLAW_ACCOUNTID}"
       OPENCLAW_BOTUSER_ID: "${OPENCLAW_BOTUSER_ID}"
       OPENCLAW_BOTUSER_PASSWORD: "${OPENCLAW_BOTUSER_PASSWORD}"
+    ports:
+      - "8000:8000"
     expose:
       - "18789"
     restart: unless-stopped

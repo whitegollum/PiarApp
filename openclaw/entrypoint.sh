@@ -7,13 +7,15 @@ export PATH="$NPM_PREFIX/bin:/data/.local/bin:$PATH"
 export CI=true
 
 SETUP_FLAG="/data/.openclaw_installed"
+OPENCLAW_VERSION="2026.4.26"
+CURRENT_VERSION_FLAG="/data/.openclaw_version_${OPENCLAW_VERSION}"
 
 
 #--------------------------------------------------------------------------------------------------------------------------
 
 
-if [ ! -f "$SETUP_FLAG" ]; then
-  echo "=== First-time setup: installing OpenClaw ==="
+if [ ! -f "$SETUP_FLAG" ] || [ ! -f "$CURRENT_VERSION_FLAG" ]; then
+  echo "=== Installing/updating OpenClaw to ${OPENCLAW_VERSION} ==="
   
   # Configure npm to use persistent directory
   echo "Configuring npm prefix to $NPM_PREFIX..."
@@ -23,9 +25,9 @@ if [ ! -f "$SETUP_FLAG" ]; then
   npm config set fund false
   npm config set audit false
   
-  # Install OpenClaw globally via npm
-  echo "Installing OpenClaw via npm..."
-  npm i -g openclaw --yes --no-fund --no-audit
+  # Install OpenClaw globally via npm (pinned version)
+  echo "Installing OpenClaw@${OPENCLAW_VERSION} via npm..."
+  npm i -g "openclaw@${OPENCLAW_VERSION}" --yes --no-fund --no-audit
   
   echo "✓ OpenClaw installed successfully"
   
@@ -44,7 +46,8 @@ if [ ! -f "$SETUP_FLAG" ]; then
   fi
   
   touch "$SETUP_FLAG"
-  echo "=== Setup complete ==="
+  touch "$CURRENT_VERSION_FLAG"
+  echo "=== Setup complete (OpenClaw ${OPENCLAW_VERSION}) ==="
 else
   echo "OpenClaw already installed, skipping setup..."
   echo "Using NPM_PREFIX: $NPM_PREFIX"
@@ -157,7 +160,7 @@ if [ -n "${OPENCLAW_BOTUSER_ID:-}" ] && [ -n "${OPENCLAW_BOTUSER_PASSWORD:-}" ];
   echo "Creating credentials file at $CREDENTIALS_FILE..."
   cat > "$CREDENTIALS_FILE" <<EOF
 # Credenciales del bot OpenClaw para acceder a PiarApp API
-PIAR_BASE_URL=http://piar_backend:8000
+PIAR_BASE_URL=http://127.0.0.1:8000
 PIAR_EMAIL=$BOTUSER_ID_CLEAN
 PIAR_PASSWORD=$BOTUSER_PASSWORD_CLEAN
 EOF

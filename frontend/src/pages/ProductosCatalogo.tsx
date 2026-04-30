@@ -4,8 +4,16 @@ import { useAuth } from '../contexts/AuthContext'
 import { ProductoService } from '../services/productoService'
 import { ProductoAfiliacion } from '../types/models'
 import { useClubRole } from '../hooks/useClubRole'
+import APIService from '../services/api'
 import Navbar from '../components/Navbar'
 import '../styles/Productos.css'
+import '../styles/ClubDetail.css'
+
+interface Club {
+  id: number
+  nombre: string
+  slug: string
+}
 
 export default function ProductosCatalogo() {
   const { usuario } = useAuth()
@@ -13,6 +21,7 @@ export default function ProductosCatalogo() {
   const navigate = useNavigate()
   const { role } = useClubRole(clubId)
 
+  const [club, setClub] = useState<Club | null>(null)
   const [productos, setProductos] = useState<ProductoAfiliacion[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -26,14 +35,17 @@ export default function ProductosCatalogo() {
       return
     }
 
+    const id = parseInt(clubId)
+    APIService.get<Club>(`/clubes/${id}`).then(setClub).catch(() => {})
+
     const cargarProductos = async () => {
       try {
         setLoading(true)
         const data = await ProductoService.getAll(
-          parseInt(clubId),
+          id,
           categoriaFiltro || undefined,
-          true, // solo activos
-          false // todos
+          true,
+          false
         )
         setProductos(data.productos)
       } catch (err) {
@@ -66,17 +78,26 @@ export default function ProductosCatalogo() {
 
   return (
     <>
-      <Navbar />
-      <main className="productos-main">
-        <div className="productos-container">
-          <div className="header-actions">
-            <button className="btn btn-back" onClick={() => navigate(`/clubes/${clubId}`)}>
-              ← Volver al Club
-            </button>
-          </div>
+      <Navbar clubName={club?.nombre} clubId={clubId} canEdit={canEdit} />
+      <main className="club-detail-main">
+        <div className="club-detail-container">
+          <button
+            className="btn-volver-tareas"
+            onClick={() => navigate(`/clubes/${clubId}`)}
+          >
+            ← Volver al club
+          </button>
 
           <div className="productos-header">
             <h1>🛒 Tienda de Afiliación</h1>
+            {canEdit && (
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={() => navigate(`/clubes/${clubId}/productos/admin`)}
+              >
+                Administrar Catálogo
+              </button>
+            )}
             <p className="subtitle">Productos recomendados por el club. Al comprar a través de estos enlaces, apoyas al club.</p>
           </div>
 

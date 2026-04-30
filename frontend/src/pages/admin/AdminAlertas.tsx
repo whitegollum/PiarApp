@@ -3,7 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Alerta, AlertaListResponse } from '../../types/alerta';
 import { alertaService } from '../../services/alertaService';
 import AlertItem from '../../components/AlertItem';
+import Navbar from '../../components/Navbar';
 import '../../styles/Alerts.css';
+import '../../styles/ClubDetail.css';
+import '../../styles/Tareas.css';
 
 interface Club {
   id: number;
@@ -175,8 +178,33 @@ const AdminAlertas: React.FC = () => {
     }));
   };
 
+  // Determinar la URL de "volver" según si viene de un club específico
+  const clubParam = searchParams.get('club');
+  const clubSeleccionado = clubes.find(c => c.id === selectedClubId);
+
   return (
-    <div className="admin-alertas-container">
+    <>
+      <Navbar
+        clubName={clubSeleccionado?.nombre}
+        clubId={clubParam || undefined}
+      />
+
+      <main className="club-detail-main">
+        <div className="club-detail-container">
+          <button
+            className="btn-volver-tareas"
+            onClick={() => {
+              if (clubParam) {
+                navigate(`/clubes/${clubParam}`);
+              } else {
+                navigate(-1);
+              }
+            }}
+          >
+            ← Volver
+          </button>
+
+          <div className="admin-alertas-container">
       <div className="alerts-list-header">
         <h1 className="alerts-list-title">🚨 Gestión de Alertas</h1>
         <button
@@ -372,7 +400,10 @@ const AdminAlertas: React.FC = () => {
           </>
         )}
       </div>
-    </div>
+      </div>
+        </div>
+      </main>
+    </>
   );
 };
 

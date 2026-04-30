@@ -35,6 +35,12 @@ import AdminDatabase from './pages/admin/AdminDatabase'
 import ClubDocumentacion from './pages/ClubDocumentacion'
 import ProductosCatalogo from './pages/ProductosCatalogo'
 import ProductosAdmin from './pages/ProductosAdmin'
+import ClubTareas from './pages/ClubTareas'
+import TareaDetail from './pages/TareaDetail'
+import CreateTarea from './pages/CreateTarea'
+import EditTarea from './pages/EditTarea'
+import ClubRanking from './pages/ClubRanking'
+import AdminPremios from './pages/AdminPremios'
 
 // Componente para verificar configuración inicial
 const SetupCheck = () => {
@@ -213,6 +219,13 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route path="/clubes/:clubId/tareas" element={<ProtectedRoute><ClubTareas /></ProtectedRoute>} />
+          <Route path="/clubes/:clubId/tareas/crear" element={<ProtectedRoute><CreateTarea /></ProtectedRoute>} />
+          <Route path="/clubes/:clubId/tareas/:tareaId" element={<ProtectedRoute><TareaDetail /></ProtectedRoute>} />
+          <Route path="/clubes/:clubId/tareas/:tareaId/editar" element={<ProtectedRoute><EditTarea /></ProtectedRoute>} />
+          <Route path="/clubes/:clubId/ranking" element={<ProtectedRoute><ClubRanking /></ProtectedRoute>} />
+          <Route path="/clubes/:clubId/premios" element={<ProtectedRoute><AdminPremios /></ProtectedRoute>} />
 
           <Route
             path="/perfil"

@@ -17,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Importar modelos para que SQLAlchemy los registre
-from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria, system_config, producto, alerta
+from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria, system_config, producto, alerta, tareas_comunitarias
 
 # Crear tablas en la base de datos
 Base.metadata.create_all(bind=engine)
@@ -72,7 +72,7 @@ app.add_middleware(
 )
 
 # Importar rutas
-from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, chat, dashboard, alertas, admin
+from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, chat, dashboard, alertas, admin, tareas_comunitarias
 
 # Incluir routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Autenticación"])
@@ -88,6 +88,7 @@ app.include_router(admin.router, prefix="/api/admin", tags=["Administración"])
 app.include_router(chat.router, prefix="/api", tags=["Chat"])
 app.include_router(dashboard.router, prefix="/api", tags=["Dashboard"])
 app.include_router(alertas.router, prefix="/api", tags=["Alertas"])
+app.include_router(tareas_comunitarias.router, prefix="/api/clubes", tags=["Tareas Comunitarias"])
 
 
 @app.get("/")
@@ -109,15 +110,16 @@ async def health_check():
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc: RequestValidationError):
     """Handle Pydantic validation errors with detailed information"""
+    body = await request.body()
     logger.error(f"Validation error on {request.url}")
     logger.error(f"Errors: {exc.errors()}")
-    logger.error(f"Body: {await request.body()}")
+    logger.error(f"Body: {body}")
     
     return JSONResponse(
         status_code=422,
         content={
             "detail": exc.errors(),
-            "body": str(await request.body())
+            "body": str(body)
         }
     )
 

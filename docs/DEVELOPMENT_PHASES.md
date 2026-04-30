@@ -11,6 +11,7 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
 | 7 | Perfiles y Gestión Avanzada | ✅ Completado | Q1 2024 |
 | 8 | Noticias y Eventos (CRUD + Asistencia API) | ✅ Completado | Feb 2026 |
 | 8.1 | Setup Inicial y Comentarios | ✅ Completado | Feb 2026 || 8.2 | Tienda/Productos + Novedades + Validación | ✅ Completado | Mar 2026 || 9 | Módulos de Club + Social + OAuth UI | ⏳ Pendiente | TBD |
+| 8.3 | Tareas Comunitarias + Ranking + Premios | ✅ Completado | Abr 2026 |
 | 10 | Testing y QA | ⏳ Pendiente | TBD |
 | 11 | Despliegue y DevOps | ⏳ Pendiente | TBD |
 | 12+ | Backlog Futuro (Ideas) | 💡 Ideas | TBD |
@@ -155,6 +156,17 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
     - [x] Frontend: catálogo de productos con grid responsivo.
     - [x] Frontend: panel admin completo (crear, editar, eliminar, toggle activo).
     - [x] Integración con tab "Tienda" en detalle del club.
+
+- [x] **Tareas Comunitarias + Ranking + Premios:**
+    - [x] Backend: 5 modelos SQLAlchemy (TareaComunitaria, ParticipanteTarea, PuntuacionUsuario, PeriodoPremios, Premio).
+    - [x] Backend: Servicio de negocio completo (crear, inscribir, aprobar/rechazar, ranking, periodos, premios).
+    - [x] Backend: 18 endpoints API con control de permisos (admin vs miembro).
+    - [x] Backend: Integración con sistema de alertas existente (notificación al otorgar puntos).
+    - [x] Backend: Tests unitarios (7) y funcionales E2E (4).
+    - [x] Frontend: Servicio API (TareasService, RankingService, PremiosService).
+    - [x] Frontend: 6 páginas (lista tareas, detalle, crear, editar, ranking, admin premios).
+    - [x] Frontend: 4 componentes (TareaCard, TareaList, RankingTable, PremioCard).
+    - [x] Frontend: Estilos CSS dedicados + integración en Navbar y rutas.
 
 - [x] **Google OAuth (UI + Producción):**
     - [x] Frontend: implementar flujo en `Login.tsx` y `Register.tsx`.

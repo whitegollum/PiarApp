@@ -629,6 +629,58 @@ DOCUMENTACION_REGLAMENTARIA
 ├── fecha_creacion
 └── fecha_actualizacion
 
+TAREAS_COMUNITARIAS
+├── id (PK)
+├── club_id (FK a CLUBES)
+├── titulo
+├── descripcion
+├── puntos (int)
+├── categoria (string)
+├── prioridad (enum: alta/media/baja)
+├── fecha_limite (datetime, nullable)
+├── max_participantes (int, nullable)
+├── estado (enum: abierta/en_progreso/completada/rechazada/expirada)
+├── motivo_rechazo (text, nullable)
+├── creador_id (FK a USUARIOS)
+├── created_at
+└── updated_at
+
+PARTICIPANTES_TAREA
+├── id (PK)
+├── tarea_id (FK a TAREAS_COMUNITARIAS)
+├── usuario_id (FK a USUARIOS)
+├── fecha_inscripcion
+└── puntos_otorgados (boolean)
+
+PUNTUACIONES_USUARIO
+├── id (PK)
+├── club_id (FK a CLUBES)
+├── usuario_id (FK a USUARIOS)
+├── tarea_id (FK a TAREAS_COMUNITARIAS)
+├── puntos (int)
+└── fecha (datetime)
+
+PERIODOS_PREMIOS
+├── id (PK)
+├── club_id (FK a CLUBES)
+├── nombre
+├── fecha_inicio
+├── fecha_fin
+├── tipo (enum: mensual/trimestral/semestral/anual)
+├── estado (enum: activo/cerrado/confirmado)
+└── created_at
+
+PREMIOS
+├── id (PK)
+├── periodo_id (FK a PERIODOS_PREMIOS)
+├── club_id (FK a CLUBES)
+├── nombre
+├── descripcion
+├── posicion (int)
+├── usuario_id (FK a USUARIOS, nullable)
+├── confirmado (boolean)
+└── created_at
+
 EVENTOS
 ├── id (PK)
 ├── nombre

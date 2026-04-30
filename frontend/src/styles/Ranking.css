@@ -1,0 +1,209 @@
+/* Estilos para Ranking y Premios */
+
+.ranking-page, .admin-premios-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.ranking-page h1, .admin-premios-page h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+}
+
+.ranking-loading, .ranking-error {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.ranking-filtro-periodo {
+  margin-bottom: 1.5rem;
+}
+
+.ranking-filtro-periodo select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  min-width: 250px;
+}
+
+/* Ranking Table */
+.ranking-table-container {
+  overflow-x: auto;
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ranking-table thead {
+  background: #f3f4f6;
+}
+
+.ranking-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.ranking-table td {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.ranking-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.ranking-row-actual {
+  background: #eff6ff !important;
+  font-weight: 600;
+}
+
+.ranking-vacio {
+  text-align: center;
+  color: #9ca3af;
+  padding: 2rem !important;
+}
+
+.ranking-posicion {
+  font-weight: 700;
+  width: 60px;
+}
+
+.ranking-medalla {
+  font-size: 1.2rem;
+}
+
+.ranking-puntos {
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+/* Admin Premios */
+.premios-actions {
+  margin-bottom: 1.5rem;
+}
+
+.btn-crear-periodo {
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-crear-periodo:hover { background: #7c3aed; }
+
+.premios-form {
+  margin-bottom: 1.5rem;
+}
+
+.premios-selector {
+  margin-bottom: 1.5rem;
+}
+
+.premios-selector select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  min-width: 300px;
+}
+
+.premios-periodo-detail {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 2rem;
+}
+
+.premios-periodo-detail h2 {
+  margin-bottom: 0.5rem;
+}
+
+.premios-periodo-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+
+.btn-cerrar-periodo { background: #f59e0b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; }
+.btn-crear-premio { background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; }
+.btn-confirmar-premios { background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; }
+
+.premios-lista {
+  margin-top: 1.5rem;
+}
+
+.premios-lista h3 {
+  margin-bottom: 1rem;
+}
+
+/* Premio Card */
+.premio-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  background: white;
+}
+
+.premio-confirmado {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.premio-card-posicion {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #8b5cf6;
+  min-width: 40px;
+}
+
+.premio-card-content {
+  flex: 1;
+}
+
+.premio-card-nombre {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.premio-card-descripcion {
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin: 0 0 0.25rem;
+}
+
+.premio-card-ganador {
+  font-size: 0.85rem;
+  color: #374151;
+  margin: 0;
+}
+
+.premio-badge-confirmado {
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 600;
+}

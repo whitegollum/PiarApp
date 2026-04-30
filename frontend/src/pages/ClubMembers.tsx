@@ -6,7 +6,9 @@ import APIService from '../services/api'
 import SocioService, { Socio } from '../services/socioService'
 import { DocumentacionService, DocumentacionResponse } from '../services/documentacionService'
 import { alertaService } from '../services/alertaService'
+import { useClubRole } from '../hooks/useClubRole'
 import '../styles/ClubMembers.css'
+import '../styles/ClubDetail.css'
 
 interface Miembro {
   id: number
@@ -48,6 +50,7 @@ export default function ClubMembers() {
   const navigate = useNavigate()
   const { clubId } = useParams<{ clubId: string }>()
   const { usuario } = useAuth()
+  const { role } = useClubRole(clubId)
   const [club, setClub] = useState<Club | null>(null)
   const [miembros, setMiembros] = useState<Miembro[]>([])
   const [socios, setSocios] = useState<Record<number, Socio>>({})
@@ -378,11 +381,12 @@ export default function ClubMembers() {
   }
 
   const isAdmin = miembros.some(m => m.usuario_id === usuario?.id && m.rol === 'administrador')
+  const canEdit = role === 'administrador' || usuario?.es_superadmin
 
   if (loading) {
     return (
       <>
-        <Navbar />
+        <Navbar clubName={club?.nombre} clubId={clubId} canEdit={canEdit} />
         <div className="loading-wrapper">
           <div className="spinner"></div>
         </div>
@@ -392,16 +396,17 @@ export default function ClubMembers() {
 
   return (
     <>
-      <Navbar />
-      <div className="club-members-layout">
-        <div className="members-container">
+      <Navbar clubName={club?.nombre} clubId={clubId} canEdit={canEdit} />
+      <main className="club-detail-main">
+        <div className="club-detail-container">
+          <button
+            className="btn-volver-tareas"
+            onClick={() => navigate(`/clubes/${clubId}`)}
+          >
+            ← Volver al club
+          </button>
+
           <div className="members-header">
-            <button 
-              className="btn btn-back"
-              onClick={() => navigate(`/clubes/${clubId}`)}
-            >
-              ← Volver
-            </button>
             <h1>Miembros de {club?.nombre}</h1>
             <p>Administra los miembros de tu club</p>
           </div>
@@ -552,7 +557,7 @@ export default function ClubMembers() {
             )}
           </section>
         </div>
-      </div>
+      </main>
 
       {docsUserId && (
         <div className="modal-overlay" style={{

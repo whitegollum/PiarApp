@@ -4,9 +4,16 @@ import { useAuth } from '../contexts/AuthContext'
 import { NewsService } from '../services/contentService'
 import { Noticia } from '../types/models'
 import { useClubRole } from '../hooks/useClubRole'
+import APIService from '../services/api'
 import Navbar from '../components/Navbar'
 import NewsList from '../components/NewsList'
-import '../styles/ClubDetail.css' // Reuse styles
+import '../styles/ClubDetail.css'
+
+interface Club {
+  id: number
+  nombre: string
+  slug: string
+}
 
 export default function ClubNews() {
   const { usuario } = useAuth()
@@ -14,6 +21,7 @@ export default function ClubNews() {
   const navigate = useNavigate()
   const { role } = useClubRole(clubId)
 
+  const [club, setClub] = useState<Club | null>(null)
   const [noticias, setNoticias] = useState<Noticia[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -26,10 +34,13 @@ export default function ClubNews() {
       return
     }
 
+    const id = parseInt(clubId)
+    APIService.get<Club>(`/clubes/${id}`).then(setClub).catch(() => {})
+
     const cargarNoticias = async () => {
       try {
         setLoading(true)
-        const data = await NewsService.getAll(parseInt(clubId), 0, 50)
+        const data = await NewsService.getAll(id, 0, 50)
         setNoticias(data)
       } catch (err) {
         setError('Error al cargar noticias')
@@ -45,19 +56,24 @@ export default function ClubNews() {
 
   return (
     <>
-      <Navbar />
+      <Navbar clubName={club?.nombre} clubId={clubId} canEdit={canEdit} />
       <main className="club-detail-main">
         <div className="club-detail-container">
+          <button
+            className="btn-volver-tareas"
+            onClick={() => navigate(`/clubes/${clubId}`)}
+          >
+            ← Volver al club
+          </button>
+
           <div className="header-actions">
-            <button className="btn btn-back" onClick={() => navigate(`/clubes/${clubId}`)}>← Volver al Club</button>
+            <h1>Noticias del Club</h1>
             {canEdit && (
               <button className="btn btn-primary" onClick={() => navigate(`/clubes/${clubId}/noticias/crear`)}>
                 + Nueva Noticia
               </button>
             )}
           </div>
-          
-          <h1>Noticias del Club</h1>
           
           {loading ? (
              <div className="loading">Cargando...</div>

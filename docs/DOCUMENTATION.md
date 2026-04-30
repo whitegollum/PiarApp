@@ -25,6 +25,7 @@ Este documento centraliza el estado actual y las bases del proyecto. Sirve como 
 - **Google OAuth:** Login/registro con Google (backend + frontend).
 - **Chat OpenClaw:** Integración con agente de IA vía WebSocket (Backend proxy + Frontend UI).
 - **Ayuda de Documentación por Club:** Markdown configurable desde la edición del club y visible en la pantalla de documentación.
+- **Tareas Comunitarias:** Sistema completo de tareas por club con inscripción, aprobación/rechazo, puntuación, ranking y premios por periodo configurable.
 
 ### Pendiente inmediato
 - Testing automatizado (pytest, React tests, E2E).

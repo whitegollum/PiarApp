@@ -557,3 +557,270 @@
   }
 }
 
+/* ===== Tareas Tab ===== */
+.tareas-ranking-summary {
+  background: linear-gradient(135deg, #fef9c3 0%, #fde68a 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.tareas-ranking-summary h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  color: #92400e;
+}
+
+.ranking-podium {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.podium-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  padding: 0.75rem 1.25rem;
+  min-width: 120px;
+}
+
+.podium-1 { order: 0; }
+.podium-2 { order: 1; }
+.podium-3 { order: 2; }
+
+.podium-medal {
+  font-size: 1.75rem;
+}
+
+.podium-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+}
+
+.podium-points {
+  font-size: 0.8rem;
+  color: #92400e;
+  font-weight: 700;
+}
+
+.tareas-tab-list {
+  margin-top: 0;
+}
+
+.tareas-tab-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tarea-tab-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tarea-tab-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.tarea-tab-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.tarea-tab-card-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.tarea-tab-card-priority {
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.tarea-tab-card-desc {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  margin: 0 0 0.5rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tarea-tab-card-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tarea-tab-card-points {
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.tarea-tab-card-status {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.tarea-tab-card-participants {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+
+.content-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.content-header-row h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--color-text);
+}
+
+.miembros-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .ranking-podium {
+    flex-direction: column;
+    align-items: center;
+  }
+  .podium-item {
+    width: 100%;
+    max-width: 200px;
+  }
+}
+
+/* ===== Productos Tab (Tienda) ===== */
+
+.productos-tab-section {
+  margin-bottom: 2rem;
+}
+
+.productos-tab-section h3 {
+  font-size: 1.1rem;
+  color: var(--color-text);
+  margin: 0 0 1rem 0;
+}
+
+.productos-tab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.producto-tab-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.producto-tab-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.producto-tab-card-destacado {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 1px #f59e0b33;
+}
+
+.producto-tab-img {
+  width: 100%;
+  height: 140px;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.producto-tab-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.producto-tab-info {
+  padding: 0.85rem 1rem;
+}
+
+.producto-tab-info h4 {
+  margin: 0 0 0.35rem 0;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.producto-tab-proveedor {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  margin-bottom: 0.25rem;
+}
+
+.producto-tab-precio {
+  display: inline-block;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-primary);
+  margin-bottom: 0.35rem;
+}
+
+.producto-tab-desc {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .productos-tab-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

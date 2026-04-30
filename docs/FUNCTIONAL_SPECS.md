@@ -987,3 +987,82 @@ Sistema de visualización de cámaras RTSP/HLS en tiempo real integrado en la p�
 - Azure Media Services
 
 
+---
+
+## 8.0 Tareas Comunitarias con Ranking y Premios
+
+### Descripción General
+Sistema de tareas comunitarias por club que permite a los administradores crear tareas con puntuación, a los miembros inscribirse, y mantener un ranking con premios por periodo configurable.
+
+### Flujo Principal
+1. **Admin crea tarea** con título, descripción, puntos, categoría, prioridad, fecha límite y plazas.
+2. **Miembros se inscriben** a la tarea (verificando plazas disponibles y fecha límite).
+3. **Admin aprueba/rechaza** la tarea:
+   - **Aprobar**: Se asignan puntos a todos los participantes + alerta in-app.
+   - **Rechazar**: Se registra motivo, sin puntos.
+4. **Ranking automático** por puntos acumulados.
+5. **Periodos y premios**: Admin define periodos (mensual/trimestral/semestral/anual), crea premios por posición, cierra periodo (cálculo automático de ganadores) y confirma premios.
+
+### Modelo de Datos
+
+| Tabla | Campos clave |
+|-------|-------------|
+| `tareas_comunitarias` | id, club_id, titulo, descripcion, puntos, categoria, prioridad, fecha_limite, max_participantes, estado, motivo_rechazo, creador_id |
+| `participantes_tarea` | id, tarea_id, usuario_id, fecha_inscripcion, puntos_otorgados |
+| `puntuaciones_usuario` | id, club_id, usuario_id, tarea_id, puntos, fecha |
+| `periodos_premios` | id, club_id, nombre, fecha_inicio, fecha_fin, tipo, estado |
+| `premios` | id, periodo_id, club_id, nombre, descripcion, posicion, usuario_id, confirmado |
+
+### Estados de Tarea
+- `abierta` → Acepta inscripciones
+- `en_progreso` → En ejecución
+- `completada` → Aprobada, puntos asignados
+- `rechazada` → Admin rechazó con motivo
+- `expirada` → Fecha límite superada
+
+### API Endpoints
+
+#### Tareas (`/api/clubes/{club_id}/tareas-comunitarias`)
+| Método | Ruta | Acceso | Descripción |
+|--------|------|--------|-------------|
+| POST | `/` | Admin | Crear tarea |
+| GET | `/` | Miembros | Listar tareas (filtros: estado, categoría, prioridad) |
+| GET | `/{tarea_id}` | Miembros | Detalle tarea con participantes |
+| PUT | `/{tarea_id}` | Admin | Actualizar tarea |
+| DELETE | `/{tarea_id}` | Admin | Eliminar tarea |
+| POST | `/{tarea_id}/inscribirse` | Miembros | Inscribirse |
+| DELETE | `/{tarea_id}/inscribirse` | Miembros | Desinscribirse |
+| POST | `/{tarea_id}/aprobar` | Admin | Aprobar y asignar puntos |
+| POST | `/{tarea_id}/rechazar` | Admin | Rechazar (body: motivo) |
+
+#### Ranking (`/api/clubes/{club_id}/ranking`)
+| Método | Ruta | Acceso | Descripción |
+|--------|------|--------|-------------|
+| GET | `/` | Miembros | Ranking general |
+| GET | `/periodo/{periodo_id}` | Miembros | Ranking por periodo |
+
+#### Periodos y Premios (`/api/clubes/{club_id}/periodos-premios`)
+| Método | Ruta | Acceso | Descripción |
+|--------|------|--------|-------------|
+| POST | `/` | Admin | Crear periodo |
+| GET | `/` | Miembros | Listar periodos |
+| GET | `/{periodo_id}` | Miembros | Detalle periodo con premios |
+| POST | `/{periodo_id}/cerrar` | Admin | Cerrar y calcular ganadores |
+| POST | `/{periodo_id}/confirmar` | Admin | Confirmar premios |
+| POST | `/{periodo_id}/premios` | Admin | Crear premio |
+
+### Reglas de Negocio
+- Un usuario no puede inscribirse dos veces a la misma tarea.
+- No se puede inscribir si las plazas están llenas.
+- No se puede inscribir si la fecha límite ha pasado.
+- Al aprobar, se genera un registro en `puntuaciones_usuario` y una alerta in-app por cada participante.
+- Al cerrar un periodo, el sistema asigna automáticamente los usuarios ganadores a los premios según posición en ranking.
+- Admin debe confirmar premios antes de que sean visibles como "publicados".
+
+### Frontend
+- **Páginas**: ClubTareas, TareaDetail, CreateTarea, EditTarea, ClubRanking, AdminPremios
+- **Componentes**: TareaCard, TareaList (con filtros), RankingTable, PremioCard
+- **Navegación**: Acceso desde menú hamburguesa del club (Tareas Comunitarias, Ranking, Gestionar Premios)
+
+
+

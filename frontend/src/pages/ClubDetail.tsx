@@ -5,7 +5,9 @@ import APIService from '../services/api'
 import SocioService, { Socio } from '../services/socioService'
 import { NewsService, EventService } from '../services/contentService'
 import { alertaService } from '../services/alertaService'
-import { Noticia, Evento } from '../types/models'
+import { TareasService, RankingService, TareaComunitaria, RankingEntry } from '../services/tareasComunitariasService'
+import { Noticia, Evento, ProductoAfiliacion } from '../types/models'
+import { ProductoService } from '../services/productoService'
 import { useClubRole } from '../hooks/useClubRole'
 import Navbar from '../components/Navbar'
 import NewsList from '../components/NewsList'
@@ -79,9 +81,12 @@ export default function ClubDetail() {
   const [weather, setWeather] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [tab, setTab] = useState<'resumen' | 'miembros' | 'noticias' | 'eventos' | 'productos'>('resumen')
+  const [tab, setTab] = useState<'resumen' | 'miembros' | 'noticias' | 'eventos' | 'productos' | 'tareas'>('resumen')
   const [totalAlertas, setTotalAlertas] = useState(0)
   const [alertasPorUsuario, setAlertasPorUsuario] = useState<Record<number, number>>({})
+  const [tareas, setTareas] = useState<TareaComunitaria[]>([])
+  const [ranking, setRanking] = useState<RankingEntry[]>([])
+  const [productos, setProductos] = useState<ProductoAfiliacion[]>([])
   
   const canEdit = role === 'administrador' || usuario?.es_superadmin;
 
@@ -116,6 +121,26 @@ export default function ClubDetail() {
         setNoticias(noticiasData)
         setEventos(eventosData)
         setContenidoReciente(contenidoRecienteData)
+
+        // Cargar tareas comunitarias y ranking
+        try {
+          const [tareasData, rankingData] = await Promise.all([
+            TareasService.listar(id),
+            RankingService.obtener(id)
+          ])
+          setTareas(tareasData)
+          setRanking(rankingData)
+        } catch (err) {
+          console.log('No se pudieron cargar tareas/ranking:', err)
+        }
+
+        // Cargar productos de afiliación
+        try {
+          const productosData = await ProductoService.getAll(id, undefined, true, false)
+          setProductos(productosData.productos)
+        } catch (err) {
+          console.log('No se pudieron cargar productos:', err)
+        }
 
         // Cargar contador de alertas si es admin o superadmin
         if (canEdit) {
@@ -266,6 +291,7 @@ export default function ClubDetail() {
               onClick={() => setTab('miembros')}
               style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
+              <span>👥 <span className="tab-text">Miembros</span> ({miembros.length})</span>
               {totalAlertas > 0 && (
                 <span
                   style={{
@@ -277,10 +303,9 @@ export default function ClubDetail() {
                     fontWeight: 'bold',
                   }}
                 >
-                  🚨 {totalAlertas}
+                  {totalAlertas}
                 </span>
               )}
-              <span>👥 <span className="tab-text">Miembros</span> ({miembros.length})</span>
             </button>
             <button
               className={`tab ${tab === 'noticias' ? 'active' : ''}`}
@@ -296,9 +321,15 @@ export default function ClubDetail() {
             </button>
             <button
               className={`tab ${tab === 'productos' ? 'active' : ''}`}
-              onClick={() => navigate(`/clubes/${clubId}/productos`)}
+              onClick={() => setTab('productos')}
             >
-              🛒 <span className="tab-text">Tienda</span>
+              🛒 <span className="tab-text">Tienda</span> ({productos.length})
+            </button>
+            <button
+              className={`tab ${tab === 'tareas' ? 'active' : ''}`}
+              onClick={() => setTab('tareas')}
+            >
+              🛠️ <span className="tab-text">Tareas</span>
             </button>
           </div>
 
@@ -468,9 +499,11 @@ export default function ClubDetail() {
                   </div>
                 )}
 
+                {canEdit && (
                 <div style={{ marginTop: '2rem' }}>
                   <OpenClawChat clubId={club.id} clubName={club.nombre} />
                 </div>
+                )}
               </div>
             )}
 
@@ -548,7 +581,7 @@ export default function ClubDetail() {
               <div className="tab-content">
                 <div className="content-header-row">
                   <h3>Últimas Noticias</h3>
-                  <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/clubes/${clubId}/noticias`)}>Ver Todas</button>
+                   <button className="btn btn-sm btn-primary" onClick={() => navigate(`/clubes/${clubId}/noticias`)}>Ver Todas</button>
                 </div>
                 <NewsList noticias={noticias} clubId={club.id} canEdit={canEdit} />
               </div>
@@ -557,10 +590,203 @@ export default function ClubDetail() {
             {tab === 'eventos' && (
               <div className="tab-content">
                 <div className="content-header-row">
-                   <h3>Próximos Eventos</h3>
+                   <h3>Proximos Eventos</h3>
                    <button className="btn btn-sm btn-primary" onClick={() => navigate(`/clubes/${clubId}/eventos`)}>Ver Calendario</button>
                 </div>
                 <EventList eventos={eventos} clubId={club.id} canEdit={canEdit} />
+              </div>
+            )}
+
+            {tab === 'productos' && (
+              <div className="tab-content">
+                <div className="content-header-row">
+                  <h3>🛒 Tienda de Afiliación</h3>
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => navigate(`/clubes/${clubId}/productos`)}
+                  >
+                    Ver todos los productos
+                  </button>
+                </div>
+
+                {productos.length === 0 ? (
+                  <div className="empty-state-small">
+                    <p>No hay productos disponibles en la tienda</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Productos Destacados */}
+                    {productos.some(p => p.destacado) && (
+                      <div className="productos-tab-section">
+                        <h3>⭐ Productos Destacados</h3>
+                        <div className="productos-tab-grid">
+                          {productos.filter(p => p.destacado).map(producto => (
+                            <div
+                              key={producto.id}
+                              className="producto-tab-card producto-tab-card-destacado"
+                              onClick={() => {
+                                ProductoService.registrarClick(parseInt(clubId!), producto.id).catch(() => {})
+                                window.open(producto.url_afiliacion, '_blank', 'noopener,noreferrer')
+                              }}
+                            >
+                              {producto.imagen_url && (
+                                <div className="producto-tab-img">
+                                  <img src={producto.imagen_url} alt={producto.nombre} />
+                                </div>
+                              )}
+                              <div className="producto-tab-info">
+                                <h4>{producto.nombre}</h4>
+                                {producto.proveedor && (
+                                  <span className="producto-tab-proveedor">{producto.proveedor}</span>
+                                )}
+                                {producto.precio_referencia && (
+                                  <span className="producto-tab-precio">{producto.precio_referencia}</span>
+                                )}
+                                {producto.descripcion && (
+                                  <p className="producto-tab-desc">{producto.descripcion}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Añadidos Recientemente (no destacados, ordenados por fecha) */}
+                    {(() => {
+                      const destacadosIds = new Set(productos.filter(p => p.destacado).map(p => p.id))
+                      const recientes = productos
+                        .filter(p => !destacadosIds.has(p.id))
+                        .sort((a, b) => new Date(b.fecha_creacion).getTime() - new Date(a.fecha_creacion).getTime())
+                        .slice(0, 6)
+                      
+                      if (recientes.length === 0) return null
+                      
+                      return (
+                        <div className="productos-tab-section">
+                          <h3>🆕 Añadidos Recientemente</h3>
+                          <div className="productos-tab-grid">
+                            {recientes.map(producto => (
+                              <div
+                                key={producto.id}
+                                className="producto-tab-card"
+                                onClick={() => {
+                                  ProductoService.registrarClick(parseInt(clubId!), producto.id).catch(() => {})
+                                  window.open(producto.url_afiliacion, '_blank', 'noopener,noreferrer')
+                                }}
+                              >
+                                {producto.imagen_url && (
+                                  <div className="producto-tab-img">
+                                    <img src={producto.imagen_url} alt={producto.nombre} />
+                                  </div>
+                                )}
+                                <div className="producto-tab-info">
+                                  <h4>{producto.nombre}</h4>
+                                  {producto.proveedor && (
+                                    <span className="producto-tab-proveedor">{producto.proveedor}</span>
+                                  )}
+                                  {producto.precio_referencia && (
+                                    <span className="producto-tab-precio">{producto.precio_referencia}</span>
+                                  )}
+                                  {producto.descripcion && (
+                                    <p className="producto-tab-desc">{producto.descripcion}</p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </>
+                )}
+              </div>
+            )}
+
+            {tab === 'tareas' && (
+              <div className="tab-content">
+                <div className="content-header-row">
+                  <h3>🛠️ Tareas Comunitarias</h3>
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => navigate(`/clubes/${clubId}/tareas`)}
+                  >
+                    Ver todas
+                  </button>
+                </div>
+
+                {/* Ranking Top 3 */}
+                {ranking.length > 0 && (
+                  <div className="tareas-ranking-summary">
+                    <h3>🏆 Top Ranking</h3>
+                    <div className="ranking-podium">
+                      {ranking.slice(0, 3).map((entry, index) => {
+                        const medals = ['🥇', '🥈', '🥉']
+                        return (
+                          <div key={entry.usuario_id} className={`podium-item podium-${index + 1}`}>
+                            <span className="podium-medal">{medals[index]}</span>
+                            <span className="podium-name">{entry.nombre}</span>
+                            <span className="podium-points">{entry.puntos_totales} pts</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <button
+                      className="btn btn-sm btn-primary"
+                      onClick={() => navigate(`/clubes/${clubId}/ranking`)}
+                    >
+                      Ver ranking completo
+                    </button>
+                  </div>
+                )}
+
+                {/* Tareas disponibles (top 10) */}
+                <div className="tareas-tab-list">
+                  <h3>Tareas Disponibles</h3>
+
+                  {tareas.length === 0 ? (
+                    <div className="empty-state-small">
+                      <p>No hay tareas comunitarias disponibles</p>
+                    </div>
+                  ) : (
+                    <div className="tareas-tab-grid">
+                      {tareas.slice(0, 10).map(tarea => {
+                        const prioridadColor: Record<string, string> = {
+                          alta: '#ef4444', media: '#f59e0b', baja: '#10b981'
+                        }
+                        const estadoLabel: Record<string, string> = {
+                          abierta: 'Abierta', en_progreso: 'En progreso',
+                          completada: 'Completada', rechazada: 'Rechazada', expirada: 'Expirada'
+                        }
+                        return (
+                          <div
+                            key={tarea.id}
+                            className="tarea-tab-card"
+                            onClick={() => navigate(`/clubes/${clubId}/tareas/${tarea.id}`)}
+                          >
+                            <div className="tarea-tab-card-header">
+                              <h4 className="tarea-tab-card-title">{tarea.titulo}</h4>
+                              <span
+                                className="tarea-tab-card-priority"
+                                style={{ backgroundColor: prioridadColor[tarea.prioridad] || '#6b7280' }}
+                              >
+                                {tarea.prioridad}
+                              </span>
+                            </div>
+                            {tarea.descripcion && (
+                              <p className="tarea-tab-card-desc">{tarea.descripcion}</p>
+                            )}
+                            <div className="tarea-tab-card-meta">
+                              <span className="tarea-tab-card-points">{tarea.puntos} pts</span>
+                              <span className="tarea-tab-card-status">{estadoLabel[tarea.estado] || tarea.estado}</span>
+                              <span className="tarea-tab-card-participants">{tarea.num_participantes} participante(s)</span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

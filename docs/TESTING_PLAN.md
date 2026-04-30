@@ -56,6 +56,18 @@
 | CU-050 | Manejo errores 422 backend | 🟢 | OK |
 | CU-051 | Contenido reciente del club | 🟢 | OK |
 | CU-052 | Tests unitarios noticias | 🟢 | OK |
+| CU-053 | Crear tarea comunitaria (Admin) | 🟢 | OK |
+| CU-054 | Listar tareas con filtros | 🟢 | OK |
+| CU-055 | Inscripción/desinscripción en tarea | 🟢 | OK |
+| CU-056 | Límite de plazas | 🟢 | OK |
+| CU-057 | Aprobar tarea y asignar puntos | 🟢 | OK |
+| CU-058 | Rechazar tarea con motivo | 🟢 | OK |
+| CU-059 | Ranking ordenado por puntos | 🟢 | OK |
+| CU-060 | Crear/cerrar/confirmar periodo de premios | 🟢 | OK |
+| CU-061 | Flujo completo E2E (crear→inscribir→aprobar→ranking) | 🟢 | OK |
+| CU-062 | Flujo rechazo E2E (crear→inscribir→rechazar→sin puntos) | 🟢 | OK |
+| CU-063 | Flujo periodo completo E2E | 🟢 | OK |
+| CU-064 | Filtros de tareas por categoría/prioridad | 🟢 | OK |
 
 
 ## 🔐 MÓDULO 1: AUTENTICACIÓN

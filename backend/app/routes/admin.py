@@ -403,6 +403,7 @@ async def get_database_status(
     try:
         # Obtener información básica de la BD
         from app.models import Usuario, Club, Noticia, Evento
+        from app.models.tareas_comunitarias import TareaComunitaria
         
         # Manejar estadísticas
         estadisticas = {
@@ -418,6 +419,12 @@ async def get_database_status(
             estadisticas["alertas"] = db.query(Alerta).count()
         except:
             estadisticas["alertas"] = 0
+        
+        # Intentar contar tareas comunitarias
+        try:
+            estadisticas["tareas_comunitarias"] = db.query(TareaComunitaria).count()
+        except:
+            estadisticas["tareas_comunitarias"] = 0
         
         info = {
             "motor": db.bind.dialect.name if db.bind else "unknown",

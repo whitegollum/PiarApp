@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Navbar from '../../components/Navbar';
 import '../../styles/AdminDatabase.css';
+import '../../styles/ClubDetail.css';
+import '../../styles/Tareas.css';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -12,6 +16,7 @@ interface DatabaseStatus {
     noticias: number;
     eventos: number;
     alertas: number;
+    tareas_comunitarias: number;
   };
   migraciones_recientes: Array<{
     nombre: string;
@@ -60,6 +65,7 @@ interface SchedulerStatus {
 }
 
 const AdminDatabase: React.FC = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<DatabaseStatus | null>(null);
   const [checkResult, setCheckResult] = useState<CheckResult | null>(null);
@@ -370,7 +376,19 @@ const AdminDatabase: React.FC = () => {
   };
 
   return (
-    <div className="admin-database-container">
+    <>
+      <Navbar />
+
+      <main className="club-detail-main">
+        <div className="club-detail-container">
+          <button
+            className="btn-volver-tareas"
+            onClick={() => navigate(-1)}
+          >
+            ← Volver
+          </button>
+
+          <div className="admin-database-container">
       <div className="admin-database-header">
         <h1>🗄️ Gestión de Base de Datos</h1>
         <p className="subtitle">Administración y mantenimiento del esquema de la base de datos</p>
@@ -404,6 +422,10 @@ const AdminDatabase: React.FC = () => {
             <div className="status-item">
               <span className="status-label">Alertas:</span>
               <span className="status-value">{status.estadisticas.alertas}</span>
+            </div>
+            <div className="status-item">
+              <span className="status-label">Tareas Comunitarias:</span>
+              <span className="status-value">{status.estadisticas.tareas_comunitarias}</span>
             </div>
           </div>
 
@@ -760,7 +782,10 @@ const AdminDatabase: React.FC = () => {
           </ul>
         </div>
       </div>
-    </div>
+          </div>
+        </div>
+      </main>
+    </>
   );
 };
 

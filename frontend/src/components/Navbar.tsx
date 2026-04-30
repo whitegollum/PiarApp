@@ -80,7 +80,7 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                     }}
                     style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}
                   >
-                    <span>👥 Administrar miembros</span>
+                    <span>👥 Miembros</span>
                     {totalAlertas && totalAlertas > 0 && (
                       <span
                         style={{
@@ -92,7 +92,7 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                           fontWeight: 'bold',
                         }}
                       >
-                        🚨 {totalAlertas}
+                        {totalAlertas}
                       </span>
                     )}
                   </button>
@@ -123,6 +123,35 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                       }}
                     >
                       🛒 Administrar Productos
+                    </button>
+                  )}
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => {
+                      navigate(`/clubes/${clubId}/tareas`)
+                      setAccionesAbiertas(false)
+                    }}
+                  >
+                    📋 Tareas Comunitarias
+                  </button>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => {
+                      navigate(`/clubes/${clubId}/ranking`)
+                      setAccionesAbiertas(false)
+                    }}
+                  >
+                    🏆 Ranking
+                  </button>
+                  {canEdit && (
+                    <button 
+                      className="dropdown-item"
+                      onClick={() => {
+                        navigate(`/clubes/${clubId}/premios`)
+                        setAccionesAbiertas(false)
+                      }}
+                    >
+                      🎁 Gestionar Premios
                     </button>
                   )}
                   <button 

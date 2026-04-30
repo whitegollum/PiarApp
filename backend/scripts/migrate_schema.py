@@ -48,6 +48,7 @@ from app.models.socio import Socio
 from app.models.votacion import Votacion
 from app.models.token_google import TokenGoogle
 from app.models.alerta import Alerta
+from app.models.tareas_comunitarias import TareaComunitaria, ParticipanteTarea, PuntuacionUsuario, PeriodoPremios, Premio
 
 
 class DatabaseMigrator:

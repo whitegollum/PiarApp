@@ -52,6 +52,7 @@ class OpenClawService:
         """
         Envía mensajes a OpenClaw via HTTP API (OpenAI-compatible /v1/chat/completions).
         Con shared-secret auth, el gateway concede scopes operator completos automáticamente.
+        El campo 'user' mantiene sesiones persistentes por usuario/club.
         """
         url = f"{self.base_url}/v1/chat/completions"
         session_key = self._get_session_key(context)
@@ -68,9 +69,10 @@ class OpenClawService:
             "model": "openclaw/default",
             "messages": openai_messages,
             "stream": False,
+            "user": session_key,
         }
 
-        logger.info(f"OpenClaw HTTP request: url={url}, session_key={session_key}, messages={len(openai_messages)}")
+        logger.info(f"OpenClaw HTTP request: url={url}, user={session_key}, messages={len(openai_messages)}")
 
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
@@ -153,16 +155,18 @@ class OpenClawService:
 
     async def check_connection_status(self) -> Dict[str, Any]:
         """
-        Verifica la conexión con OpenClaw via HTTP health check.
+        Verifica la conexión con OpenClaw via HTTP.
         """
         try:
             token = self._get_token()
-            # Intentar un health check simple
             url = f"{self.base_url}/v1/models"
             async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get(url, headers=self._get_auth_headers())
-                if response.status_code == 200:
+                is_html = response.text.strip().startswith("<!") or response.text.strip().startswith("<html")
+                if response.status_code == 200 and not is_html:
                     return {"connected": True, "error": None}
+                elif is_html:
+                    return {"connected": False, "error": "HTTP API endpoints not enabled (got Control UI HTML). Enable gateway.http.endpoints in openclaw.json"}
                 else:
                     return {"connected": False, "error": f"HTTP {response.status_code}: {response.text[:200]}"}
         except httpx.TimeoutException:
@@ -244,63 +248,84 @@ class OpenClawService:
                     "details": f"Network test failed: {str(e)}"
                 })
 
-            # Step 4: Test HTTP API (/v1/models)
+            # Step 4: Test HTTP API (/v1/models) — verifica que el endpoint HTTP esté habilitado
             try:
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     response = await client.get(
                         f"{self.base_url}/v1/models",
                         headers=self._get_auth_headers(),
                     )
-                    if response.status_code == 200:
+                    response_text = response.text
+                    is_html = response_text.strip().startswith("<!") or response_text.strip().startswith("<html")
+                    
+                    if response.status_code == 200 and not is_html:
                         diagnosis["steps"].append({
-                            "step": "http_api_check",
+                            "step": "http_models_endpoint",
                             "status": "ok",
-                            "details": f"HTTP API responsive (GET /v1/models → 200). Response: {response.text[:500]}"
+                            "details": f"GET /v1/models → 200 (JSON). Response: {response_text}"
                         })
+                    elif is_html:
+                        diagnosis["steps"].append({
+                            "step": "http_models_endpoint",
+                            "status": "error",
+                            "details": f"GET /v1/models devuelve HTML (Control UI fallback). El endpoint HTTP NO está habilitado. Añade gateway.http.endpoints.models.enabled=true y gateway.http.endpoints.chatCompletions.enabled=true a openclaw.json y reinicia el gateway."
+                        })
+                        diagnosis["error"] = "HTTP API endpoints not enabled in gateway config"
+                        return diagnosis
                     else:
                         diagnosis["steps"].append({
-                            "step": "http_api_check",
-                            "status": "warning",
-                            "details": f"HTTP API returned {response.status_code}: {response.text[:500]}"
+                            "step": "http_models_endpoint",
+                            "status": "error",
+                            "details": f"GET /v1/models → {response.status_code}. Response: {response_text}"
                         })
             except Exception as e:
                 diagnosis["steps"].append({
-                    "step": "http_api_check",
+                    "step": "http_models_endpoint",
                     "status": "error",
                     "details": f"HTTP API unreachable: {str(e)}"
                 })
 
-            # Step 5: Test HTTP chat endpoint
+            # Step 5: Test HTTP chat completions
             try:
                 async with httpx.AsyncClient(timeout=30.0) as client:
                     test_payload = {
                         "model": "openclaw/default",
                         "messages": [{"role": "user", "content": "ping"}],
                         "stream": False,
+                        "user": "diagnostic_test",
                     }
                     response = await client.post(
                         f"{self.base_url}/v1/chat/completions",
                         headers=self._get_auth_headers(),
                         json=test_payload,
                     )
+                    response_text = response.text
                     if response.status_code == 200:
-                        data = response.json()
-                        diagnosis["steps"].append({
-                            "step": "http_chat_test",
-                            "status": "ok",
-                            "details": f"Chat completions endpoint working (200). Response keys: {list(data.keys()) if isinstance(data, dict) else type(data).__name__}"
-                        })
-                        diagnosis["success"] = True
-                        diagnosis["steps"].append({
-                            "step": "connection_summary",
-                            "status": "ok",
-                            "details": "All tests passed! OpenClaw HTTP API is ready for chat."
-                        })
+                        try:
+                            data = response.json()
+                            diagnosis["steps"].append({
+                                "step": "http_chat_test",
+                                "status": "ok",
+                                "details": f"POST /v1/chat/completions → 200. Response: {response_text}"
+                            })
+                            diagnosis["success"] = True
+                            diagnosis["steps"].append({
+                                "step": "connection_summary",
+                                "status": "ok",
+                                "details": "All tests passed! OpenClaw HTTP API is ready for chat."
+                            })
+                        except Exception:
+                            diagnosis["steps"].append({
+                                "step": "http_chat_test",
+                                "status": "error",
+                                "details": f"POST /v1/chat/completions → 200 but not JSON. Response: {response_text}"
+                            })
+                            diagnosis["error"] = "Chat API returned non-JSON"
                     else:
                         diagnosis["steps"].append({
                             "step": "http_chat_test",
                             "status": "error",
-                            "details": f"Chat completions returned {response.status_code}: {response.text[:500]}"
+                            "details": f"POST /v1/chat/completions → {response.status_code}. Response: {response_text}"
                         })
                         diagnosis["error"] = f"Chat API error: HTTP {response.status_code}"
             except httpx.TimeoutException:

@@ -51,6 +51,12 @@
       "mode": "password",
       "password": "PiaraClawNiselosabe"
     },
+    "http": {
+      "endpoints": {
+        "chatCompletions": { "enabled": true },
+        "models": { "enabled": true }
+      }
+    },
     "tailscale": {
       "mode": "off",
       "resetOnExit": false

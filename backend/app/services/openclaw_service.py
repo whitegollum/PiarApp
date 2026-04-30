@@ -72,9 +72,10 @@ class OpenClawService:
                             "maxProtocol": 3,
                             "client": {
                                 "id": "cli",
+                                "displayName": "PiarApp Backend",
                                 "version": "1.0.0",
-                                "platform": "python",
-                                "mode": "operator"
+                                "platform": "node",
+                                "mode": "cli"
                             },
                             "role": "operator",
                             "scopes": ["operator.read", "operator.write", "operator.admin"],
@@ -241,9 +242,10 @@ class OpenClawService:
                             "maxProtocol": 3,
                             "client": {
                                 "id": "cli",
+                                "displayName": "PiarApp Backend",
                                 "version": "1.0.0",
-                                "platform": "python",
-                                "mode": "operator"
+                                "platform": "node",
+                                "mode": "cli"
                             },
                             "role": "operator",
                             "scopes": ["operator.read", "operator.write", "operator.admin"],
@@ -344,9 +346,10 @@ class OpenClawService:
                             "maxProtocol": 3,
                             "client": {
                                 "id": "cli",
+                                "displayName": "PiarApp Backend",
                                 "version": "1.0.0",
-                                "platform": "python",
-                                "mode": "status_check"
+                                "platform": "node",
+                                "mode": "cli"
                             },
                             "role": "operator",
                             "scopes": ["operator.read"],
@@ -503,9 +506,10 @@ class OpenClawService:
                                     "maxProtocol": 3,
                                     "client": {
                                         "id": "cli",
+                                        "displayName": "PiarApp Backend",
                                         "version": "1.0.0",
-                                        "platform": "python",
-                                        "mode": "diagnostic"
+                                        "platform": "node",
+                                        "mode": "cli"
                                     },
                                     "role": "operator",
                                     "scopes": ["operator.read", "operator.write", "operator.admin"],
@@ -528,15 +532,15 @@ class OpenClawService:
                             connect_response = await asyncio.wait_for(websocket.recv(), timeout=10.0)
                             connect_data = json.loads(connect_response)
                             
-                            response_preview = str(connect_data)[:200] + "..." if len(str(connect_data)) > 200 else str(connect_data)
+                            response_full = str(connect_data)
                             
-                            if connect_data.get("ok") or connect_data.get("type") == "res":
+                            if connect_data.get("ok") == True:
                                 server_info = connect_data.get("payload", {}).get("server", {})
                                 protocol = connect_data.get("payload", {}).get("protocol", "unknown")
                                 diagnosis["steps"].append({
                                     "step": "handshake_response", 
                                     "status": "ok", 
-                                    "details": f"✓ Handshake successful! Protocol: {protocol}, Server: {server_info.get('version', 'unknown')} | Response: {response_preview}"
+                                    "details": f"✓ Handshake successful! Protocol: {protocol}, Server: {server_info.get('version', 'unknown')} | Response: {response_full}"
                                 })
                                 diagnosis["success"] = True
                                 
@@ -547,11 +551,12 @@ class OpenClawService:
                                     "details": "All connection tests passed! OpenClaw is ready to receive messages."
                                 })
                             else:
-                                error_msg = connect_data.get("error", {}).get("message", "Unknown error")
+                                error_info = connect_data.get("error", {})
+                                error_msg = error_info.get("message", "Unknown error")
                                 diagnosis["steps"].append({
                                     "step": "handshake_response", 
                                     "status": "error", 
-                                    "details": f"✗ Handshake rejected: {error_msg} | Full response: {response_preview}"
+                                    "details": f"✗ Handshake rejected: {error_msg} | Full response: {response_full}"
                                 })
                                 diagnosis["error"] = f"Handshake failed: {error_msg}"
                         else:

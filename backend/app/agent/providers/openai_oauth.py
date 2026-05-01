@@ -32,6 +32,7 @@ log = logging.getLogger(__name__)
 
 # --- Constantes del flujo OAuth (Codex CLI) ---
 CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann"
+REDIRECT_URI = "http://localhost:1455/auth/callback"
 OAUTH_AUTHORIZE_URL = "https://auth.openai.com/oauth/authorize"
 OAUTH_TOKEN_URL = "https://auth.openai.com/oauth/token"
 SCOPES = "openid profile email offline_access"
@@ -54,9 +55,8 @@ MODELS_CACHE_TTL_S = 86400
 
 
 def get_redirect_uri() -> str:
-    """Construye el redirect_uri dinámicamente basado en frontend_url."""
-    base = settings.frontend_url.rstrip("/")
-    return f"{base}/api/admin/agent/oauth/openai/callback"
+    """Devuelve el redirect_uri registrado (solo localhost para el client_id del Codex CLI)."""
+    return REDIRECT_URI
 
 # --- Catálogo estático curado ---
 # Fuente: @mariozechner/pi-ai (packages/ai/scripts/generate-models.ts)
@@ -203,6 +203,34 @@ async def handle_oauth_callback(code: str, state: str) -> str:
     )
 
 
+async def complete_oauth_with_code(code: str, state: str) -> dict:
+    """
+    Completa el flujo OAuth recibiendo code+state del frontend.
+    Usado cuando el admin pega la URL de callback (deploy remoto).
+    Returns: {"status": "complete"} o raise RuntimeError.
+    """
+    global _received_code
+
+    if _pending_flow is None:
+        raise RuntimeError("No hay flujo OAuth en curso. Inicia uno primero.")
+
+    expected_state = _pending_flow.get("state", "")
+    if state != expected_state:
+        raise RuntimeError("State no coincide — posible CSRF o flujo expirado.")
+
+    _received_code = code
+    if _flow_complete_event:
+        _flow_complete_event.set()
+
+    # Esperar brevemente a que el background task complete el exchange
+    await asyncio.sleep(2)
+
+    tokens = _load_tokens()
+    if tokens and tokens.get("access_token"):
+        return {"status": "complete"}
+    return {"status": "processing"}
+
+
 # =============================================================================
 # Token exchange & refresh
 # =============================================================================
@@ -254,18 +282,18 @@ async def start_oauth_flow() -> dict:
     Inicia el flujo OAuth PKCE:
     1. Genera PKCE + state
     2. Devuelve {authorization_url, ...} para que el frontend abra la URL
-    3. El callback llegará al endpoint GET /api/admin/agent/oauth/openai/callback
+    3. El admin completa el auth y pega la URL de callback (localhost no resuelve remotamente)
+    4. El frontend envía code+state a POST /oauth/openai/complete
     """
     global _pending_flow, _flow_complete_event, _received_code
 
     code_verifier, code_challenge = _generate_pkce()
     state = _generate_state()
-    redirect_uri = get_redirect_uri()
 
     params = {
         "response_type": "code",
         "client_id": CLIENT_ID,
-        "redirect_uri": redirect_uri,
+        "redirect_uri": REDIRECT_URI,
         "scope": SCOPES,
         "code_challenge": code_challenge,
         "code_challenge_method": "S256",
@@ -281,13 +309,13 @@ async def start_oauth_flow() -> dict:
     _received_code = None
     _flow_complete_event = asyncio.Event()
 
-    # Lanzar background task que espera al callback event
+    # Lanzar background task que espera al complete event
     asyncio.create_task(_background_oauth_flow(code_verifier))
 
     return {
         "authorization_url": authorization_url,
         "state": state,
-        "redirect_uri": redirect_uri,
+        "redirect_uri": REDIRECT_URI,
         "expires_in": 300,
     }
 

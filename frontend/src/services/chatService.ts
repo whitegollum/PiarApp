@@ -120,6 +120,11 @@ export const AgentAdminService = {
     return APIService.post('/admin/agent/oauth/openai/start')
   },
 
+  /** Completar flujo OAuth enviando la URL de callback copiada por el admin */
+  async completeOpenAIOAuth(callbackUrl: string): Promise<{ status: string }> {
+    return APIService.post('/admin/agent/oauth/openai/complete', { callback_url: callbackUrl })
+  },
+
   /** Poll OAuth OpenAI — no requiere parámetros, el backend trackea el estado */
   async pollOpenAIOAuth(): Promise<{ status: string; detail?: string }> {
     return APIService.post('/admin/agent/oauth/openai/poll')

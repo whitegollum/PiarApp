@@ -45,6 +45,7 @@ const AdminAgentConfig = () => {
     deviceCode?: string
     polling: boolean
   } | null>(null)
+  const [callbackUrl, setCallbackUrl] = useState('')
 
   // Debug state
   const [debugRunning, setDebugRunning] = useState(false)
@@ -173,6 +174,27 @@ const AdminAgentConfig = () => {
     } catch (err) {
       console.error(err)
       setMessage({ type: 'error', text: 'Error iniciando flujo OAuth' })
+    }
+  }
+
+  const submitCallbackUrl = async () => {
+    if (!callbackUrl.includes('code=')) {
+      setMessage({ type: 'error', text: 'La URL no contiene un código de autorización' })
+      return
+    }
+    try {
+      const res = await AgentAdminService.completeOpenAIOAuth(callbackUrl)
+      if (res.status === 'complete') {
+        setOauthFlow(null)
+        setCallbackUrl('')
+        setMessage({ type: 'success', text: 'OpenAI conectado correctamente' })
+      } else {
+        // Might still be processing, poll a few more times
+        setMessage({ type: 'success', text: 'Código recibido, completando...' })
+        pollOpenAIOAuth()
+      }
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err?.message || 'Error completando OAuth' })
     }
   }
 
@@ -351,12 +373,34 @@ const AdminAgentConfig = () => {
                     <>
                       <p><strong>Autenticación OpenAI (PKCE)</strong></p>
                       <p>
-                        Se ha abierto una pestaña para que inicies sesión en OpenAI.
+                        1. Se ha abierto una pestaña para que inicies sesión en OpenAI.
                         {oauthFlow.authorizationUrl && (
                           <> Si no se abrió, <a href={oauthFlow.authorizationUrl} target="_blank" rel="noopener noreferrer">haz click aquí</a>.</>
                         )}
                       </p>
-                      <p style={{ fontSize: '0.8rem', color: '#666' }}>Esperando que completes el login...</p>
+                      <p>
+                        2. Después de autenticarte, el navegador intentará ir a una URL que empieza por <code>http://localhost:1455/...</code>.
+                        La página no cargará, pero <strong>copia la URL completa</strong> de la barra de direcciones y pégala aquí:
+                      </p>
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                        <input
+                          type="text"
+                          value={callbackUrl}
+                          onChange={e => setCallbackUrl(e.target.value)}
+                          placeholder="http://localhost:1455/auth/callback?code=...&state=..."
+                          style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', fontFamily: 'monospace', fontSize: '0.8rem' }}
+                        />
+                        <button
+                          className="btn btn-primary"
+                          onClick={submitCallbackUrl}
+                          disabled={!callbackUrl}
+                        >
+                          Completar
+                        </button>
+                      </div>
+                      <p style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.5rem' }}>
+                        También funciona automáticamente si accedes desde la misma máquina que el servidor.
+                      </p>
                     </>
                   )}
                   {oauthFlow.type === 'copilot' && oauthFlow.userCode && (

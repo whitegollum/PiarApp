@@ -102,6 +102,37 @@ async def openai_oauth_callback(
     return HTMLResponse(content=html)
 
 
+class OAuthCompleteRequest(BaseModel):
+    callback_url: str
+
+
+@router.post("/oauth/openai/complete")
+async def openai_oauth_complete(
+    payload: OAuthCompleteRequest,
+    _: Usuario = Depends(get_current_superadmin),
+):
+    """Completa el flujo OAuth recibiendo la URL de callback pegada por el admin.
+    El frontend envía la URL completa de localhost:1455/auth/callback?code=...&state=...
+    """
+    from urllib.parse import urlparse, parse_qs
+    from .providers.openai_oauth import complete_oauth_with_code
+
+    parsed = urlparse(payload.callback_url)
+    params = parse_qs(parsed.query)
+
+    code = params.get("code", [None])[0]
+    state = params.get("state", [None])[0]
+
+    if not code or not state:
+        raise HTTPException(400, "URL inválida: no contiene code y state")
+
+    try:
+        result = await complete_oauth_with_code(code, state)
+        return result
+    except RuntimeError as e:
+        raise HTTPException(400, str(e))
+
+
 @router.post("/oauth/openai/poll")
 async def openai_oauth_poll(
     _: Usuario = Depends(get_current_superadmin),

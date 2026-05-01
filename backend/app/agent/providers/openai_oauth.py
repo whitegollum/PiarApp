@@ -21,7 +21,7 @@ import logging
 import secrets
 import time
 from pathlib import Path
-from urllib.parse import urlencode, urlparse, parse_qs
+from urllib.parse import urlencode
 
 import httpx
 
@@ -32,7 +32,6 @@ log = logging.getLogger(__name__)
 
 # --- Constantes del flujo OAuth (Codex CLI) ---
 CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann"
-REDIRECT_URI = "http://localhost:1455/auth/callback"
 OAUTH_AUTHORIZE_URL = "https://auth.openai.com/oauth/authorize"
 OAUTH_TOKEN_URL = "https://auth.openai.com/oauth/token"
 SCOPES = "openid profile email offline_access"
@@ -52,6 +51,12 @@ REFRESH_LEEWAY_S = 5 * 60
 
 # Cache TTL para modelos: 24 horas
 MODELS_CACHE_TTL_S = 86400
+
+
+def get_redirect_uri() -> str:
+    """Construye el redirect_uri dinámicamente basado en frontend_url."""
+    base = settings.frontend_url.rstrip("/")
+    return f"{base}/api/admin/agent/oauth/openai/callback"
 
 # --- Catálogo estático curado ---
 # Fuente: @mariozechner/pi-ai (packages/ai/scripts/generate-models.ts)
@@ -152,133 +157,50 @@ def _extract_account_id(id_token: str) -> str:
 
 _pending_flow: dict | None = None
 _flow_complete_event: asyncio.Event | None = None
+_received_code: str | None = None
 
 
 # =============================================================================
-# Callback server (puerto 1455)
+# Callback handler (invocado por el endpoint FastAPI)
 # =============================================================================
 
-async def _run_callback_server(expected_state: str, timeout_s: int = 300) -> str:
+async def handle_oauth_callback(code: str, state: str) -> str:
     """
-    Levanta un servidor HTTP en 127.0.0.1:1455, espera el callback de OpenAI
-    y devuelve el authorization code.
+    Recibe el authorization code del callback OAuth.
+    Valida el state y señala al background flow.
+    Returns: HTML de éxito/error para mostrar al usuario.
     """
-    received_code: list[str | None] = [None]
-    error_msg: list[str | None] = [None]
+    global _received_code
 
-    async def handle_request(reader: asyncio.StreamReader,
-                             writer: asyncio.StreamWriter):
-        # Leer request line
-        request_line = await reader.readline()
-        request_str = request_line.decode("utf-8", errors="replace")
-
-        # Leer headers (descartamos)
-        while True:
-            line = await reader.readline()
-            if line in (b"\r\n", b"\n", b""):
-                break
-
-        parts = request_str.split(" ")
-        if len(parts) < 2:
-            writer.close()
-            await writer.wait_closed()
-            return
-
-        path = parts[1]
-        if not path.startswith("/auth/callback"):
-            body = "Not Found"
-            resp = f"HTTP/1.1 404 Not Found\r\nContent-Length: {len(body)}\r\n\r\n{body}"
-            writer.write(resp.encode())
-            await writer.drain()
-            writer.close()
-            await writer.wait_closed()
-            return
-
-        parsed = urlparse(path)
-        params = parse_qs(parsed.query)
-
-        if "error" in params:
-            error_msg[0] = params["error"][0]
-            body = f"<h1>Error: {error_msg[0]}</h1>"
-            resp = (
-                f"HTTP/1.1 400 Bad Request\r\n"
-                f"Content-Type: text/html\r\n"
-                f"Content-Length: {len(body.encode())}\r\n\r\n{body}"
-            )
-            writer.write(resp.encode())
-            await writer.drain()
-            writer.close()
-            await writer.wait_closed()
-            return
-
-        cb_state = params.get("state", [None])[0]
-        if cb_state != expected_state:
-            error_msg[0] = "State mismatch — posible CSRF"
-            body = f"<h1>{error_msg[0]}</h1>"
-            resp = (
-                f"HTTP/1.1 400 Bad Request\r\n"
-                f"Content-Type: text/html\r\n"
-                f"Content-Length: {len(body.encode())}\r\n\r\n{body}"
-            )
-            writer.write(resp.encode())
-            await writer.drain()
-            writer.close()
-            await writer.wait_closed()
-            return
-
-        code = params.get("code", [None])[0]
-        if not code:
-            error_msg[0] = "Missing authorization code"
-            body = f"<h1>{error_msg[0]}</h1>"
-            resp = (
-                f"HTTP/1.1 400 Bad Request\r\n"
-                f"Content-Type: text/html\r\n"
-                f"Content-Length: {len(body.encode())}\r\n\r\n{body}"
-            )
-            writer.write(resp.encode())
-            await writer.drain()
-            writer.close()
-            await writer.wait_closed()
-            return
-
-        received_code[0] = code
-        body = (
-            "<!doctype html><html><head><meta charset='utf-8'>"
-            "<title>Login completado</title></head>"
-            "<body style='font-family:system-ui;text-align:center;padding:4rem'>"
-            "<h1>✅ Autenticación completada</h1>"
-            "<p>Ya puedes cerrar esta pestaña y volver a la aplicación.</p>"
+    if _pending_flow is None:
+        return (
+            "<!doctype html><html><body style='font-family:system-ui;text-align:center;padding:4rem'>"
+            "<h1>❌ No hay flujo OAuth en curso</h1>"
+            "<p>Inicia el flujo desde el panel de administración.</p>"
             "</body></html>"
         )
-        resp = (
-            f"HTTP/1.1 200 OK\r\n"
-            f"Content-Type: text/html; charset=utf-8\r\n"
-            f"Content-Length: {len(body.encode())}\r\n\r\n{body}"
+
+    expected_state = _pending_flow.get("state", "")
+    if state != expected_state:
+        return (
+            "<!doctype html><html><body style='font-family:system-ui;text-align:center;padding:4rem'>"
+            "<h1>❌ State mismatch — posible CSRF</h1>"
+            "</body></html>"
         )
-        writer.write(resp.encode())
-        await writer.drain()
-        writer.close()
-        await writer.wait_closed()
 
-    server = await asyncio.start_server(handle_request, "127.0.0.1", 1455)
+    _received_code = code
+    if _flow_complete_event:
+        _flow_complete_event.set()
 
-    try:
-        deadline = time.time() + timeout_s
-        while received_code[0] is None and error_msg[0] is None:
-            if time.time() > deadline:
-                raise RuntimeError(
-                    "Timeout esperando callback OAuth (5 min). "
-                    "El usuario no completó el login."
-                )
-            await asyncio.sleep(0.5)
-    finally:
-        server.close()
-        await server.wait_closed()
-
-    if error_msg[0]:
-        raise RuntimeError(f"OAuth error: {error_msg[0]}")
-
-    return received_code[0]  # type: ignore
+    return (
+        "<!doctype html><html><head><meta charset='utf-8'>"
+        "<title>Login completado</title></head>"
+        "<body style='font-family:system-ui;text-align:center;padding:4rem'>"
+        "<h1>✅ Autenticación completada</h1>"
+        "<p>Ya puedes cerrar esta pestaña y volver a la aplicación.</p>"
+        "<script>setTimeout(()=>window.close(),2000)</script>"
+        "</body></html>"
+    )
 
 
 # =============================================================================
@@ -293,7 +215,7 @@ async def _exchange_code(code: str, code_verifier: str) -> dict:
             data={
                 "grant_type": "authorization_code",
                 "code": code,
-                "redirect_uri": REDIRECT_URI,
+                "redirect_uri": get_redirect_uri(),
                 "client_id": CLIENT_ID,
                 "code_verifier": code_verifier,
             },
@@ -331,18 +253,19 @@ async def start_oauth_flow() -> dict:
     """
     Inicia el flujo OAuth PKCE:
     1. Genera PKCE + state
-    2. Arranca callback server en background (127.0.0.1:1455)
-    3. Devuelve {authorization_url, ...} para que el frontend abra la URL
+    2. Devuelve {authorization_url, ...} para que el frontend abra la URL
+    3. El callback llegará al endpoint GET /api/admin/agent/oauth/openai/callback
     """
-    global _pending_flow, _flow_complete_event
+    global _pending_flow, _flow_complete_event, _received_code
 
     code_verifier, code_challenge = _generate_pkce()
     state = _generate_state()
+    redirect_uri = get_redirect_uri()
 
     params = {
         "response_type": "code",
         "client_id": CLIENT_ID,
-        "redirect_uri": REDIRECT_URI,
+        "redirect_uri": redirect_uri,
         "scope": SCOPES,
         "code_challenge": code_challenge,
         "code_challenge_method": "S256",
@@ -355,25 +278,36 @@ async def start_oauth_flow() -> dict:
         "state": state,
         "started_at": time.time(),
     }
+    _received_code = None
     _flow_complete_event = asyncio.Event()
 
-    # Lanzar callback server + exchange en background
-    asyncio.create_task(_background_oauth_flow(state, code_verifier))
+    # Lanzar background task que espera al callback event
+    asyncio.create_task(_background_oauth_flow(code_verifier))
 
     return {
         "authorization_url": authorization_url,
         "state": state,
-        "redirect_uri": REDIRECT_URI,
+        "redirect_uri": redirect_uri,
         "expires_in": 300,
     }
 
 
-async def _background_oauth_flow(state: str, code_verifier: str):
-    """Background task: espera callback, intercambia code, guarda tokens."""
-    global _pending_flow, _flow_complete_event
+async def _background_oauth_flow(code_verifier: str):
+    """Background task: espera que handle_oauth_callback señale, luego intercambia code."""
+    global _pending_flow, _flow_complete_event, _received_code
     try:
-        code = await _run_callback_server(state, timeout_s=300)
-        tokens = await _exchange_code(code, code_verifier)
+        # Esperar hasta 5 minutos a que llegue el callback
+        try:
+            await asyncio.wait_for(_flow_complete_event.wait(), timeout=300)
+        except asyncio.TimeoutError:
+            log.warning("OAuth flow timeout (5 min sin callback)")
+            return
+
+        if not _received_code:
+            log.error("OAuth flow: event fired but no code received")
+            return
+
+        tokens = await _exchange_code(_received_code, code_verifier)
 
         # Extraer account_id del id_token
         account_id = ""

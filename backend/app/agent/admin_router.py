@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.database.db import get_db
@@ -82,13 +83,23 @@ async def openai_oauth_start(_: Usuario = Depends(get_current_superadmin)):
     """Inicia flujo OAuth PKCE contra OpenAI (Codex CLI).
     Devuelve {authorization_url, state, redirect_uri, expires_in}.
     El admin debe abrir authorization_url en su navegador.
-    El backend escucha en localhost:1455 para capturar el callback.
     """
     from .providers.openai_oauth import start_oauth_flow
     try:
         return await start_oauth_flow()
     except Exception as e:
         raise HTTPException(502, f"Error iniciando flujo OAuth con OpenAI: {e}")
+
+
+@router.get("/oauth/openai/callback", response_class=HTMLResponse)
+async def openai_oauth_callback(
+    code: str = Query(...),
+    state: str = Query(...),
+):
+    """Callback de OpenAI OAuth. Recibe code+state y completa el flujo."""
+    from .providers.openai_oauth import handle_oauth_callback
+    html = await handle_oauth_callback(code, state)
+    return HTMLResponse(content=html)
 
 
 @router.post("/oauth/openai/poll")

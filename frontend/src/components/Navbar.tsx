@@ -143,6 +143,15 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                   >
                     🏆 Ranking
                   </button>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => {
+                      navigate(`/clubes/${clubId}/canales`)
+                      setAccionesAbiertas(false)
+                    }}
+                  >
+                    📡 Canales
+                  </button>
                   {canEdit && (
                     <button 
                       className="dropdown-item"

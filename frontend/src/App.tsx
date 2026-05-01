@@ -32,6 +32,7 @@ import AdminEmailConfig from './pages/admin/AdminEmailConfig'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminAlertas from './pages/admin/AdminAlertas'
 import AdminDatabase from './pages/admin/AdminDatabase'
+import AdminAgentConfig from './pages/admin/AdminAgentConfig'
 import ClubDocumentacion from './pages/ClubDocumentacion'
 import ProductosCatalogo from './pages/ProductosCatalogo'
 import ProductosAdmin from './pages/ProductosAdmin'
@@ -41,6 +42,7 @@ import CreateTarea from './pages/CreateTarea'
 import EditTarea from './pages/EditTarea'
 import ClubRanking from './pages/ClubRanking'
 import AdminPremios from './pages/AdminPremios'
+import ClubCanales from './pages/ClubCanales'
 
 // Componente para verificar configuración inicial
 const SetupCheck = () => {
@@ -83,6 +85,7 @@ function App() {
           <Route path="/admin/email" element={<ProtectedRoute><AdminEmailConfig /></ProtectedRoute>} />
           <Route path="/admin/alertas" element={<ProtectedRoute><AdminAlertas /></ProtectedRoute>} />
           <Route path="/admin/database" element={<ProtectedRoute><AdminDatabase /></ProtectedRoute>} />
+          <Route path="/admin/agent" element={<ProtectedRoute><AdminAgentConfig /></ProtectedRoute>} />
 
           {/* Rutas públicas */}
           <Route path="/auth/setup-inicial" element={<FirstAccess />} />
@@ -225,6 +228,7 @@ function App() {
           <Route path="/clubes/:clubId/tareas/:tareaId" element={<ProtectedRoute><TareaDetail /></ProtectedRoute>} />
           <Route path="/clubes/:clubId/tareas/:tareaId/editar" element={<ProtectedRoute><EditTarea /></ProtectedRoute>} />
           <Route path="/clubes/:clubId/ranking" element={<ProtectedRoute><ClubRanking /></ProtectedRoute>} />
+          <Route path="/clubes/:clubId/canales" element={<ProtectedRoute><ClubCanales /></ProtectedRoute>} />
           <Route path="/clubes/:clubId/premios" element={<ProtectedRoute><AdminPremios /></ProtectedRoute>} />
 
           <Route

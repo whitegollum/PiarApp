@@ -36,18 +36,6 @@ class Settings(BaseSettings):
     # Frontend
     frontend_url: str = "http://localhost:5173"
     
-    # OpenClaw
-    openclaw_api_key: str = ""
-    openclaw_api_url: str = "https://api.openclaw.example/v1/chat"
-    openclaw_auth_mode: str = "api_key" # "api_key" or "password"
-    openclaw_username: str = ""
-    openclaw_password: str = ""
-    openclaw_login_url: str = "https://api.openclaw.example/v1/auth/login"
-    
-    # OpenClaw Bot User (for initial setup)
-    openclaw_botuser_id: str = ""
-    openclaw_botuser_password: str = ""
-    
     # CORS
     cors_origins: List[str] = [
         "http://localhost:3000",
@@ -73,9 +61,14 @@ class Settings(BaseSettings):
     # Invitaciones
     invitation_token_expiry_days: int = 30
     
+    # Agent / LLM
+    openai_api_key: str = ""
+    agent_data_dir: str = "./data/agent"
+    
     model_config = SettingsConfigDict(
         env_file=".env",
-        case_sensitive=False
+        case_sensitive=False,
+        extra="ignore",
     )
 
 

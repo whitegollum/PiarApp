@@ -17,3 +17,4 @@ PyYAML==6.0.1
 pytest==8.2.2
 httpx==0.26.0
 APScheduler==3.10.4
+openai>=1.50.0

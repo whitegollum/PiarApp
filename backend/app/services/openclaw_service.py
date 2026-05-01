@@ -85,7 +85,13 @@ class OpenClawService:
                 if response.status_code != 200:
                     error_body = response.text
                     logger.error(f"OpenClaw HTTP error {response.status_code}: {error_body}")
-                    return f"Error de OpenClaw (HTTP {response.status_code}): {error_body[:500]}"
+                    # Intentar extraer mensaje de error legible
+                    try:
+                        error_data = response.json()
+                        error_msg = error_data.get("error", {}).get("message", error_body)
+                    except Exception:
+                        error_msg = error_body
+                    return f"Error de OpenClaw (HTTP {response.status_code}): {error_msg}"
 
                 data = response.json()
                 # OpenAI-compatible response format
@@ -322,12 +328,26 @@ class OpenClawService:
                             })
                             diagnosis["error"] = "Chat API returned non-JSON"
                     else:
+                        # Parsear error del gateway para dar contexto
+                        error_detail = response_text
+                        error_hint = ""
+                        try:
+                            error_data = response.json()
+                            error_detail = error_data.get("error", {}).get("message", response_text)
+                        except Exception:
+                            pass
+                        
+                        if "refresh" in error_detail.lower() or "token" in error_detail.lower() or "auth" in error_detail.lower():
+                            error_hint = " → El proveedor de modelo (ej. OpenAI Codex) tiene un problema de autenticación. Ejecuta 'openclaw auth login <provider>' dentro del contenedor del gateway para re-autenticarte."
+                        elif "internal error" in error_detail.lower():
+                            error_hint = " → Error interno del gateway. Revisa los logs del contenedor openclaw para más detalles (docker logs openclawPiara)."
+                        
                         diagnosis["steps"].append({
                             "step": "http_chat_test",
                             "status": "error",
-                            "details": f"POST /v1/chat/completions → {response.status_code}. Response: {response_text}"
+                            "details": f"POST /v1/chat/completions → {response.status_code}. Error: {error_detail}{error_hint}. Full response: {response_text}"
                         })
-                        diagnosis["error"] = f"Chat API error: HTTP {response.status_code}"
+                        diagnosis["error"] = f"Chat API error (HTTP {response.status_code}): {error_detail}{error_hint}"
             except httpx.TimeoutException:
                 diagnosis["steps"].append({
                     "step": "http_chat_test",

@@ -5,9 +5,10 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: piar_backend
-    network_mode: "service:openclaw-gateway-piara"
-    depends_on:
-      - openclaw-gateway-piara
+    networks:
+      - piar-network
+    ports:
+      - "8000:8000"
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_KEY=${SECRET_KEY}
@@ -23,13 +24,7 @@ services:
       - SMTP_USE_TLS=${SMTP_USE_TLS}
       - FRONTEND_URL=${FRONTEND_URL}
       - CORS_ORIGINS=${CORS_ORIGINS}
-      - OPENCLAW_API_KEY=${OPENCLAW_API_KEY}
-      - OPENCLAW_API_URL=http://127.0.0.1:18789/v1/chat
-      - OPENCLAW_AUTH_MODE=${OPENCLAW_AUTH_MODE}
-      - OPENCLAW_PASSWORD=${OPENCLAW_GATEWAY_PASSWORD}
-      - OPENCLAW_LOGIN_URL=http://127.0.0.1:18789/v1/login
-      - OPENCLAW_BOTUSER_ID=${OPENCLAW_BOTUSER_ID}
-      - OPENCLAW_BOTUSER_PASSWORD=${OPENCLAW_BOTUSER_PASSWORD}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - piar_data:/app/data
 
@@ -47,47 +42,7 @@ services:
     ports:
       - "8587:80"
     depends_on:
-      - openclaw-gateway-piara
-    networks:
-      - piar-network
-
-  
-
-  openclaw-gateway-piara:
-    build:
-      context: ./openclaw
-    container_name: openclawPiara
-    image: openclaw:latest
-    environment:
-      HOME: /data
-      TZ: Europe/Madrid
-      OPENCLAW_DOCTOR: "0"
-      OPENCLAW_CONFIGURE: "0"
-      GATEWAY_MODE: local
-      OPENAI_API_KEY: "${OPENAI_API_KEY}"
-      BRAVE_API_KEY: "${BRAVE_API_KEY}"
-      OPENCLAW_GATEWAY_PASSWORD: "${OPENCLAW_GATEWAY_PASSWORD}"
-      OPENCLAW_DEVICEID: "${OPENCLAW_DEVICEID}"
-      OPENCLAW_DEVICEID_TOKEN: "${OPENCLAW_DEVICEID_TOKEN}"
-      OPENCLAW_AUTH_TYPE: "${OPENCLAW_AUTH_TYPE}"
-      OPENCLAW_PROVIDER: "${OPENCLAW_PROVIDER}"
-      OPENCLAW_ACCESS_KEY: "${OPENCLAW_ACCESS_KEY}"
-      OPENCLAW_REFRESH_KEY: "${OPENCLAW_REFRESH_KEY}"
-      OPENCLAW_EXPIRES: "${OPENCLAW_EXPIRES}"
-      OPENCLAW_ACCOUNTID: "${OPENCLAW_ACCOUNTID}"
-      OPENCLAW_BOTUSER_ID: "${OPENCLAW_BOTUSER_ID}"
-      OPENCLAW_BOTUSER_PASSWORD: "${OPENCLAW_BOTUSER_PASSWORD}"
-    ports:
-      - "8000:8000"
-    expose:
-      - "18789"
-    restart: unless-stopped
-    stdin_open: True
-    tty: True
-    volumes:
-      - piara_openclaw:/data
-      - ./openclaw/data/.config:/data/.config
-      - ./openclaw/data/.openclaw:/data/.openclaw
+      - backend
     networks:
       - piar-network
 
@@ -97,4 +52,3 @@ networks:
 
 volumes:
   piar_data:
-  piara_openclaw:

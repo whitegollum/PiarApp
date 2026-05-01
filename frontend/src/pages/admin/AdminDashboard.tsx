@@ -50,6 +50,12 @@ const AdminDashboard = () => {
                             <h3 className="admin-card-title">Base de datos</h3>
                             <p className="admin-card-text">Verificar y aplicar migraciones del esquema de base de datos.</p>
                         </Link>
+
+                        <Link to="/admin/agent" className="admin-card">
+                            <div className="admin-card-icon">🤖</div>
+                            <h3 className="admin-card-title">Agente IA</h3>
+                            <p className="admin-card-text">Configurar proveedor, modelo y personalidad del asistente.</p>
+                        </Link>
                     </div>
                 </div>
             </main>

@@ -1,0 +1,314 @@
+/* Estilos para Panel de Canales */
+
+.canales-header {
+  margin-bottom: 24px;
+}
+
+.canales-header .btn-back {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 12px;
+  display: inline-block;
+}
+
+.canales-header .btn-back:hover {
+  text-decoration: underline;
+}
+
+.canales-header h1 {
+  font-size: 1.75rem;
+  margin: 0 0 8px 0;
+  color: var(--color-text);
+}
+
+.canales-subtitle {
+  color: var(--color-text-secondary);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.canales-notificacion {
+  background: var(--color-primary);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.canales-error {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.canales-loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--color-text-secondary);
+}
+
+.canales-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* Card de Canal */
+.canal-card {
+  background: var(--color-card);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.canal-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.canal-card.canal-activo {
+  border-color: var(--color-primary);
+}
+
+.canal-card.canal-en-vuelo {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.canal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.canal-numero {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.canal-badge-vuelo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #dc2626;
+  background: #fee2e2;
+  padding: 3px 8px;
+  border-radius: 12px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Usuarios en canal */
+.canal-usuarios {
+  min-height: 60px;
+  margin-bottom: 12px;
+}
+
+.canal-vacio {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.canal-lista-usuarios {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.canal-lista-usuarios li {
+  padding: 4px 0;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.canal-lista-usuarios li.usuario-volando {
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.badge-volando {
+  font-size: 0.7rem;
+  background: #dc2626;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 8px;
+  margin-left: 6px;
+}
+
+/* Acciones */
+.canal-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn-canal {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  min-width: 120px;
+}
+
+.btn-canal:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-ocupar {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-ocupar:hover {
+  opacity: 0.9;
+}
+
+.btn-liberar {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.btn-liberar:hover {
+  background: #d1d5db;
+}
+
+.btn-vuelo {
+  background: #f59e0b;
+  color: white;
+}
+
+.btn-vuelo:hover:not(:disabled) {
+  background: #d97706;
+}
+
+.btn-vuelo-activo {
+  background: #dc2626;
+}
+
+.btn-vuelo-activo:hover {
+  background: #b91c1c;
+}
+
+/* Aviso de vuelo */
+.canal-aviso-vuelo {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .canales-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Widget de Canal en ClubDetail */
+.canal-vuelo-widget {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-card);
+  border: 2px solid var(--color-primary);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.canal-vuelo-widget:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.canal-widget-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.canal-widget-estado {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.canal-widget-vacio {
+  font-style: italic;
+}
+
+.canal-widget-alerta {
+  margin: 6px 0 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.btn-canal-vuelo-widget {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: #f59e0b;
+  color: white;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-canal-vuelo-widget:hover:not(:disabled) {
+  background: #d97706;
+}
+
+.btn-canal-vuelo-widget.volando {
+  background: #dc2626;
+}
+
+.btn-canal-vuelo-widget.volando:hover {
+  background: #b91c1c;
+}
+
+.btn-canal-vuelo-widget.bloqueado {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}

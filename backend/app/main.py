@@ -17,7 +17,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Importar modelos para que SQLAlchemy los registre
-from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria, system_config, producto, alerta, tareas_comunitarias
+from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria, system_config, producto, alerta, tareas_comunitarias, canal
+from app.agent import models as agent_models  # noqa: F401
 
 # Crear tablas en la base de datos
 Base.metadata.create_all(bind=engine)
@@ -72,7 +73,9 @@ app.add_middleware(
 )
 
 # Importar rutas
-from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, chat, dashboard, alertas, admin, tareas_comunitarias
+from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, dashboard, alertas, admin, tareas_comunitarias, canales
+from app.agent.router import router as agent_chat_router
+from app.agent.admin_router import router as agent_admin_router
 
 # Incluir routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Autenticación"])
@@ -85,10 +88,12 @@ app.include_router(instalaciones.router, prefix="/api", tags=["Instalaciones"]) 
 app.include_router(documentacion.router, prefix="/api/documentacion", tags=["Documentación"])
 app.include_router(productos.router, prefix="/api", tags=["Productos"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Administración"])
-app.include_router(chat.router, prefix="/api", tags=["Chat"])
+app.include_router(agent_chat_router, prefix="/api", tags=["Chat"])
+app.include_router(agent_admin_router, prefix="/api/admin", tags=["Agent Admin"])
 app.include_router(dashboard.router, prefix="/api", tags=["Dashboard"])
 app.include_router(alertas.router, prefix="/api", tags=["Alertas"])
 app.include_router(tareas_comunitarias.router, prefix="/api/clubes", tags=["Tareas Comunitarias"])
+app.include_router(canales.router, prefix="/api/clubes", tags=["Canales"])
 
 
 @app.get("/")

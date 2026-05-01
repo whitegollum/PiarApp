@@ -56,11 +56,21 @@ class SchedulerService:
             replace_existing=True
         )
         
+        # Tarea diaria: Reset de canales de vuelo (a las 4:00 AM)
+        cls._scheduler.add_job(
+            func=cls._job_reset_canales,
+            trigger=CronTrigger(hour=4, minute=0),
+            id='reset_canales_diario',
+            name='Reset diario de canales de vuelo',
+            replace_existing=True
+        )
+        
         cls._scheduler.start()
         logger.info("✅ Scheduler iniciado correctamente")
         logger.info("📅 Tareas programadas:")
         logger.info("  - Alertas: Diario a las 2:00 AM")
         logger.info("  - Backups: Diario a las 3:00 AM")
+        logger.info("  - Reset canales: Diario a las 4:00 AM")
     
     @classmethod
     def shutdown(cls):
@@ -174,6 +184,26 @@ class SchedulerService:
             
         except Exception as e:
             logger.error(f"❌ Error en job de backups automáticos: {e}")
+            db.rollback()
+        finally:
+            db.close()
+    
+    @classmethod
+    def _job_reset_canales(cls):
+        """
+        Job: Reset diario de canales de vuelo
+        Se ejecuta diariamente a las 4:00 AM
+        Elimina todas las ocupaciones y estados de vuelo.
+        """
+        logger.info("📡 Iniciando reset diario de canales...")
+        
+        db = SessionLocal()
+        try:
+            from app.services.canal_service import CanalService
+            count = CanalService.reset_todos_los_clubes(db)
+            logger.info(f"✅ Reset de canales completado: {count} ocupaciones eliminadas")
+        except Exception as e:
+            logger.error(f"❌ Error en job de reset de canales: {e}")
             db.rollback()
         finally:
             db.close()

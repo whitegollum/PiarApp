@@ -9,12 +9,14 @@ import { TareasService, RankingService, TareaComunitaria, RankingEntry } from '.
 import { Noticia, Evento, ProductoAfiliacion } from '../types/models'
 import { ProductoService } from '../services/productoService'
 import { useClubRole } from '../hooks/useClubRole'
+import { CanalesService, CanalesPanel, CanalEstado } from '../services/canalesService'
 import Navbar from '../components/Navbar'
 import NewsList from '../components/NewsList'
 import EventList from '../components/EventList'
-import OpenClawChat from '../components/OpenClawChat'
+import ChatPanel from '../components/ChatPanel'
 import RTSPViewer from '../components/RTSPViewer'
 import '../styles/ClubDetail.css'
+import '../styles/Canales.css'
 
 interface Club {
   id: number
@@ -78,6 +80,7 @@ export default function ClubDetail() {
   const [eventos, setEventos] = useState<Evento[]>([])
   const [contenidoReciente, setContenidoReciente] = useState<RecentContentItem[]>([])
   const [instalacionPass, setInstalacionPass] = useState<ContrasenaData | null>(null)
+  const [canalPanel, setCanalPanel] = useState<CanalesPanel | null>(null)
   const [weather, setWeather] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -142,6 +145,14 @@ export default function ClubDetail() {
           console.log('No se pudieron cargar productos:', err)
         }
 
+        // Cargar panel de canales
+        try {
+          const canalesData = await CanalesService.obtenerPanel(id)
+          setCanalPanel(canalesData)
+        } catch (err) {
+          console.log('No se pudieron cargar canales:', err)
+        }
+
         // Cargar contador de alertas si es admin o superadmin
         if (canEdit) {
           try {
@@ -189,6 +200,18 @@ export default function ClubDetail() {
     cargarDatos()
   }, [clubId, usuario, navigate])
 
+  // Polling de canales cada 5 segundos
+  useEffect(() => {
+    if (!clubId) return
+    const interval = setInterval(async () => {
+      try {
+        const data = await CanalesService.obtenerPanel(parseInt(clubId))
+        setCanalPanel(data)
+      } catch {}
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [clubId])
+
   useEffect(() => {
     let isActive = true
 
@@ -235,6 +258,20 @@ export default function ClubDetail() {
       isActive = false
     }
   }, [socios])
+
+  // Fondo rojo cuando el usuario está volando
+  const yoVolandoGlobal = canalPanel?.canales.some(c =>
+    c.usuarios.some(u => u.usuario_id === usuario?.id && u.en_vuelo)
+  ) ?? false
+
+  useEffect(() => {
+    if (yoVolandoGlobal) {
+      document.body.style.backgroundColor = '#dc2626'
+    } else {
+      document.body.style.backgroundColor = ''
+    }
+    return () => { document.body.style.backgroundColor = '' }
+  }, [yoVolandoGlobal])
 
   if (!usuario) return null
 
@@ -338,6 +375,51 @@ export default function ClubDetail() {
             {tab === 'resumen' && (
               <div className="tab-content">
                 
+                {/* Canal de Vuelo Widget */}
+                {canalPanel && (() => {
+                  const miCanal = canalPanel.canales.find(c => c.usuarios.some(u => u.usuario_id === usuario?.id))
+                  const otroVolando = miCanal?.en_vuelo && !miCanal.usuarios.some(u => u.usuario_id === usuario?.id && u.en_vuelo)
+                  const yoVolando = miCanal?.usuarios.some(u => u.usuario_id === usuario?.id && u.en_vuelo)
+
+                  return (
+                    <div
+                      className="canal-vuelo-widget"
+                      style={{ background: otroVolando ? '#fef2f2' : undefined, borderColor: otroVolando ? '#dc2626' : undefined }}
+                      onClick={() => navigate(`/clubes/${clubId}/canales`)}
+                    >
+                      <div className="canal-widget-info">
+                        <h3>📡 Canal de Vuelo</h3>
+                        {miCanal ? (
+                          <p className="canal-widget-estado">
+                            Estás en <strong>Canal {miCanal.canal_numero}</strong>
+                            {miCanal.usuarios.length > 1 && ` · ${miCanal.usuarios.length} pilotos`}
+                          </p>
+                        ) : (
+                          <p className="canal-widget-estado canal-widget-vacio">No estás en ningún canal</p>
+                        )}
+                        {otroVolando && (
+                          <p className="canal-widget-alerta">🔴 {miCanal?.piloto_volando} está volando — NO volar</p>
+                        )}
+                      </div>
+                      {miCanal && (
+                        <button
+                          className={`btn-canal-vuelo-widget ${yoVolando ? 'volando' : ''} ${otroVolando ? 'bloqueado' : ''}`}
+                          disabled={otroVolando || false}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (!clubId || !miCanal) return
+                            CanalesService.toggleVuelo(parseInt(clubId), miCanal.canal_numero)
+                              .then(setCanalPanel)
+                              .catch(() => {})
+                          }}
+                        >
+                          {yoVolando ? '🛬 Aterrizar' : '✈️ A volar'}
+                        </button>
+                      )}
+                    </div>
+                  )
+                })()}
+
                 {/* Facility Password Section */}
                 {instalacionPass && (
                   <div className="facility-access-section">
@@ -501,7 +583,7 @@ export default function ClubDetail() {
 
                 {canEdit && (
                 <div style={{ marginTop: '2rem' }}>
-                  <OpenClawChat clubId={club.id} clubName={club.nombre} />
+                  <ChatPanel clubId={club.id} clubName={club.nombre} />
                 </div>
                 )}
               </div>

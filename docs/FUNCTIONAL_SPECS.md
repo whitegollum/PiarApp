@@ -379,30 +379,41 @@ Este documento describe detalladamente las funcionalidades del sistema
 
 ---
 
-## 1.5 Asistente Virtual (OpenClaw)
+## 1.5 Asistente Virtual (Agente Nativo — Piarabot)
 
 ### Chat con el Asistente
 
-**Descripción:** Los usuarios pueden interactuar con un asistente virtual inteligente para resolver dudas sobre gestión, normativas o uso de la plataforma.
+**Descripción:** Los usuarios pueden interactuar con un asistente virtual inteligente (Piarabot) para resolver dudas sobre gestión, normativas o uso de la plataforma. El agente está integrado directamente en el backend, sin dependencias externas.
 
 #### Funcionalidades
 
-- **Chat Interactivo:** Ventana de chat flotante o dedicada disponible en la interfaz.
-- **Respuestas Contextuales:** El asistente tiene contexto sobre el club y el usuario (versión futura).
-- **Streaming de Respuesta:** Efecto de escritura en tiempo real para una mejor experiencia de usuario.
-- **Historial de Sesión:** Mantiene el contexto de la conversación durante la sesión actual.
+- **Chat Interactivo:** Ventana de chat disponible en la interfaz del club.
+- **Sesiones Persistentes:** Historial completo de conversaciones almacenado en BD, aislado por usuario y club.
+- **Tool Use:** El agente puede consultar datos del sistema (clubes, miembros, eventos) usando tools internas.
+- **Personalidad Configurable:** El superadmin puede editar los archivos de personalidad (identity, soul, tools, agents) vía API.
+- **Multi-Provider:** Soporte para OpenAI API Key, OpenAI OAuth y GitHub Copilot (extensible).
 
 #### Integración
 
-- Conexión vía WebSocket para baja latencia.
-- Autenticación transparente usando las credenciales del usuario actual.
-- Indicadores de estado: Conectado, Escribiendo, Desconectado.
+- Comunicación vía HTTP REST (`POST /api/chat/send`).
+- Autenticación JWT estándar del usuario.
+- Sesiones aisladas por `user_id` + `club_id` con ownership checks.
+- Configuración de modelo/provider gestionable por superadmin (`/api/admin/agent/config`).
 
 #### Tipos de Consultas Soportadas
 
 - Ayuda sobre el uso de la aplicación.
-- Información general sobre aeromodelismo (vía conocimiento base del modelo).
-- Estado del sistema (operatividad del bot).
+- Consulta de clubes, miembros y eventos del usuario (via tools).
+- Información general sobre aeromodelismo.
+- Consultas específicas del contexto del club activo.
+
+#### Administración (Superadmin)
+
+- Cambiar provider LLM (OpenAI ApiKey, OAuth, GitHub Copilot).
+- Seleccionar modelo (gpt-4o, gpt-4o-mini, gpt-4.1, etc.).
+- Ajustar max_tokens y temperatura.
+- Habilitar/deshabilitar el agente globalmente.
+- Editar archivos de personalidad (identity.md, soul.md, tools.md, agents.md).
 - Comentarios en noticias
 - Notificaciones de nuevas noticias
 
@@ -904,7 +915,7 @@ Sistema de visualización de cámaras RTSP/HLS en tiempo real integrado en la p�
 
 **Ubicación:**
 - Pestaña "Resumen" de la página principal del club
-- Posicionado al final, antes del chat OpenClaw
+- Posicionado al final, antes del chat del asistente
 - Visible solo si hay URL configurada
 
 **Características del Reproductor:**

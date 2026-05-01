@@ -19,6 +19,7 @@ if [ ! -f "$SETUP_FLAG" ] || [ ! -f "$CURRENT_VERSION_FLAG" ]; then
   
   # Configure npm to use persistent directory
   echo "Configuring npm prefix to $NPM_PREFIX..."
+  npm install -g npm@11.13.0
   mkdir -p "$NPM_PREFIX"
   npm config set prefix "$NPM_PREFIX"
   npm config set yes true
@@ -28,8 +29,10 @@ if [ ! -f "$SETUP_FLAG" ] || [ ! -f "$CURRENT_VERSION_FLAG" ]; then
   # Install OpenClaw globally via npm (pinned version)
   echo "Installing OpenClaw@${OPENCLAW_VERSION} via npm..."
   npm i -g "openclaw@${OPENCLAW_VERSION}" --yes --no-fund --no-audit
-  
   echo "✓ OpenClaw installed successfully"
+
+  echo "Installing Gemini Cli via npm... (required for Gemini provider)"
+  npm install -g @google/gemini-cli
   
   # Verify installation
   echo "Verifying openclaw binary..."

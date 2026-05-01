@@ -61,18 +61,25 @@
 - **Testing**: Pytest para tests unitarios e integración
 - **API Documentation**: Swagger/OpenAPI (automático en FastAPI)
 
-### Integración IA (OpenClaw)
+### Integración IA (Agente Nativo)
 
-- **Protocolo**: WebSocket (Protocolo nativo de OpenClaw/Gateway).
-- **Cliente**: `websockets` (Python async) para el backend proxy.
-- **Arquitectura**:
-  - **Frontend**: Conecta al backend de PiarApp vía HTTP (REST) para enviar mensajes (`POST /api/chat/openclaw`).
-  - **Backend**: Actúa como proxy. Recibe el mensaje REST, mantiene una conexión WebSocket persistente o bajo demanda con el servidor OpenClaw, y devuelve la respuesta.
-  - **Autenticación**: El backend se autentica contra OpenClaw usando `OPENCLAW_API_KEY` o `OPENCLAW_PASSWORD` (modo Gateway).
+- **Arquitectura**: Módulo `app/agent/` integrado directamente en el backend FastAPI. Sin gateway externo, sin WebSocket.
+- **LLM Provider**: OpenAI API (async via `openai` SDK). Extensible a OAuth OpenAI y GitHub Copilot.
+- **Módulo**: `backend/app/agent/`
+  - `router.py`: Endpoints de chat (`/api/chat/send`, `/api/chat/sessions`, etc.)
+  - `admin_router.py`: Endpoints de administración (`/api/admin/agent/config`, `/api/admin/agent/persona/{file}`)
+  - `service.py`: Orquestación del turno (tool-use loop, max 5 iteraciones)
+  - `providers/`: Abstracción de proveedores LLM (OpenAI ApiKey, OAuth, GitHub Copilot)
+  - `tools.py`: Tools disponibles para el agente (list_clubs, list_club_members, list_events)
+  - `storage.py`: Persistencia de sesiones y mensajes (SQLAlchemy sync)
+  - `persona_loader.py`: Sistema de personalidad configurable via archivos markdown
+  - `models.py`: Tablas `chat_sessions`, `chat_messages`, `agent_config`
+  - `schemas.py`: Modelos Pydantic v2
+- **Personalidad**: 4 archivos markdown en `data/agent/` (identity.md, soul.md, tools.md, agents.md) editables por superadmin vía API.
+- **Sesiones**: Aisladas por `user_id` + `club_id`. Ownership checks en todas las operaciones.
 - **Configuración**:
-  - `OPENCLAW_API_URL`: URL base del servicio de chat.
-  - `OPENCLAW_AUTH_MODE`: `password` o `api_key`.
-  - `OPENCLAW_PASSWORD` / `OPENCLAW_API_KEY`: Credenciales.
+  - `OPENAI_API_KEY`: Clave de API del proveedor LLM.
+  - `agent_data_dir`: Directorio de datos del agente (default: `./data/agent`).
 
 ### Implementaciones relevantes (fases previas)
 
@@ -197,6 +204,17 @@ Protegidas (con login):
 - **GET /api/admin/config/email**: Obtener configuracion SMTP.
 - **PUT /api/admin/config/email**: Actualizar configuracion SMTP.
 - **POST /api/admin/config/test-email**: Enviar email de prueba.
+- **GET /api/admin/agent/config**: Obtener configuración del agente IA.
+- **PUT /api/admin/agent/config**: Actualizar configuración (provider, modelo, temperatura, etc.).
+- **GET /api/admin/agent/providers/{provider}/models**: Listar modelos disponibles del provider.
+- **GET /api/admin/agent/persona/{filename}**: Leer archivo de personalidad del agente.
+- **PUT /api/admin/agent/persona/{filename}**: Actualizar archivo de personalidad.
+
+### Chat / Agente IA (`app/agent/router.py`)
+- **POST /api/chat/send**: Enviar mensaje al agente. Body: `{message, session_id?, club_id?}`. Retorna respuesta + mensajes nuevos.
+- **GET /api/chat/sessions**: Listar sesiones del usuario (filtrable por `club_id`).
+- **GET /api/chat/sessions/{session_id}/messages**: Obtener mensajes de una sesión (ownership check).
+- **DELETE /api/chat/sessions/{session_id}**: Archivar sesión.
 
 ### Noticias y Eventos
 - **Noticias (`app/routes/noticias.py`)**: CRUD completo. Admin crea/edita/borra. Miembros leen.

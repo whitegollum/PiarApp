@@ -14,13 +14,18 @@ La aplicación se compone de dos servicios principales orquestados:
 1.  **Backend (`piar_backend`)**:
     -   Basado en `python:3.11-slim`.
     -   Ejecuta Uvicorn en puerto 8000.
-    -   Persistencia de datos en volumen SQLite (montado).
+    -   Persistencia de datos en volumen SQLite (montado en `/app/data`).
+    -   Incluye agente IA nativo (módulo `app/agent/`).
+    -   Red: `piar-network`.
 
 2.  **Frontend (`piar_frontend`)**:
     -   Multi-stage build (`node:18-alpine` -> `nginx:alpine`).
     -   Sirve la aplicación React compilada (`dist`).
     -   Actúa como Reverse Proxy para la API (`/api/*` -> `backend:8000`).
-    -   Expone el puerto 3000 en el host (mapeado al 80 interno).
+    -   Expone el puerto 8587 en el host (mapeado al 80 interno).
+    -   Red: `piar-network`.
+
+> **Nota:** El servicio OpenClaw ha sido eliminado. El agente IA está integrado directamente en el backend.
 
 ## Ejecución Local con Docker Compose
 
@@ -39,6 +44,8 @@ En `docker-compose.yml` encontrarás un apartado `environment:` para cada servic
   - `GOOGLE_REDIRECT_URI` debe coincidir con la URL registrada en la consola de Google (por ejemplo `http://localhost:3000/oauth-callback`).
 - `VITE_GOOGLE_CLIENT_ID` / `VITE_API_URL` (frontend build args)
   - Ajustes de compilación que establece Vite. En el `docker-compose.yml` se declaran bajo `build.args:` para que el `Dockerfile` pueda copiar el valor a un `.env.production` interno.
+- `OPENAI_API_KEY` (backend)
+  - Clave de API de OpenAI para el agente IA nativo. Sin esta variable el agente no podrá responder (pero el backend arranca igual).
 
 > **Nota:** Si prefieres no hardcodear valores en el YAML puedes utilizar un fichero `.env` en la raíz del proyecto y referenciarlo con `env_file:` en Compose. De ese modo las mismas variables (por ejemplo `SECRET_KEY`, `GOOGLE_CLIENT_ID`, etc.) se heredan automáticamente a los contenedores.
 

@@ -93,10 +93,14 @@ Este documento rastrea el progreso histórico y futuro del desarrollo de la plat
     - [x] Backend: endpoints para configurar y probar SMTP.
     - [x] Frontend: panel de configuracion accesible solo a superadmins (incluye URL del frontend).
 
-- [x] **Integración OpenClaw (Chatbot):**
-    - [x] Backend: conexión WebSocket y gestión de sesiones (`club_id` + `user_id`).
+- [x] **Integración Agente IA Nativo (reemplaza OpenClaw):**
+    - [x] Backend: módulo `app/agent/` con providers, tools, storage, service.
+    - [x] Backend: tablas `chat_sessions`, `chat_messages`, `agent_config`.
+    - [x] Backend: endpoints `/api/chat/send`, `/api/chat/sessions`, etc.
+    - [x] Backend: admin endpoints `/api/admin/agent/config`, `/api/admin/agent/persona/{file}`.
+    - [x] Backend: personalidad configurable via markdown (identity, soul, tools, agents).
+    - [x] Backend: tool-use loop (list_clubs, list_club_members, list_events).
     - [x] Frontend: Widget de chat flotante con historial y formateo Markdown.
-    - [x] Renderizado de mensajes mejorado (limpieza de tags internos, estilo bot).
 
 ### Phase 8.2: Tienda/Productos + Mejoras de Validación (Mar 2026)
 **Objetivo:** Implementar sistema de productos de afiliación, mejorar contenido reciente y validación de formularios.

@@ -9,7 +9,7 @@ import { TareasService, RankingService, TareaComunitaria, RankingEntry } from '.
 import { Noticia, Evento, ProductoAfiliacion } from '../types/models'
 import { ProductoService } from '../services/productoService'
 import { useClubRole } from '../hooks/useClubRole'
-import { CanalesService, CanalesPanel, CanalEstado } from '../services/canalesService'
+import { CanalesService, CanalesPanel } from '../services/canalesService'
 import Navbar from '../components/Navbar'
 import NewsList from '../components/NewsList'
 import EventList from '../components/EventList'

@@ -83,7 +83,6 @@ export default function ClubCanales() {
   const handleToggleVuelo = async (canalNumero: number) => {
     if (!clubId) return
     try {
-      const panelAntes = panel
       const data = await CanalesService.toggleVuelo(parseInt(clubId), canalNumero)
       setPanel(data)
 
@@ -149,7 +148,6 @@ export default function ClubCanales() {
                   canal={canal}
                   estoyEnCanal={estoyEnCanal(canal)}
                   estoyVolando={estoyVolando(canal)}
-                  usuarioId={usuario?.id}
                   onOcupar={() => handleOcupar(canal.canal_numero)}
                   onLiberar={() => handleLiberar(canal.canal_numero)}
                   onToggleVuelo={() => handleToggleVuelo(canal.canal_numero)}
@@ -167,15 +165,13 @@ interface CanalCardProps {
   canal: CanalEstado
   estoyEnCanal: boolean
   estoyVolando: boolean
-  usuarioId?: number
   onOcupar: () => void
   onLiberar: () => void
   onToggleVuelo: () => void
 }
 
-function CanalCard({ canal, estoyEnCanal, estoyVolando, usuarioId, onOcupar, onLiberar, onToggleVuelo }: CanalCardProps) {
+function CanalCard({ canal, estoyEnCanal, estoyVolando, onOcupar, onLiberar, onToggleVuelo }: CanalCardProps) {
   const tieneMultiplesUsuarios = canal.usuarios.length >= 2
-  const puedeVolar = estoyEnCanal && tieneMultiplesUsuarios && (!canal.en_vuelo || estoyVolando)
 
   return (
     <div className={`canal-card ${canal.en_vuelo ? 'canal-en-vuelo' : ''} ${estoyEnCanal ? 'canal-activo' : ''}`}>

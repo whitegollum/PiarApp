@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { ProductoService } from '../services/productoService'
 import { ProductoAfiliacion } from '../types/models'
 import { useClubRole } from '../hooks/useClubRole'
+import { affiliateUrl } from '../utils/affiliate'
 import APIService from '../services/api'
 import Navbar from '../components/Navbar'
 import '../styles/Productos.css'
@@ -63,12 +64,12 @@ export default function ProductosCatalogo() {
     try {
       // Registrar click para estadísticas
       await ProductoService.registrarClick(parseInt(clubId!), producto.id)
-      // Abrir enlace en nueva pestaña
-      window.open(producto.url_afiliacion, '_blank', 'noopener,noreferrer')
+      // Abrir enlace en nueva pestaña (con redirect de afiliación para AliExpress)
+      window.open(affiliateUrl(producto.url_afiliacion), '_blank', 'noopener,noreferrer')
     } catch (err) {
       console.error('Error al registrar click:', err)
       // Abrir enlace aunque falle el registro
-      window.open(producto.url_afiliacion, '_blank', 'noopener,noreferrer')
+      window.open(affiliateUrl(producto.url_afiliacion), '_blank', 'noopener,noreferrer')
     }
   }
 

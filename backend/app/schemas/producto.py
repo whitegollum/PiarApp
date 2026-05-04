@@ -1,6 +1,12 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional
 from datetime import datetime
+
+from app.utils.aliexpress import (
+    is_aliexpress_url,
+    is_third_party_affiliate,
+    normalize_aliexpress_url,
+)
 
 
 class ProductoAfiliacionBase(BaseModel):
@@ -19,7 +25,21 @@ class ProductoAfiliacionBase(BaseModel):
 
 class ProductoAfiliacionCreate(ProductoAfiliacionBase):
     """Schema para crear un producto de afiliación"""
-    pass
+
+    @field_validator("url_afiliacion")
+    @classmethod
+    def validar_url(cls, v: str, info) -> str:
+        proveedor = (info.data.get("proveedor") or "").lower()
+        if "aliexpress" in proveedor:
+            if is_third_party_affiliate(v):
+                raise ValueError(
+                    "No se permiten links de afiliación de terceros "
+                    "(s.click.aliexpress.com). Pega el link directo del producto."
+                )
+            if not is_aliexpress_url(v):
+                raise ValueError("La URL debe ser de aliexpress.com")
+            return normalize_aliexpress_url(v)
+        return v
 
 
 class ProductoAfiliacionUpdate(BaseModel):
@@ -35,6 +55,23 @@ class ProductoAfiliacionUpdate(BaseModel):
     activo: Optional[bool] = None
     orden: Optional[int] = None
     destacado: Optional[bool] = None
+
+    @field_validator("url_afiliacion")
+    @classmethod
+    def validar_url(cls, v: Optional[str], info) -> Optional[str]:
+        if v is None:
+            return v
+        proveedor = (info.data.get("proveedor") or "").lower()
+        if "aliexpress" in proveedor:
+            if is_third_party_affiliate(v):
+                raise ValueError(
+                    "No se permiten links de afiliación de terceros "
+                    "(s.click.aliexpress.com). Pega el link directo del producto."
+                )
+            if not is_aliexpress_url(v):
+                raise ValueError("La URL debe ser de aliexpress.com")
+            return normalize_aliexpress_url(v)
+        return v
 
 
 class ProductoAfiliacionResponse(ProductoAfiliacionBase):

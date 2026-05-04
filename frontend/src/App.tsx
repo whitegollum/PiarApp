@@ -33,6 +33,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminAlertas from './pages/admin/AdminAlertas'
 import AdminDatabase from './pages/admin/AdminDatabase'
 import AdminAgentConfig from './pages/admin/AdminAgentConfig'
+import AdminAfiliacion from './pages/admin/AdminAfiliacion'
 import ClubDocumentacion from './pages/ClubDocumentacion'
 import ProductosCatalogo from './pages/ProductosCatalogo'
 import ProductosAdmin from './pages/ProductosAdmin'
@@ -86,6 +87,7 @@ function App() {
           <Route path="/admin/alertas" element={<ProtectedRoute><AdminAlertas /></ProtectedRoute>} />
           <Route path="/admin/database" element={<ProtectedRoute><AdminDatabase /></ProtectedRoute>} />
           <Route path="/admin/agent" element={<ProtectedRoute><AdminAgentConfig /></ProtectedRoute>} />
+          <Route path="/admin/afiliacion" element={<ProtectedRoute><AdminAfiliacion /></ProtectedRoute>} />
 
           {/* Rutas públicas */}
           <Route path="/auth/setup-inicial" element={<FirstAccess />} />

@@ -915,4 +915,173 @@ async def get_scheduler_status(
         )
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Configuración de Afiliación
+# ─────────────────────────────────────────────────────────────────────────────
+
+def ensure_afiliacion_columns(db: Session) -> None:
+    """Asegurar que existen las columnas de configuración de afiliación"""
+    if db.bind and db.bind.dialect.name == "sqlite":
+        columns = db.execute(text("PRAGMA table_info(system_config)"))
+        column_names = {row[1] for row in columns}
+        if "aliexpress_banner_url" not in column_names:
+            db.execute(text("ALTER TABLE system_config ADD COLUMN aliexpress_banner_url VARCHAR(500)"))
+        if "aliexpress_redirect_enabled" not in column_names:
+            db.execute(text("ALTER TABLE system_config ADD COLUMN aliexpress_redirect_enabled BOOLEAN DEFAULT 1"))
+        db.commit()
+
+
+@router.get("/config/afiliacion")
+async def get_afiliacion_config(
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obtener configuración de afiliación — solo superadmin"""
+    if not current_user.es_superadmin:
+        raise HTTPException(status_code=403, detail="Requiere privilegios de superadministrador")
+
+    ensure_afiliacion_columns(db)
+    config = db.query(SystemConfig).first()
+
+    banner_url = settings.aliexpress_banner_url
+    redirect_enabled = settings.aliexpress_redirect_enabled
+
+    if config:
+        if config.aliexpress_banner_url:
+            banner_url = config.aliexpress_banner_url
+        if config.aliexpress_redirect_enabled is not None:
+            redirect_enabled = config.aliexpress_redirect_enabled
+
+    return {
+        "aliexpress_banner_url": banner_url,
+        "aliexpress_redirect_enabled": redirect_enabled,
+    }
+
+
+@router.put("/config/afiliacion")
+async def update_afiliacion_config(
+    data: dict,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Actualizar configuración de afiliación — solo superadmin"""
+    if not current_user.es_superadmin:
+        raise HTTPException(status_code=403, detail="Requiere privilegios de superadministrador")
+
+    ensure_afiliacion_columns(db)
+    config = db.query(SystemConfig).first()
+    if not config:
+        config = SystemConfig()
+        db.add(config)
+
+    if "aliexpress_banner_url" in data:
+        config.aliexpress_banner_url = data["aliexpress_banner_url"]
+        # Actualizar también en runtime
+        settings.aliexpress_banner_url = data["aliexpress_banner_url"]
+
+    if "aliexpress_redirect_enabled" in data:
+        config.aliexpress_redirect_enabled = bool(data["aliexpress_redirect_enabled"])
+        settings.aliexpress_redirect_enabled = bool(data["aliexpress_redirect_enabled"])
+
+    db.commit()
+    db.refresh(config)
+
+    return {
+        "aliexpress_banner_url": config.aliexpress_banner_url or settings.aliexpress_banner_url,
+        "aliexpress_redirect_enabled": config.aliexpress_redirect_enabled if config.aliexpress_redirect_enabled is not None else settings.aliexpress_redirect_enabled,
+    }
+
+
+@router.get("/config/afiliacion/stats")
+async def get_afiliacion_stats(
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obtener estadísticas de productos de afiliación — solo superadmin"""
+    if not current_user.es_superadmin:
+        raise HTTPException(status_code=403, detail="Requiere privilegios de superadministrador")
+
+    from sqlalchemy import func
+
+    # Total clicks y productos
+    total_productos = db.query(func.count(ProductoAfiliacion.id)).scalar() or 0
+    total_clicks = db.query(func.sum(ProductoAfiliacion.clicks)).scalar() or 0
+    productos_activos = db.query(func.count(ProductoAfiliacion.id)).filter(
+        ProductoAfiliacion.activo == True
+    ).scalar() or 0
+
+    # Top productos por clicks
+    top_productos = db.query(
+        ProductoAfiliacion.id,
+        ProductoAfiliacion.nombre,
+        ProductoAfiliacion.proveedor,
+        ProductoAfiliacion.url_afiliacion,
+        ProductoAfiliacion.clicks,
+        ProductoAfiliacion.club_id,
+        Club.nombre.label("club_nombre")
+    ).join(Club, Club.id == ProductoAfiliacion.club_id).filter(
+        ProductoAfiliacion.clicks > 0
+    ).order_by(
+        ProductoAfiliacion.clicks.desc()
+    ).limit(20).all()
+
+    # Stats por club
+    stats_por_club = db.query(
+        Club.id,
+        Club.nombre,
+        func.count(ProductoAfiliacion.id).label("total_productos"),
+        func.sum(ProductoAfiliacion.clicks).label("total_clicks")
+    ).join(ProductoAfiliacion, ProductoAfiliacion.club_id == Club.id).group_by(
+        Club.id, Club.nombre
+    ).order_by(func.sum(ProductoAfiliacion.clicks).desc()).all()
+
+    # Stats por proveedor
+    stats_por_proveedor = db.query(
+        ProductoAfiliacion.proveedor,
+        func.count(ProductoAfiliacion.id).label("total_productos"),
+        func.sum(ProductoAfiliacion.clicks).label("total_clicks")
+    ).filter(
+        ProductoAfiliacion.proveedor != None
+    ).group_by(ProductoAfiliacion.proveedor).order_by(
+        func.sum(ProductoAfiliacion.clicks).desc()
+    ).all()
+
+    return {
+        "resumen": {
+            "total_productos": total_productos,
+            "productos_activos": productos_activos,
+            "total_clicks": total_clicks,
+        },
+        "top_productos": [
+            {
+                "id": p.id,
+                "nombre": p.nombre,
+                "proveedor": p.proveedor,
+                "url_afiliacion": p.url_afiliacion,
+                "clicks": p.clicks,
+                "club_id": p.club_id,
+                "club_nombre": p.club_nombre,
+            }
+            for p in top_productos
+        ],
+        "stats_por_club": [
+            {
+                "club_id": s.id,
+                "club_nombre": s.nombre,
+                "total_productos": s.total_productos,
+                "total_clicks": s.total_clicks or 0,
+            }
+            for s in stats_por_club
+        ],
+        "stats_por_proveedor": [
+            {
+                "proveedor": s.proveedor or "Sin proveedor",
+                "total_productos": s.total_productos,
+                "total_clicks": s.total_clicks or 0,
+            }
+            for s in stats_por_proveedor
+        ],
+    }
+
+
 

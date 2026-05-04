@@ -65,6 +65,10 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     agent_data_dir: str = "./data/agent"
     
+    # AliExpress Affiliation
+    aliexpress_banner_url: str = "https://s.click.aliexpress.com/e/_oFVB2sT?bz=300*250"
+    aliexpress_redirect_enabled: bool = True
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=False,

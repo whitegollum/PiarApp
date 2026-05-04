@@ -8,6 +8,7 @@ import { alertaService } from '../services/alertaService'
 import { TareasService, RankingService, TareaComunitaria, RankingEntry } from '../services/tareasComunitariasService'
 import { Noticia, Evento, ProductoAfiliacion } from '../types/models'
 import { ProductoService } from '../services/productoService'
+import { affiliateUrl } from '../utils/affiliate'
 import { useClubRole } from '../hooks/useClubRole'
 import { CanalesService, CanalesPanel } from '../services/canalesService'
 import Navbar from '../components/Navbar'
@@ -708,7 +709,7 @@ export default function ClubDetail() {
                               className="producto-tab-card producto-tab-card-destacado"
                               onClick={() => {
                                 ProductoService.registrarClick(parseInt(clubId!), producto.id).catch(() => {})
-                                window.open(producto.url_afiliacion, '_blank', 'noopener,noreferrer')
+                                window.open(affiliateUrl(producto.url_afiliacion), '_blank', 'noopener,noreferrer')
                               }}
                             >
                               {producto.imagen_url && (
@@ -754,7 +755,7 @@ export default function ClubDetail() {
                                 className="producto-tab-card"
                                 onClick={() => {
                                   ProductoService.registrarClick(parseInt(clubId!), producto.id).catch(() => {})
-                                  window.open(producto.url_afiliacion, '_blank', 'noopener,noreferrer')
+                                  window.open(affiliateUrl(producto.url_afiliacion), '_blank', 'noopener,noreferrer')
                                 }}
                               >
                                 {producto.imagen_url && (

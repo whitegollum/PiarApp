@@ -24,3 +24,7 @@ class SystemConfig(Base):
     backup_frecuencia_dias = Column(Integer, default=7)  # Cada cuántos días hacer backup
     backup_max_archivos = Column(Integer, default=10)     # Máximo de backups a conservar
     backup_ultimo_ejecutado = Column(DateTime, nullable=True)  # Última vez que se ejecutó backup automático
+
+    # Configuración de afiliación AliExpress
+    aliexpress_banner_url = Column(String(500), nullable=True)
+    aliexpress_redirect_enabled = Column(Boolean, default=True)

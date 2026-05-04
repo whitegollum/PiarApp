@@ -56,6 +56,12 @@ const AdminDashboard = () => {
                             <h3 className="admin-card-title">Agente IA</h3>
                             <p className="admin-card-text">Configurar proveedor, modelo y personalidad del asistente.</p>
                         </Link>
+
+                        <Link to="/admin/afiliacion" className="admin-card">
+                            <div className="admin-card-icon">🔗</div>
+                            <h3 className="admin-card-title">Afiliaciones</h3>
+                            <p className="admin-card-text">Configuración y estadísticas del sistema de afiliación de productos.</p>
+                        </Link>
                     </div>
                 </div>
             </main>

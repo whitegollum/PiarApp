@@ -73,7 +73,7 @@ app.add_middleware(
 )
 
 # Importar rutas
-from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, dashboard, alertas, admin, tareas_comunitarias, canales
+from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, dashboard, alertas, admin, tareas_comunitarias, canales, afiliacion
 from app.agent.router import router as agent_chat_router
 from app.agent.admin_router import router as agent_admin_router
 
@@ -94,6 +94,7 @@ app.include_router(dashboard.router, prefix="/api", tags=["Dashboard"])
 app.include_router(alertas.router, prefix="/api", tags=["Alertas"])
 app.include_router(tareas_comunitarias.router, prefix="/api/clubes", tags=["Tareas Comunitarias"])
 app.include_router(canales.router, prefix="/api/clubes", tags=["Canales"])
+app.include_router(afiliacion.router)  # SIN prefix /api — sirve HTML público
 
 
 @app.get("/")

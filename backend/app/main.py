@@ -44,6 +44,16 @@ def _apply_pending_column_migrations():
             except Exception:
                 pass
 
+        # aliexpress_banner_url / aliexpress_redirect_enabled en system_config
+        if "system_config" in inspector.get_table_names():
+            existing_cols = {c["name"] for c in inspector.get_columns("system_config")}
+            if "aliexpress_banner_url" not in existing_cols:
+                conn.execute(text("ALTER TABLE system_config ADD COLUMN aliexpress_banner_url VARCHAR(500) DEFAULT NULL"))
+                logger.info("Migración aplicada: system_config.aliexpress_banner_url")
+            if "aliexpress_redirect_enabled" not in existing_cols:
+                conn.execute(text("ALTER TABLE system_config ADD COLUMN aliexpress_redirect_enabled BOOLEAN DEFAULT 1"))
+                logger.info("Migración aplicada: system_config.aliexpress_redirect_enabled")
+
 try:
     _apply_pending_column_migrations()
 except Exception as _mig_err:

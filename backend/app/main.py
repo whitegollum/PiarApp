@@ -23,6 +23,32 @@ from app.agent import models as agent_models  # noqa: F401
 # Crear tablas en la base de datos
 Base.metadata.create_all(bind=engine)
 
+# Aplicar migraciones de columnas faltantes (safe: no falla si ya existen)
+def _apply_pending_column_migrations():
+    """Añade columnas nuevas a tablas existentes si aún no existen."""
+    from sqlalchemy import text, inspect as sa_inspect
+    inspector = sa_inspect(engine)
+    with engine.begin() as conn:
+        # reset_token / reset_token_expires en usuarios (2026-05-04)
+        if "usuarios" in inspector.get_table_names():
+            existing_cols = {c["name"] for c in inspector.get_columns("usuarios")}
+            if "reset_token" not in existing_cols:
+                conn.execute(text("ALTER TABLE usuarios ADD COLUMN reset_token VARCHAR(255) DEFAULT NULL"))
+                logger.info("Migración aplicada: usuarios.reset_token")
+            if "reset_token_expires" not in existing_cols:
+                conn.execute(text("ALTER TABLE usuarios ADD COLUMN reset_token_expires DATETIME DEFAULT NULL"))
+                logger.info("Migración aplicada: usuarios.reset_token_expires")
+            # Índice: SQLite no soporta IF NOT EXISTS en CREATE INDEX, ignorar error si ya existe
+            try:
+                conn.execute(text("CREATE INDEX idx_usuarios_reset_token ON usuarios(reset_token)"))
+            except Exception:
+                pass
+
+try:
+    _apply_pending_column_migrations()
+except Exception as _mig_err:
+    logger.error(f"Error aplicando migraciones de columnas: {_mig_err}")
+
 # Inicializar datos necesarios
 init_db()
 

@@ -3,8 +3,10 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import os
+import secrets
+import logging
 from pathlib import Path
 
 from app.config import settings
@@ -15,11 +17,13 @@ from app.models.club import Club
 from app.schemas.auth import (
     LoginRequest, UsuarioCreate, UsuarioCreateDesdeInvitacion,
     TokenResponse, UsuarioResponse, GoogleLoginRequest, GoogleOAuthCodeRequest,
-    InvitacionResponse, RefreshTokenRequest, UsuarioUpdate, InvitacionPublicaResponse
+    InvitacionResponse, RefreshTokenRequest, UsuarioUpdate, InvitacionPublicaResponse,
+    SolicitarResetRequest, ResetContrasenaRequest, ValidarResetTokenResponse
 )
 from app.services.auth_service import AuthService
 from app.services.google_oauth_service import GoogleOAuthService
 from app.services.invitacion_service import InvitacionService
+from app.services.email_service import EmailService
 from app.utils.security import AuthUtils
 from app.utils.security import AuthUtils
 
@@ -427,6 +431,133 @@ async def cambiar_contraseña(
     db.commit()
     
     return {"message": "Contraseña actualizada exitosamente"}
+
+
+# ==================== RESET DE CONTRASEÑA ====================
+
+logger = logging.getLogger(__name__)
+
+
+def _mask_email(email: str) -> str:
+    """Oculta parcialmente un email: u***@gmail.com"""
+    parts = email.split("@")
+    if len(parts) != 2:
+        return "***"
+    local = parts[0]
+    if len(local) <= 2:
+        masked = local[0] + "***"
+    else:
+        masked = local[0] + "***" + local[-1]
+    return f"{masked}@{parts[1]}"
+
+
+@router.post("/solicitar-reset-contrasena", response_model=dict)
+async def solicitar_reset_contrasena(
+    request: SolicitarResetRequest,
+    db: Session = Depends(get_db)
+):
+    """Solicitar email de reset de contraseña (público)"""
+    
+    mensaje_generico = "Si el email está registrado, recibirás instrucciones para restablecer tu contraseña."
+    
+    usuario = db.query(Usuario).filter(
+        Usuario.email == request.email.lower()
+    ).first()
+    
+    # No revelar si el email existe
+    if not usuario:
+        logger.info(f"Reset solicitado para email no registrado")
+        return {"message": mensaje_generico}
+    
+    # Usuario solo Google (sin contraseña local)
+    if not usuario.contraseña_hash:
+        logger.info(f"Reset solicitado para usuario Google-only (id={usuario.id})")
+        return {"message": mensaje_generico}
+    
+    # Invalidar tokens previos (solo 1 activo a la vez)
+    usuario.reset_token = secrets.token_urlsafe(32)
+    usuario.reset_token_expires = datetime.utcnow() + timedelta(
+        minutes=settings.password_reset_token_expire_minutes
+    )
+    db.commit()
+    
+    # Enviar email
+    try:
+        await EmailService.enviar_reset_contrasena(usuario.email, usuario.reset_token)
+        logger.info(f"Email de reset enviado para usuario id={usuario.id}")
+    except Exception as e:
+        logger.error(f"Error enviando email de reset: {e}")
+    
+    return {"message": mensaje_generico}
+
+
+@router.get("/validar-reset-token", response_model=ValidarResetTokenResponse)
+async def validar_reset_token(
+    token: str,
+    db: Session = Depends(get_db)
+):
+    """Validar si un token de reset es válido (público)"""
+    
+    usuario = db.query(Usuario).filter(
+        Usuario.reset_token == token
+    ).first()
+    
+    if not usuario or not usuario.reset_token_expires:
+        return ValidarResetTokenResponse(valid=False)
+    
+    # Comparar con naive UTC (SQLite almacena naive)
+    expires = usuario.reset_token_expires
+    now = datetime.utcnow()
+    if expires < now:
+        return ValidarResetTokenResponse(valid=False)
+    
+    return ValidarResetTokenResponse(
+        valid=True,
+        email_hint=_mask_email(usuario.email)
+    )
+
+
+@router.post("/reset-contrasena", response_model=dict)
+async def reset_contrasena(
+    request: ResetContrasenaRequest,
+    db: Session = Depends(get_db)
+):
+    """Restablecer contraseña con token válido (público)"""
+    
+    usuario = db.query(Usuario).filter(
+        Usuario.reset_token == request.token
+    ).first()
+    
+    if not usuario or not usuario.reset_token_expires:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token inválido o expirado"
+        )
+    
+    # Comparar con naive UTC (SQLite almacena naive)
+    expires = usuario.reset_token_expires
+    now = datetime.utcnow()
+    if expires < now:
+        # Limpiar token expirado
+        usuario.reset_token = None
+        usuario.reset_token_expires = None
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token inválido o expirado"
+        )
+    
+    # Actualizar contraseña
+    usuario.contraseña_hash = AuthUtils.hash_password(request.nueva_contrasena)
+    
+    # Invalidar token (un solo uso)
+    usuario.reset_token = None
+    usuario.reset_token_expires = None
+    db.commit()
+    
+    logger.info(f"Contraseña restablecida para usuario id={usuario.id}")
+    
+    return {"message": "Contraseña actualizada correctamente"}
 
 
 # ==================== CONFIGURACIÓN INICIAL ====================

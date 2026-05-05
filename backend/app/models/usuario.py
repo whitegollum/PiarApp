@@ -27,6 +27,10 @@ class Usuario(Base):
     dos_fa_habilitado = Column(Boolean, default=False)
     dos_fa_secret = Column(String(255), nullable=True)
     
+    # Reset de contraseña
+    reset_token = Column(String(255), nullable=True, index=True)
+    reset_token_expires = Column(DateTime, nullable=True)
+    
     # Auditoría
     fecha_creacion = Column(DateTime, server_default=func.now())
     ultimo_login = Column(DateTime, nullable=True)

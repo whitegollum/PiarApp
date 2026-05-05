@@ -302,7 +302,87 @@ Panel de diagnóstico en la página de administración del agente (`/admin/agent
 
 ---
 
-## 🐛 Errores resueltos durante integración Codex
+## � Recuperación de Contraseña (05/05/2026)
+
+### Resumen
+Funcionalidad completa de "olvidé mi contraseña" con generación de token seguro, envío por email y formulario de restablecimiento en el frontend.
+
+---
+
+### Backend — Archivos nuevos
+
+| Archivo | Descripción |
+|---------|-------------|
+| `migrations/2026_05_04_add_reset_password_fields.sql` | Migración: columnas `reset_token` y `reset_token_expires` en tabla `usuarios` |
+| `tests/test_reset_password.py` | 9 tests: solicitar reset, reset con token válido/expirado/un-solo-uso, contraseña débil, validar token |
+
+### Backend — Archivos modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `app/models/usuario.py` | +`reset_token` (String, indexed), +`reset_token_expires` (DateTime) |
+| `app/config.py` | +`password_reset_token_expire_minutes: int = 60` |
+| `app/schemas/auth.py` | +`SolicitarResetRequest`, +`ResetContrasenaRequest`, +`ValidarResetTokenResponse` |
+| `app/routes/auth.py` | +3 endpoints de reset, +helper `_mask_email()` |
+
+### Frontend — Archivos nuevos
+
+| Archivo | Descripción |
+|---------|-------------|
+| `src/pages/ForgotPassword.tsx` | Página de solicitud de reset (email) |
+| `src/pages/ResetPassword.tsx` | Página de nueva contraseña (con validación de token) |
+
+### Frontend — Archivos modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `src/App.tsx` | +Rutas `/auth/recuperar-contrasena` y `/auth/reset-contrasena` |
+| `src/pages/Login.tsx` | Link "¿Olvidaste tu contraseña?" (ya existía) |
+
+---
+
+### API Endpoints Nuevos
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/auth/solicitar-reset-contrasena` | Genera token y envía email (siempre responde éxito) |
+| GET | `/api/auth/validar-reset-token?token=xxx` | Verifica validez del token, devuelve `email_hint` |
+| POST | `/api/auth/reset-contrasena` | Actualiza contraseña y borra token |
+
+### Schemas
+
+```python
+class SolicitarResetRequest(BaseModel):
+    email: EmailStr
+
+class ResetContrasenaRequest(BaseModel):
+    token: str
+    nueva_contrasena: str  # min_length=8
+
+class ValidarResetTokenResponse(BaseModel):
+    valid: bool
+    email_hint: Optional[str]  # ej: "u***@gmail.com"
+```
+
+### Migración SQL
+
+```sql
+ALTER TABLE usuarios ADD COLUMN reset_token VARCHAR(255) DEFAULT NULL;
+ALTER TABLE usuarios ADD COLUMN reset_token_expires DATETIME DEFAULT NULL;
+CREATE INDEX idx_usuarios_reset_token ON usuarios(reset_token);
+```
+
+### Seguridad
+- Token opaco con `secrets.token_urlsafe(32)` (256 bits de entropía)
+- Expiración configurable (default 60 min)
+- Un solo uso: se invalida al consumirse
+- Respuesta genérica para evitar enumeración de emails
+- Usuarios Google-only no reciben email de reset
+- Validación de contraseña mínima 8 caracteres (Pydantic)
+
+---
+
+## �🐛 Errores resueltos durante integración Codex
 
 | Error | Causa raíz | Fix |
 |-------|-----------|-----|

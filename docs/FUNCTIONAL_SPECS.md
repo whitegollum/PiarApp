@@ -37,6 +37,24 @@ Este documento describe detalladamente las funcionalidades del sistema
   - Usar foto de perfil de Google (opcional)
 - Recuperación de contraseña por email
 
+#### Flujo de Recuperación de Contraseña
+
+**Objetivo:** Permitir al usuario restablecer su contraseña cuando la olvida, mediante un token seguro enviado por email.
+
+1. El usuario hace clic en "¿Olvidaste tu contraseña?" en la pantalla de login.
+2. Se muestra formulario pidiendo email (`/auth/recuperar-contrasena`).
+3. El backend genera un token opaco (32 bytes, `secrets.token_urlsafe`) con expiración de 1 hora.
+4. Se envía email con enlace a `/auth/reset-contrasena?token=xxx`.
+5. El usuario abre el enlace → frontend valida el token contra el backend.
+6. Si es válido, se muestra formulario de nueva contraseña (mín. 8 caracteres).
+7. Al enviar, la contraseña se actualiza y el token se invalida (un solo uso).
+
+**Seguridad:**
+- Respuesta genérica siempre ("Si existe una cuenta, se ha enviado un email") para evitar enumeración de usuarios.
+- Usuarios registrados solo con Google no reciben email (no tienen contraseña local).
+- Token de un solo uso: se borra al usarse o al expirar.
+- Hint de email enmascarado en validación (ej: `u***@gmail.com`).
+
 #### Opciones de Registro
 
 **Opción 1: Usar Google OAuth**
@@ -694,6 +712,74 @@ Este documento describe detalladamente las funcionalidades del sistema
 - Compartir producto
 - Guardar producto como favorito
 - Indicador de popularidad ("X socios interesados")
+
+---
+
+### Sistema de Redirección con Cookie de Afiliación (AliExpress)
+
+> **Estado de Implementación (Mayo 2026):**  
+> ✅ **COMPLETADO:**  
+> - Backend: endpoint `/go` de redirección, validación de URLs, normalización de tracking params  
+> - Frontend: helper `affiliateUrl()` integrado en catálogo y detalle de club  
+> - Admin: panel de configuración y estadísticas en `/admin/afiliacion`  
+> - Seguridad: protección XSS, prevención open-redirect, bloqueo de links de afiliados de terceros  
+>  
+> 🔜 **Pendiente:**  
+> - Migrar a AliExpress Affiliate API (Open Platform) cuando se aprueben credenciales  
+
+**Descripción:** Cuando un socio pulsa un producto de AliExpress publicado en la tienda del club, el sistema asienta una cookie de afiliación del club antes de redirigir al producto, generando ingresos para el club.
+
+#### Flujo de Redirección
+
+1. Socio pulsa "Ver Producto" en un producto de AliExpress
+2. Se registra el click (estadísticas)
+3. Se abre la URL `/go?to={url_producto}` en nueva pestaña
+4. Página intermedia abre el banner de afiliación (`s.click.aliexpress.com`) en ventana nueva (drop de cookie)
+5. Tras 1.2s se cierra el banner y redirige al producto en AliExpress
+6. Fallback: si el popup es bloqueado, el usuario pulsa botón manual
+
+#### Validación de URLs al Crear/Editar Productos
+
+- Solo se aceptan URLs de dominios `*.aliexpress.com`
+- Se rechazan URLs de `s.click.aliexpress.com` (links de afiliación de terceros)
+- Se normalizan automáticamente eliminando parámetros de tracking (`utm_*`, `spm`, `aff_*`, etc.)
+
+#### Configuración Administrable (Superadmin)
+
+- **URL del banner**: configurable desde `/admin/afiliacion`
+- **Toggle habilitado/deshabilitado**: si se deshabilita, los links redirigen directamente sin pasar por el banner
+- Persistencia en `SystemConfig` (base de datos)
+
+#### Estadísticas (Panel Admin)
+
+- Total de clicks en todos los productos
+- Total de productos / productos activos
+- Top productos por clicks (tabla con nombre, proveedor, club, clicks)
+- Estadísticas agrupadas por club
+- Estadísticas agrupadas por proveedor
+
+#### Endpoints
+
+| Método | Ruta | Auth | Descripción |
+|--------|------|------|-------------|
+| GET | `/go?to={url}` | No | Página intermedia de redirección (HTML público) |
+| GET | `/api/admin/config/afiliacion` | Superadmin | Obtener configuración de afiliación |
+| PUT | `/api/admin/config/afiliacion` | Superadmin | Actualizar configuración |
+| GET | `/api/admin/config/afiliacion/stats` | Superadmin | Estadísticas de uso |
+
+#### Seguridad
+
+- Protección contra open-redirect: solo permite URLs de `*.aliexpress.com`
+- Escape XSS: HTML-safe JSON encoding en la página intermedia
+- Bloqueo de links de afiliación de terceros al crear productos
+- Headers: `Cache-Control: no-store`, `X-Robots-Tag: noindex`, `Referrer-Policy: no-referrer`
+
+#### Limitaciones Conocidas
+
+- Safari iOS (ITP): cookie de terceros bloqueada, atribución <10%
+- Firefox: restricciones similares, atribución limitada
+- Chrome desktop: mejor tasa (~50-70%)
+- Popup blockers: fallback a botón manual
 
 ---
 

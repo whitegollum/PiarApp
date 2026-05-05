@@ -139,3 +139,22 @@ class MiembroClubResponse(BaseModel):
     estado: str
     
     model_config = ConfigDict(from_attributes=True)
+
+
+# ==================== RESET DE CONTRASEÑA ====================
+
+class SolicitarResetRequest(BaseModel):
+    """Request para solicitar reset de contraseña"""
+    email: EmailStr
+
+
+class ResetContrasenaRequest(BaseModel):
+    """Request para restablecer contraseña con token"""
+    token: str
+    nueva_contrasena: str = Field(..., min_length=8)
+
+
+class ValidarResetTokenResponse(BaseModel):
+    """Response para validación de token de reset"""
+    valid: bool
+    email_hint: Optional[str] = None

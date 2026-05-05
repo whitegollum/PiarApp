@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     # Invitaciones
     invitation_token_expiry_days: int = 30
     
+    # Reset de contraseña
+    password_reset_token_expire_minutes: int = 60
+    
     # Agent / LLM
     openai_api_key: str = ""
     agent_data_dir: str = "./data/agent"

@@ -2,6 +2,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import Optional
 from datetime import datetime, timedelta, timezone
 import os
@@ -461,7 +462,7 @@ async def solicitar_reset_contrasena(
     mensaje_generico = "Si el email está registrado, recibirás instrucciones para restablecer tu contraseña."
     
     usuario = db.query(Usuario).filter(
-        Usuario.email == request.email.lower()
+        func.lower(Usuario.email) == request.email.lower().strip()
     ).first()
     
     # No revelar si el email existe

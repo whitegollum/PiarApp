@@ -25,9 +25,9 @@ class AuthService:
     ) -> Optional[Usuario]:
         """Registra un nuevo usuario con email y contraseña"""
         email_norm = usuario_create.email.lower().strip()
-        # Verificar que el email no exista
+        # Verificar que el email no exista (case-insensitive)
         usuario_existente = db.query(Usuario).filter(
-            Usuario.email == email_norm
+            func.lower(Usuario.email) == email_norm
         ).first()
         
         if usuario_existente:
@@ -94,9 +94,9 @@ class AuthService:
         if invitacion.email.lower().strip() != email_norm:
             return None, "El email no coincide con la invitación"
         
-        # Verificar que el email no exista
+        # Verificar que el email no exista (case-insensitive)
         usuario_existente = db.query(Usuario).filter(
-            Usuario.email == email_norm
+            func.lower(Usuario.email) == email_norm
         ).first()
         
         if usuario_existente:
@@ -140,8 +140,9 @@ class AuthService:
         login_request: LoginRequest
     ) -> Optional[Usuario]:
         """Verifica credenciales y retorna usuario si son válidas"""
+        email_norm = login_request.email.lower().strip()
         usuario = db.query(Usuario).filter(
-            Usuario.email == login_request.email.lower().strip(),
+            func.lower(Usuario.email) == email_norm,
             Usuario.activo == True
         ).first()
         

@@ -24,9 +24,10 @@ class AuthService:
         usuario_create: UsuarioCreate
     ) -> Optional[Usuario]:
         """Registra un nuevo usuario con email y contraseña"""
+        email_norm = usuario_create.email.lower().strip()
         # Verificar que el email no exista
         usuario_existente = db.query(Usuario).filter(
-            Usuario.email == usuario_create.email
+            Usuario.email == email_norm
         ).first()
         
         if usuario_existente:
@@ -34,7 +35,7 @@ class AuthService:
         
         # Crear nuevo usuario
         usuario = Usuario(
-            email=usuario_create.email,
+            email=email_norm,
             nombre_completo=usuario_create.nombre_completo,
             contraseña_hash=AuthUtils.hash_password(usuario_create.password),
             email_verificado=True,  # Simplificado, en producción verificar email
@@ -59,7 +60,7 @@ class AuthService:
         
         # Crear nuevo usuario admin
         usuario = Usuario(
-            email=usuario_create.email,
+            email=usuario_create.email.lower().strip(),
             nombre_completo=usuario_create.nombre_completo,
             contraseña_hash=AuthUtils.hash_password(usuario_create.password),
             email_verificado=True,
@@ -89,12 +90,13 @@ class AuthService:
             return None, "Invitación inválida o expirada"
         
         # Verificar que el email coincida
-        if invitacion.email != usuario_create.email:
+        email_norm = usuario_create.email.lower().strip()
+        if invitacion.email.lower().strip() != email_norm:
             return None, "El email no coincide con la invitación"
         
         # Verificar que el email no exista
         usuario_existente = db.query(Usuario).filter(
-            Usuario.email == usuario_create.email
+            Usuario.email == email_norm
         ).first()
         
         if usuario_existente:
@@ -102,7 +104,7 @@ class AuthService:
         
         # Crear usuario
         usuario = Usuario(
-            email=usuario_create.email,
+            email=email_norm,
             nombre_completo=usuario_create.nombre_completo,
             contraseña_hash=AuthUtils.hash_password(usuario_create.password),
             email_verificado=True,
@@ -139,7 +141,7 @@ class AuthService:
     ) -> Optional[Usuario]:
         """Verifica credenciales y retorna usuario si son válidas"""
         usuario = db.query(Usuario).filter(
-            Usuario.email == login_request.email,
+            Usuario.email == login_request.email.lower().strip(),
             Usuario.activo == True
         ).first()
         

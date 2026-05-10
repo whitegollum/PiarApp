@@ -7,44 +7,67 @@ interface RankingTableProps {
   usuarioId?: number
 }
 
+const MEDAL_COLORS: Record<number, string> = {
+  1: '#f59e0b',
+  2: '#94a3b8',
+  3: '#cd7c2f',
+}
+
 export const RankingTable: React.FC<RankingTableProps> = ({ ranking, usuarioId }) => {
+  if (ranking.length === 0) {
+    return <p className="ranking-vacio">No hay datos de ranking</p>
+  }
+
+  const top3 = ranking.filter(e => e.posicion <= 3)
+  const rest = ranking.filter(e => e.posicion > 3)
+
   return (
-    <div className="ranking-table-container">
-      <table className="ranking-table">
-        <thead>
-          <tr>
-            <th>Posición</th>
-            <th>Usuario</th>
-            <th>Puntos</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ranking.length === 0 ? (
-            <tr>
-              <td colSpan={3} className="ranking-vacio">No hay datos de ranking</td>
-            </tr>
-          ) : (
-            ranking.map(entry => (
-              <tr
+    <div className="ranking-list">
+
+      {/* Podio top 3 */}
+      {top3.length > 0 && (
+        <div className="ranking-podio">
+          {top3.map(entry => {
+            const color = MEDAL_COLORS[entry.posicion]
+            const esMio = entry.usuario_id === usuarioId
+            return (
+              <div
                 key={entry.usuario_id}
-                className={entry.usuario_id === usuarioId ? 'ranking-row-actual' : ''}
+                className={`ranking-podio-item${esMio ? ' ranking-podio-item-mio' : ''}`}
+                style={{ borderTopColor: color }}
               >
-                <td className="ranking-posicion">
-                  {entry.posicion <= 3 ? (
-                    <span className={`ranking-medalla ranking-medalla-${entry.posicion}`}>
-                      <Medal size={18} />
-                    </span>
-                  ) : (
-                    entry.posicion
-                  )}
-                </td>
-                <td className="ranking-nombre">{entry.nombre}</td>
-                <td className="ranking-puntos">{entry.puntos_totales} pts</td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+                <span className="ranking-podio-medal" style={{ color }}>
+                  <Medal size={24} />
+                </span>
+                <span className="ranking-podio-nombre">{entry.nombre}</span>
+                <span className="ranking-podio-pts" style={{ color }}>{entry.puntos_totales} pts</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Resto del ranking */}
+      {rest.length > 0 && (
+        <div className="ranking-rest">
+          {rest.map(entry => {
+            const esMio = entry.usuario_id === usuarioId
+            return (
+              <div
+                key={entry.usuario_id}
+                className={`ranking-rest-row${esMio ? ' ranking-rest-row-mio' : ''}`}
+              >
+                <span className="ranking-rest-pos">{entry.posicion}</span>
+                <span className="ranking-rest-nombre">
+                  {entry.nombre}
+                  {esMio && <span className="ranking-yo-badge">Tú</span>}
+                </span>
+                <span className="ranking-rest-pts">{entry.puntos_totales} pts</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

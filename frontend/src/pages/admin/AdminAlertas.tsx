@@ -1,410 +1,372 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Alerta, AlertaListResponse } from '../../types/alerta';
-import { alertaService } from '../../services/alertaService';
-import AlertItem from '../../components/AlertItem';
-import Navbar from '../../components/Navbar';
-import '../../styles/Alerts.css';
-import '../../styles/ClubDetail.css';
-import '../../styles/Tareas.css';
+import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Alerta, AlertaListResponse } from '../../types/alerta'
+import { alertaService } from '../../services/alertaService'
+import AlertItem from '../../components/AlertItem'
+import Navbar from '../../components/Navbar'
+import { ArrowLeft, RefreshCw, Filter, X, Bell, Building2, CheckCircle2, Loader2 } from 'lucide-react'
+import '../../styles/Forms.css'
+import '../../styles/Alerts.css'
 
-interface Club {
-  id: number;
-  nombre: string;
-  slug: string;
+interface Club { id: number; nombre: string; slug: string }
+
+interface FiltrosState {
+  tipo: string
+  subtipo: string
+  severidad: string
+  estado: string
+  usuario_id: number | undefined
+}
+
+const FILTROS_INICIAL: FiltrosState = {
+  tipo: '',
+  subtipo: '',
+  severidad: '',
+  estado: 'activa',
+  usuario_id: undefined,
 }
 
 const AdminAlertas: React.FC = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
-  const [loading, setLoading] = useState(false);
-  const [loadingClubes, setLoadingClubes] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [alertas, setAlertas] = useState<Alerta[]>([]);
-  const [total, setTotal] = useState(0);
-  const [clubes, setClubes] = useState<Club[]>([]);
-  const [selectedClubId, setSelectedClubId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false)
+  const [loadingClubes, setLoadingClubes] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [alertas, setAlertas] = useState<Alerta[]>([])
+  const [total, setTotal] = useState(0)
+  const [clubes, setClubes] = useState<Club[]>([])
+  const [selectedClubId, setSelectedClubId] = useState<number | null>(null)
+  const [filtros, setFiltros] = useState<FiltrosState>(FILTROS_INICIAL)
 
-  // Filtros
-  const [filtros, setFiltros] = useState({
-    tipo: '',
-    subtipo: '',
-    severidad: '',
-    estado: 'activa',
-    usuario_id: undefined as number | undefined,
-  });
-
-  // Cargar lista de clubes al montar el componente
   useEffect(() => {
     const fetchClubes = async () => {
-      setLoadingClubes(true);
-      setError(null);
+      setLoadingClubes(true)
+      setError(null)
       try {
-        const token = localStorage.getItem('access_token');
+        const token = localStorage.getItem('access_token')
         const response = await fetch('/api/clubes', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        setClubes(data);
-        // Seleccionar el primer club por defecto
-        if (data.length > 0) {
-          setSelectedClubId(data[0].id);
-        }
-      } catch (error: any) {
-        console.error('[AdminAlertas] Error al cargar clubes:', error);
-        setError(error.message || 'Error al cargar clubes');
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        })
+        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
+        const data = await response.json()
+        setClubes(data)
+        if (data.length > 0) setSelectedClubId(data[0].id)
+      } catch (e: any) {
+        setError(e.message || 'Error al cargar clubes')
       } finally {
-        setLoadingClubes(false);
+        setLoadingClubes(false)
       }
-    };
+    }
+    fetchClubes()
+  }, [])
 
-    fetchClubes();
-  }, []);
-
-  // Aplicar filtros desde query params (club y usuario)
   useEffect(() => {
-    const clubParam = searchParams.get('club');
-    const usuarioParam = searchParams.get('usuario');
-
+    const clubParam = searchParams.get('club')
+    const usuarioParam = searchParams.get('usuario')
     if (clubParam) {
-      const clubId = parseInt(clubParam, 10);
-      if (!isNaN(clubId)) {
-        setSelectedClubId(clubId);
-      }
+      const id = parseInt(clubParam, 10)
+      if (!isNaN(id)) setSelectedClubId(id)
     }
-
     if (usuarioParam) {
-      const usuarioId = parseInt(usuarioParam, 10);
-      if (!isNaN(usuarioId)) {
-        setFiltros((prev) => ({ ...prev, usuario_id: usuarioId }));
-      }
+      const id = parseInt(usuarioParam, 10)
+      if (!isNaN(id)) setFiltros(prev => ({ ...prev, usuario_id: id }))
     }
-  }, [searchParams]);
+  }, [searchParams])
 
   const cargarAlertas = useCallback(async () => {
-    if (!selectedClubId) return;
-
-    setLoading(true);
+    if (!selectedClubId) return
+    setLoading(true)
     try {
-      const data: AlertaListResponse = await alertaService.obtenerAlertasClub(
-        selectedClubId,
-        filtros
-      );
-      setAlertas(data.alertas);
-      setTotal(data.total);
-    } catch (error) {
-      console.error('Error al cargar alertas:', error);
+      const data: AlertaListResponse = await alertaService.obtenerAlertasClub(selectedClubId, filtros)
+      setAlertas(data.alertas)
+      setTotal(data.total)
+    } catch {
+      // silently fail — list will be empty
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [selectedClubId, filtros]);
+  }, [selectedClubId, filtros])
 
   useEffect(() => {
-    if (selectedClubId) {
-      cargarAlertas();
-    }
-  }, [selectedClubId, cargarAlertas]);
+    if (selectedClubId) cargarAlertas()
+  }, [selectedClubId, cargarAlertas])
 
   const handleGenerarAlertas = async () => {
-    if (!selectedClubId) return;
-
+    if (!selectedClubId) return
+    setLoading(true)
     try {
-      setLoading(true);
-      const result = await alertaService.generarAlertasClub(selectedClubId);
-      
-      const stats = result.estadisticas || result;
-      
-      // Mostrar mensaje primero
-      alert(
-        `Alertas generadas correctamente:\n\n` +
-        `✅ Creadas: ${stats.creadas}\n` +
-        `🔄 Actualizadas: ${stats.actualizadas}\n` +
-        `✔️ Resueltas: ${stats.resueltas}`
-      );
-      
-      // Recargar alertas DESPUÉS de cerrar el alert
-      await cargarAlertas();
-    } catch (error: any) {
-      console.error('[AdminAlertas] Error:', error);
-      alert(`Error al generar alertas:\n\n${error.message || 'Error desconocido'}`);
+      await alertaService.generarAlertasClub(selectedClubId)
+      await cargarAlertas()
+    } catch (e: any) {
+      setError(`Error al generar alertas: ${e.message || 'Error desconocido'}`)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const handleResolver = async (alertaId: number) => {
-    try {
-      await alertaService.accionarAlerta(alertaId, 'resolver');
-      // Recargar alertas
-      await cargarAlertas();
-    } catch (error) {
-      console.error('Error al resolver alerta:', error);
-      alert('Error al resolver alerta');
-    }
-  };
+  const handleResolver = async (id: number) => {
+    try { await alertaService.accionarAlerta(id, 'resolver'); await cargarAlertas() }
+    catch { setError('Error al resolver alerta') }
+  }
 
-  const handleIgnorar = async (alertaId: number) => {
-    try {
-      await alertaService.accionarAlerta(alertaId, 'ignorar');
-      // Recargar alertas
-      await cargarAlertas();
-    } catch (error) {
-      console.error('Error al ignorar alerta:', error);
-      alert('Error al ignorar alerta');
-    }
-  };
+  const handleIgnorar = async (id: number) => {
+    try { await alertaService.accionarAlerta(id, 'ignorar'); await cargarAlertas() }
+    catch { setError('Error al ignorar alerta') }
+  }
 
   const handleVerPerfil = (usuarioId: number) => {
-    // Encontrar el slug del club seleccionado
-    const club = clubes.find(c => c.id === selectedClubId);
-    if (club) {
-      navigate(`/clubs/${club.slug}/miembros/${usuarioId}`);
-    }
-  };
+    const club = clubes.find(c => c.id === selectedClubId)
+    if (club) navigate(`/clubs/${club.slug}/miembros/${usuarioId}`)
+  }
 
-  const handleFiltroChange = (campo: string, valor: string) => {
-    setFiltros(prev => ({
-      ...prev,
-      [campo]: valor,
-    }));
-  };
+  const handleFiltroChange = (campo: keyof FiltrosState, valor: string) => {
+    setFiltros(prev => ({ ...prev, [campo]: valor }))
+  }
 
-  // Determinar la URL de "volver" según si viene de un club específico
-  const clubParam = searchParams.get('club');
-  const clubSeleccionado = clubes.find(c => c.id === selectedClubId);
+  const limpiarFiltros = () => setFiltros(FILTROS_INICIAL)
+
+  // --- Active chips ---
+  const LABELS: Record<string, string> = {
+    'documento_por_vencer': 'Por vencer', 'documento_vencido': 'Vencido',
+    'carnet_piloto': 'Carnet piloto', 'seguro_rc': 'Seguro RC',
+    'warning': 'Aviso', 'danger': 'Urgente', 'critical': 'Crítico',
+    'activa': 'Activas', 'resuelta': 'Resueltas', 'ignorada': 'Ignoradas',
+  }
+  interface Chip { key: string; label: string; onRemove: () => void }
+  const activeChips: Chip[] = [
+    filtros.estado     ? { key: 'estado',    label: LABELS[filtros.estado]     || filtros.estado,    onRemove: () => handleFiltroChange('estado', '') }    : null,
+    filtros.tipo       ? { key: 'tipo',      label: LABELS[filtros.tipo]       || filtros.tipo,      onRemove: () => handleFiltroChange('tipo', '') }      : null,
+    filtros.subtipo    ? { key: 'subtipo',   label: LABELS[filtros.subtipo]    || filtros.subtipo,   onRemove: () => handleFiltroChange('subtipo', '') }   : null,
+    filtros.severidad  ? { key: 'severidad', label: LABELS[filtros.severidad]  || filtros.severidad, onRemove: () => handleFiltroChange('severidad', '') } : null,
+    filtros.usuario_id ? { key: 'usuario',   label: `Usuario #${filtros.usuario_id}`,                onRemove: () => setFiltros(p => ({ ...p, usuario_id: undefined })) } : null,
+  ].filter(Boolean) as Chip[]
+
+  // Summary pill shown in main content
+  const estadoLabel = filtros.estado ? (LABELS[filtros.estado] || filtros.estado) : 'Todas'
+  const tipoLabel   = filtros.tipo   ? (LABELS[filtros.tipo]   || filtros.tipo)   : 'todos los tipos'
+  const filterSummary = `${estadoLabel} · ${tipoLabel}`
+
+  const clubParam = searchParams.get('club')
 
   return (
     <>
-      <Navbar
-        clubName={clubSeleccionado?.nombre}
-        clubId={clubParam || undefined}
-      />
+      <Navbar />
+      <main className="form-main alerts-form-main">
+        <div className="alerts-layout">
 
-      <main className="club-detail-main">
-        <div className="club-detail-container">
-          <button
-            className="btn-volver-tareas"
-            onClick={() => {
-              if (clubParam) {
-                navigate(`/clubes/${clubParam}`);
-              } else {
-                navigate(-1);
-              }
-            }}
-          >
-            ← Volver
-          </button>
+          {/* ── Sidebar de filtros ── */}
+          <aside className="alerts-sidebar">
+            <div className="alerts-sidebar-heading">
+              <Filter size={15} />
+              <span>Filtros</span>
+              {activeChips.length > 0 && (
+                <span className="alerts-filter-count">{activeChips.length}</span>
+              )}
+            </div>
 
-          <div className="admin-alertas-container">
-      <div className="alerts-list-header">
-        <h1 className="alerts-list-title">🚨 Gestión de Alertas</h1>
-        <button
-          className="alert-btn alert-btn-ver"
-          onClick={handleGenerarAlertas}
-          disabled={loading || !selectedClubId}
-        >
-          🔄 Actualizar Alertas
-        </button>
-      </div>
+            {/* Club */}
+            <div className="filter-group">
+              <label htmlFor="filter-club">Club</label>
+              <select
+                id="filter-club"
+                value={selectedClubId || ''}
+                onChange={(e) => setSelectedClubId(Number(e.target.value))}
+                disabled={loadingClubes}
+              >
+                {loadingClubes
+                  ? <option>Cargando...</option>
+                  : <>
+                      <option value="">Selecciona un club</option>
+                      {clubes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                    </>
+                }
+              </select>
+            </div>
 
-      {/* Mensaje de error */}
-      {error && (
-        <div style={{ 
-          backgroundColor: '#ffebee', 
-          color: '#c62828', 
-          padding: '1rem', 
-          borderRadius: '8px', 
-          margin: '1rem 0',
-          border: '1px solid #ef5350'
-        }}>
-          <strong>⚠️ Error:</strong> {error}
-        </div>
-      )}
+            {/* Active chips */}
+            {activeChips.length > 0 && (
+              <div className="alerts-chips-row">
+                <span className="alerts-chips-label">Activos:</span>
+                {activeChips.map(chip => (
+                  <span key={chip.key} className="alerts-chip">
+                    {chip.label}
+                    <button className="alerts-chip-remove" onClick={chip.onRemove} aria-label={`Quitar ${chip.label}`}>
+                      <X size={11} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
 
-      {/* Selector de Club */}
-      <div className="alerts-filters">
-        <div className="alerts-filters-row">
-          <div className="filter-group">
-            <label>Club</label>
-            <select
-              value={selectedClubId || ''}
-              onChange={(e) => setSelectedClubId(Number(e.target.value))}
-              style={{ fontWeight: 'bold', fontSize: '1.1rem' }}
-              disabled={loadingClubes}
+            <div className="alerts-sidebar-divider">
+              <Filter size={12} />
+              <span>Filtros</span>
+            </div>
+
+            {/* TIPO */}
+            <div className="filter-group">
+              <label htmlFor="filter-tipo">Tipo</label>
+              <select
+                id="filter-tipo"
+                className={filtros.tipo ? 'filter-select-active' : ''}
+                value={filtros.tipo}
+                onChange={(e) => handleFiltroChange('tipo', e.target.value)}
+              >
+                <option value="">Todos</option>
+                <option value="documento_por_vencer">Documento por vencer</option>
+                <option value="documento_vencido">Documento vencido</option>
+              </select>
+            </div>
+
+            {/* DOCUMENTO */}
+            <div className="filter-group">
+              <label htmlFor="filter-subtipo">Documento</label>
+              <select
+                id="filter-subtipo"
+                className={filtros.subtipo ? 'filter-select-active' : ''}
+                value={filtros.subtipo}
+                onChange={(e) => handleFiltroChange('subtipo', e.target.value)}
+              >
+                <option value="">Todos</option>
+                <option value="carnet_piloto">Carnet de Piloto</option>
+                <option value="seguro_rc">Seguro RC</option>
+              </select>
+            </div>
+
+            {/* SEVERIDAD */}
+            <div className="filter-group">
+              <label htmlFor="filter-severidad">Severidad</label>
+              <select
+                id="filter-severidad"
+                className={filtros.severidad ? 'filter-select-active' : ''}
+                value={filtros.severidad}
+                onChange={(e) => handleFiltroChange('severidad', e.target.value)}
+              >
+                <option value="">Todas</option>
+                <option value="warning">Aviso</option>
+                <option value="danger">Urgente</option>
+                <option value="critical">Crítico</option>
+              </select>
+            </div>
+
+            {/* ESTADO */}
+            <div className="filter-group">
+              <label htmlFor="filter-estado">Estado</label>
+              <select
+                id="filter-estado"
+                className={filtros.estado ? 'filter-select-active' : ''}
+                value={filtros.estado}
+                onChange={(e) => handleFiltroChange('estado', e.target.value)}
+              >
+                <option value="">Todas</option>
+                <option value="activa">Activas</option>
+                <option value="resuelta">Resueltas</option>
+                <option value="ignorada">Ignoradas</option>
+              </select>
+            </div>
+
+            {activeChips.length > 0 && (
+              <button className="alerts-limpiar-btn" onClick={limpiarFiltros}>
+                Limpiar filtros
+              </button>
+            )}
+          </aside>
+
+          {/* ── Área principal ── */}
+          <section className="alerts-main">
+
+            {/* Volver */}
+            <button
+              className="alerts-volver-link"
+              onClick={() => clubParam ? navigate(`/clubes/${clubParam}`) : navigate(-1)}
             >
+              <ArrowLeft size={15} /> Volver
+            </button>
+
+            {/* Header */}
+            <div className="alerts-main-header">
+              <div className="alerts-main-title">
+                <Bell size={22} />
+                <h1>Gestión de Alertas</h1>
+              </div>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={handleGenerarAlertas}
+                disabled={loading || !selectedClubId}
+              >
+                <RefreshCw size={14} />
+                {loading ? 'Actualizando...' : 'Actualizar'}
+              </button>
+            </div>
+
+            {error && (
+              <div className="alert alert-error alerts-error-bar">
+                <span>{error}</span>
+                <button onClick={() => setError(null)} aria-label="Cerrar"><X size={15} /></button>
+              </div>
+            )}
+
+            {/* Pill resumen de filtros activos */}
+            {selectedClubId && (
+              <div className="alerts-summary-pill">
+                <span className="alerts-summary-dot" />
+                <span>{filterSummary}</span>
+              </div>
+            )}
+
+            {/* Lista */}
+            <div className="alerts-list-area">
               {loadingClubes ? (
-                <option value="">Cargando clubes...</option>
+                <div className="alerts-empty-state">
+                  <Loader2 size={32} className="alerts-spinner-icon" />
+                  <p>Cargando clubes...</p>
+                </div>
+              ) : clubes.length === 0 ? (
+                <div className="alerts-empty-state">
+                  <Building2 size={36} strokeWidth={1.2} />
+                  <p>No hay clubes disponibles</p>
+                  <span>Verifica que seas superadmin y que existan clubes en el sistema.</span>
+                </div>
+              ) : !selectedClubId ? (
+                <div className="alerts-empty-state">
+                  <Bell size={36} strokeWidth={1.2} />
+                  <p>Selecciona un club para ver las alertas</p>
+                </div>
+              ) : loading ? (
+                <div className="alerts-empty-state">
+                  <Loader2 size={32} className="alerts-spinner-icon" />
+                  <p>Cargando alertas...</p>
+                </div>
+              ) : alertas.length === 0 ? (
+                <div className="alerts-empty-state">
+                  <CheckCircle2 size={36} strokeWidth={1.2} style={{ color: '#16a34a' }} />
+                  <p>No hay alertas {filtros.estado === 'activa' ? 'activas' : ''}</p>
+                  <span>No hay problemas pendientes.</span>
+                </div>
               ) : (
                 <>
-                  <option value="">Selecciona un club</option>
-                  {clubes.map((club) => (
-                    <option key={club.id} value={club.id}>
-                      {club.nombre}
-                    </option>
+                  <p className="alerts-count">Mostrando {alertas.length} de {total} alertas</p>
+                  {alertas.map(alerta => (
+                    <AlertItem
+                      key={alerta.id}
+                      alerta={alerta}
+                      onResolver={handleResolver}
+                      onIgnorar={handleIgnorar}
+                      onVerPerfil={handleVerPerfil}
+                      mostrarUsuario={true}
+                      compact={true}
+                    />
                   ))}
                 </>
               )}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Filtros */}
-      <div className="alerts-filters">
-        <div className="alerts-filters-row">
-          <div className="filter-group">
-            <label>Tipo</label>
-            <select
-              value={filtros.tipo}
-              onChange={(e) => handleFiltroChange('tipo', e.target.value)}
-            >
-              <option value="">Todos</option>
-              <option value="documento_por_vencer">Documento por vencer</option>
-              <option value="documento_vencido">Documento vencido</option>
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label>Documento</label>
-            <select
-              value={filtros.subtipo}
-              onChange={(e) => handleFiltroChange('subtipo', e.target.value)}
-            >
-              <option value="">Todos</option>
-              <option value="carnet_piloto">Carnet de Piloto</option>
-              <option value="seguro_rc">Seguro RC</option>
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label>Severidad</label>
-            <select
-              value={filtros.severidad}
-              onChange={(e) => handleFiltroChange('severidad', e.target.value)}
-            >
-              <option value="">Todas</option>
-              <option value="warning">⚠️ Aviso</option>
-              <option value="danger">❌ Urgente</option>
-              <option value="critical">🚨 Crítico</option>
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label>Estado</label>
-            <select
-              value={filtros.estado}
-              onChange={(e) => handleFiltroChange('estado', e.target.value)}
-            >
-              <option value="activa">Activas</option>
-              <option value="resuelta">Resueltas</option>
-              <option value="ignorada">Ignoradas</option>
-              <option value="">Todas</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Indicador de filtro por usuario */}
-      {filtros.usuario_id && (
-        <div style={{
-          backgroundColor: '#fff3cd',
-          border: '1px solid #ffc107',
-          borderRadius: '8px',
-          padding: '0.75rem 1rem',
-          margin: '1rem 0',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem'
-        }}>
-          <span style={{ fontSize: '1.2rem' }}>🔍</span>
-          <span style={{ fontSize: '0.95rem', color: '#856404' }}>
-            Filtrando alertas del <strong>usuario ID: {filtros.usuario_id}</strong>
-          </span>
-          <button
-            onClick={() => setFiltros(prev => ({ ...prev, usuario_id: undefined }))}
-            style={{
-              marginLeft: 'auto',
-              padding: '0.25rem 0.75rem',
-              backgroundColor: '#ffc107',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-              fontWeight: 'bold',
-              color: '#000'
-            }}
-          >
-            ✖ Quitar filtro
-          </button>
-        </div>
-      )}
-
-      {/* Lista de alertas */}
-      <div className="alerts-list-container">
-        {loadingClubes ? (
-          <div className="alerts-list-empty">
-            <div className="alerts-list-empty-icon">⏳</div>
-            <p>Cargando clubes...</p>
-          </div>
-        ) : clubes.length === 0 ? (
-          <div className="alerts-list-empty">
-            <div className="alerts-list-empty-icon">⚠️</div>
-            <p>No hay clubes disponibles</p>
-            <p style={{ fontSize: '0.9rem', color: '#999' }}>
-              Verifica que seas superadmin y que existan clubes en el sistema.<br/>
-              Si el problema persiste, revisa la consola del navegador (F12).
-            </p>
-          </div>
-        ) : !selectedClubId ? (
-          <div className="alerts-list-empty">
-            <div className="alerts-list-empty-icon">👆</div>
-            <p>Selecciona un club para ver las alertas</p>
-          </div>
-        ) : loading ? (
-          <div className="alerts-list-empty">
-            <div className="alerts-list-empty-icon">⏳</div>
-            <p>Cargando alertas...</p>
-          </div>
-        ) : alertas.length === 0 ? (
-          <div className="alerts-list-empty">
-            <div className="alerts-list-empty-icon">✅</div>
-            <p>No hay alertas {filtros.estado === 'activa' ? 'activas' : ''}</p>
-            <p style={{ fontSize: '0.9rem', color: '#999' }}>
-              ¡Excelente! No hay problemas pendientes.
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="alerts-list-count">
-              Mostrando {alertas.length} de {total} alertas
             </div>
-            {alertas.map((alerta) => (
-              <AlertItem
-                key={alerta.id}
-                alerta={alerta}
-                onResolver={handleResolver}
-                onIgnorar={handleIgnorar}
-                onVerPerfil={handleVerPerfil}
-                mostrarUsuario={true}
-              />
-            ))}
-          </>
-        )}
-      </div>
-      </div>
+
+          </section>
         </div>
       </main>
     </>
-  );
-};
+  )
+}
 
-export default AdminAlertas;
+export default AdminAlertas

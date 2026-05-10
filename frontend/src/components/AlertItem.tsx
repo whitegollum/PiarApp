@@ -1,14 +1,52 @@
-import React from 'react';
-import { AlertTriangle, XCircle, Siren, Info, User, Calendar, Clock, Check, X } from 'lucide-react';
-import { Alerta } from '../types/alerta';
-import '../styles/Alerts.css';
+import React from 'react'
+import { AlertTriangle, XCircle, Siren, Info, User, Calendar, Check, X } from 'lucide-react'
+import { Alerta } from '../types/alerta'
+import '../styles/Alerts.css'
 
 interface AlertItemProps {
-  alerta: Alerta;
-  onResolver?: (id: number) => void;
-  onIgnorar?: (id: number) => void;
-  onVerPerfil?: (usuarioId: number) => void;
-  mostrarUsuario?: boolean;
+  alerta: Alerta
+  onResolver?: (id: number) => void
+  onIgnorar?: (id: number) => void
+  onVerPerfil?: (usuarioId: number) => void
+  mostrarUsuario?: boolean
+  compact?: boolean
+}
+
+const getSeverityIcon = (severidad: string) => {
+  switch (severidad) {
+    case 'warning':  return <AlertTriangle size={15} />
+    case 'danger':   return <XCircle size={15} />
+    case 'critical': return <Siren size={15} />
+    default:         return <Info size={15} />
+  }
+}
+
+const getSeverityLabel = (severidad: string) => {
+  switch (severidad) {
+    case 'warning':  return 'Aviso'
+    case 'danger':   return 'Urgente'
+    case 'critical': return 'Crítico'
+    default:         return 'Info'
+  }
+}
+
+const timeAgo = (dateString?: string): string => {
+  if (!dateString) return ''
+  const diff = Date.now() - new Date(dateString).getTime()
+  const mins  = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days  = Math.floor(diff / 86400000)
+  const weeks = Math.floor(days / 7)
+  if (mins  < 60)  return `hace ${mins} min`
+  if (hours < 24)  return `hace ${hours} h`
+  if (days  < 7)   return `hace ${days} día${days !== 1 ? 's' : ''}`
+  if (weeks < 5)   return `hace ${weeks} semana${weeks !== 1 ? 's' : ''}`
+  return new Date(dateString).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+}
+
+const formatDate = (dateString?: string) => {
+  if (!dateString) return 'N/A'
+  return new Date(dateString).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 const AlertItem: React.FC<AlertItemProps> = ({
@@ -17,43 +55,60 @@ const AlertItem: React.FC<AlertItemProps> = ({
   onIgnorar,
   onVerPerfil,
   mostrarUsuario = true,
+  compact = false,
 }) => {
-  const getSeverityIcon = (severidad: string) => {
-    switch (severidad) {
-      case 'warning':
-        return <AlertTriangle size={16} />;
-      case 'danger':
-        return <XCircle size={16} />;
-      case 'critical':
-        return <Siren size={16} />;
-      default:
-        return <Info size={16} />;
-    }
-  };
+  if (compact) {
+    return (
+      <div className={`alert-item alert-item-compact ${alerta.severidad}`}>
+        <div className="alert-compact-main">
+          <div className="alert-compact-body">
+            <div className="alert-compact-title">
+              <span className="alert-item-icon">{getSeverityIcon(alerta.severidad)}</span>
+              <span>{alerta.titulo}</span>
+            </div>
+            <div className="alert-compact-meta">
+              {mostrarUsuario && alerta.usuario && (
+                <span>{alerta.usuario.nombre}</span>
+              )}
+              {alerta.fecha_creacion && (
+                <span className="alert-compact-time">{timeAgo(alerta.fecha_creacion)}</span>
+              )}
+              {alerta.fecha_referencia && (
+                <span className="alert-compact-time">
+                  <Calendar size={11} /> Vence {formatDate(alerta.fecha_referencia)}
+                </span>
+              )}
+            </div>
+          </div>
+          <span className={`alert-severity-badge ${alerta.severidad}`}>
+            {getSeverityLabel(alerta.severidad)}
+          </span>
+        </div>
 
-  const getSeverityLabel = (severidad: string) => {
-    switch (severidad) {
-      case 'warning':
-        return 'Aviso';
-      case 'danger':
-        return 'Urgente';
-      case 'critical':
-        return 'Crítico';
-      default:
-        return 'Info';
-    }
-  };
+        {(onResolver || onIgnorar || onVerPerfil) && (
+          <div className="alert-compact-actions">
+            {onResolver && (
+              <button className="alert-action-btn alert-action-resolver" onClick={() => onResolver(alerta.id)}>
+                <Check size={12} /> Resolver
+              </button>
+            )}
+            {onIgnorar && (
+              <button className="alert-action-btn alert-action-ignorar" onClick={() => onIgnorar(alerta.id)}>
+                <X size={12} /> Ignorar
+              </button>
+            )}
+            {onVerPerfil && alerta.usuario && (
+              <button className="alert-action-btn alert-action-ver" onClick={() => onVerPerfil(alerta.usuario!.id)}>
+                <User size={12} /> Ver perfil
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  };
-
+  // Full mode (non-admin contexts)
   return (
     <div className={`alert-item ${alerta.severidad}`}>
       <div className="alert-item-header">
@@ -70,7 +125,6 @@ const AlertItem: React.FC<AlertItemProps> = ({
         {alerta.descripcion && (
           <p className="alert-item-description">{alerta.descripcion}</p>
         )}
-
         <div className="alert-item-meta">
           {mostrarUsuario && alerta.usuario && (
             <div className="alert-item-meta-item">
@@ -79,18 +133,12 @@ const AlertItem: React.FC<AlertItemProps> = ({
               <span>({alerta.usuario.email})</span>
             </div>
           )}
-          
           {alerta.fecha_referencia && (
             <div className="alert-item-meta-item">
               <Calendar size={14} />
               <span>Vence: {formatDate(alerta.fecha_referencia)}</span>
             </div>
           )}
-
-          <div className="alert-item-meta-item">
-            <Clock size={14} />
-            <span>Creada: {formatDate(alerta.fecha_creacion)}</span>
-          </div>
         </div>
       </div>
 
@@ -98,26 +146,17 @@ const AlertItem: React.FC<AlertItemProps> = ({
         <div className="alert-item-footer">
           <div className="alert-item-actions">
             {onResolver && (
-              <button
-                className="alert-btn alert-btn-resolver"
-                onClick={() => onResolver(alerta.id)}
-              >
+              <button className="alert-btn alert-btn-resolver" onClick={() => onResolver(alerta.id)}>
                 <Check size={14} /> Marcar Resuelta
               </button>
             )}
             {onIgnorar && (
-              <button
-                className="alert-btn alert-btn-ignorar"
-                onClick={() => onIgnorar(alerta.id)}
-              >
+              <button className="alert-btn alert-btn-ignorar" onClick={() => onIgnorar(alerta.id)}>
                 <X size={14} /> Ignorar
               </button>
             )}
             {onVerPerfil && alerta.usuario && (
-              <button
-                className="alert-btn alert-btn-ver"
-                onClick={() => onVerPerfil(alerta.usuario!.id)}
-              >
+              <button className="alert-btn alert-btn-ver" onClick={() => onVerPerfil(alerta.usuario!.id)}>
                 Ver Perfil
               </button>
             )}
@@ -125,7 +164,7 @@ const AlertItem: React.FC<AlertItemProps> = ({
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default AlertItem;
+export default AlertItem

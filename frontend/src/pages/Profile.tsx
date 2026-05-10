@@ -353,7 +353,7 @@ export default function Profile() {
   return (
     <>
       <Navbar />
-      <div className="profile-layout">
+      <main className="form-main">
         <div className="profile-container">
           <div className="profile-header">
             <h1>Mi Perfil</h1>
@@ -740,7 +740,7 @@ export default function Profile() {
             </button>
           </section>
         </div>
-      </div>
+      </main>
     </>
   )
 }

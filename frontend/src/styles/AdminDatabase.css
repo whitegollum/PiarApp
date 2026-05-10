@@ -362,14 +362,13 @@
 }
 
 .btn-primary {
-  background: #3182ce;
+  background: var(--color-primary);
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #2c5aa0;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+  background: var(--color-primary-dark);
+  transform: none;
 }
 
 .backups-list {

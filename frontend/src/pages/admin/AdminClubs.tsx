@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import APIService from '../../services/api'
 import Navbar from '../../components/Navbar'
+import { Plus, Eye, Trash2, AlertTriangle, Building2 } from 'lucide-react'
+import '../../styles/Forms.css'
+import '../../styles/AdminClubs.css'
 
 interface Club {
   id: number
@@ -19,13 +22,11 @@ export default function AdminClubs() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  // Form state
   const [showForm, setShowForm] = useState(false)
   const [nombre, setNombre] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [slug, setSlug] = useState('')
 
-  // Delete confirmation state
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [clubToDelete, setClubToDelete] = useState<Club | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -34,23 +35,16 @@ export default function AdminClubs() {
   useEffect(() => {
     if (!isLoading && (!usuario || !usuario.es_superadmin)) {
       navigate('/dashboard')
-      return; // Stop execution
+      return
     }
-    
-    if (usuario?.es_superadmin) {
-        fetchClubs()
-    }
+    if (usuario?.es_superadmin) fetchClubs()
   }, [usuario, isLoading, navigate])
 
   const fetchClubs = async () => {
     try {
-      // Assuming you might add a specific admin endpoint list later,
-      // but for now we might only have the public list or need a new endpoint.
-      // The current GET /clubes might return all clubs.
-      // If GET /clubes returns all active clubs, that's fine for now.
       const data = await APIService.get<Club[]>('/clubes')
       setClubs(data)
-    } catch (err: any) {
+    } catch {
       setError('Error al cargar clubes')
     } finally {
       setLoading(false)
@@ -59,20 +53,16 @@ export default function AdminClubs() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
     try {
-      await APIService.post('/clubes', {
-        nombre,
-        descripcion,
-        slug
-      })
+      await APIService.post('/clubes', { nombre, descripcion, slug })
       setShowForm(false)
       setNombre('')
       setDescripcion('')
       setSlug('')
       fetchClubs()
-      alert('Club creado exitosamente')
     } catch (err: any) {
-      alert('Error al crear club: ' + (err.response?.data?.detail || err.message))
+      setError('Error al crear club: ' + (err.response?.data?.detail || err.message))
     }
   }
 
@@ -90,7 +80,6 @@ export default function AdminClubs() {
 
   const handleConfirmDelete = async () => {
     if (!clubToDelete || !confirmDelete) return
-
     setDeleting(true)
     try {
       await APIService.post(`/admin/clubes/${clubToDelete.id}/delete`, {})
@@ -98,254 +87,182 @@ export default function AdminClubs() {
       setClubToDelete(null)
       setConfirmDelete(false)
       fetchClubs()
-      alert(`Club "${clubToDelete.nombre}" eliminado exitosamente`)
     } catch (err: any) {
-      alert('Error al eliminar club: ' + (err.response?.data?.detail || err.message))
+      setError('Error al eliminar club: ' + (err.response?.data?.detail || err.message))
     } finally {
       setDeleting(false)
     }
   }
 
-  if (isLoading) return <div>Cargando...</div>
-  if (!usuario?.es_superadmin) return null // Should redirect in useEffect
+  if (isLoading) return null
+  if (!usuario?.es_superadmin) return null
 
   return (
-    <div className="layout">
+    <>
       <Navbar />
-      <div className="container" style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h1>Administración de Clubes</h1>
-            <button 
-                onClick={() => setShowForm(!showForm)}
-                className="btn btn-primary"
-                style={{ padding: '8px 16px', cursor: 'pointer' }}
+      <main className="form-main">
+        <div className="admin-clubs-page">
+
+          <div className="header-actions">
+            <h1>Clubes</h1>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => { setShowForm(prev => !prev); setError('') }}
             >
-                {showForm ? 'Cancelar' : '➕ Nuevo Club'}
+              {showForm ? 'Cancelar' : <><Plus size={15} /> Nuevo Club</>}
             </button>
-        </div>
+          </div>
 
-        {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
+          {error && <div className="alert alert-error">{error}</div>}
 
-        {showForm && (
-            <div style={{ background: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #ddd' }}>
-                <h3>Crear Nuevo Club</h3>
-                <form onSubmit={handleCreate}>
-                    <div style={{ marginBottom: '10px' }}>
-                        <label style={{ display: 'block', marginBottom: '5px' }}>Nombre</label>
-                        <input 
-                            type="text" 
-                            value={nombre} 
-                            onChange={(e) => setNombre(e.target.value)} 
-                            required 
-                            style={{ width: '100%', padding: '8px' }}
-                        />
-                    </div>
-                    <div style={{ marginBottom: '10px' }}>
-                        <label style={{ display: 'block', marginBottom: '5px' }}>Slug (URL)</label>
-                        <input 
-                            type="text" 
-                            value={slug} 
-                            onChange={(e) => setSlug(e.target.value)} 
-                            required 
-                            placeholder="ej: club-madrid"
-                            style={{ width: '100%', padding: '8px' }}
-                        />
-                    </div>
-                    <div style={{ marginBottom: '10px' }}>
-                        <label style={{ display: 'block', marginBottom: '5px' }}>Descripción</label>
-                        <textarea 
-                            value={descripcion} 
-                            onChange={(e) => setDescripcion(e.target.value)} 
-                            required 
-                            style={{ width: '100%', padding: '8px', minHeight: '80px' }}
-                        />
-                    </div>
-                    <button type="submit" className="btn btn-primary" style={{ padding: '8px 16px' }}>
-                        Guardar Club
-                    </button>
-                </form>
-            </div>
-        )}
-
-        {loading ? (
-            <p>Cargando lista...</p>
-        ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                    <tr style={{ background: '#eee', textAlign: 'left' }}>
-                        <th style={{ padding: '10px' }}>ID</th>
-                        <th style={{ padding: '10px' }}>Nombre</th>
-                        <th style={{ padding: '10px' }}>Slug</th>
-                        <th style={{ padding: '10px' }}>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {clubs.map(club => (
-                        <tr key={club.id} style={{ borderBottom: '1px solid #ddd' }}>
-                            <td style={{ padding: '10px' }}>{club.id}</td>
-                            <td style={{ padding: '10px' }}>{club.nombre}</td>
-                            <td style={{ padding: '10px' }}>{club.slug}</td>
-                            <td style={{ padding: '10px' }}>
-                                <button 
-                                  onClick={() => navigate(`/clubes/${club.id}`)} 
-                                  className="btn btn-sm btn-primary"
-                                  style={{ marginRight: '5px' }}
-                                >
-                                    👁️ Ver
-                                </button>
-                                <button 
-                                  onClick={() => handleDeleteClick(club)}
-                                  className="btn btn-sm btn-danger"
-                                  style={{ padding: '4px 12px' }}
-                                >
-                                    🗑️ Borrar
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        )}
-
-        {/* Modal de confirmación de borrado */}
-        {showDeleteModal && clubToDelete && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}>
-            <div style={{
-              backgroundColor: 'white',
-              padding: '30px',
-              borderRadius: '12px',
-              maxWidth: '500px',
-              width: '90%',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
-            }}>
-              <h2 style={{ color: '#dc2626', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                ⚠️ Confirmar Eliminación
-              </h2>
-              
-              <div style={{ marginBottom: '25px' }}>
-                <p style={{ marginBottom: '15px', fontSize: '16px', lineHeight: '1.5' }}>
-                  ¿Estás seguro de que deseas eliminar el club?
-                </p>
-                <div style={{
-                  backgroundColor: '#fee',
-                  padding: '15px',
-                  borderRadius: '8px',
-                  border: '1px solid #fcc'
-                }}>
-                  <p style={{ margin: '0 0 5px 0', fontWeight: 'bold', fontSize: '18px' }}>
-                    {clubToDelete.nombre}
-                  </p>
-                  <p style={{ margin: '0', color: '#666', fontSize: '14px' }}>
-                    Slug: {clubToDelete.slug}
-                  </p>
-                </div>
-                <p style={{ marginTop: '15px', color: '#dc2626', fontSize: '14px', fontWeight: '500' }}>
-                  ⚠️ Esta acción no se puede deshacer. Se eliminarán todos los datos asociados al club.
-                </p>
-              </div>
-
-              {/* Toggle de confirmación */}
-              <div style={{
-                backgroundColor: '#f9f9f9',
-                padding: '15px',
-                borderRadius: '8px',
-                marginBottom: '25px',
-                border: '1px solid #ddd',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <label style={{ 
-                  fontSize: '14px', 
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  flex: 1
-                }}>
-                  Estoy seguro de lo que estoy haciendo
-                </label>
-                
-                {/* Toggle Switch */}
-                <label style={{
-                  position: 'relative',
-                  display: 'inline-block',
-                  width: '60px',
-                  height: '30px',
-                  cursor: 'pointer'
-                }}>
+          {showForm && (
+            <div className="admin-clubs-form-panel">
+              <h3>Crear nuevo club</h3>
+              <form className="form" onSubmit={handleCreate}>
+                <div className="form-group">
+                  <label htmlFor="nombre">Nombre *</label>
                   <input
-                    type="checkbox"
-                    checked={confirmDelete}
-                    onChange={(e) => setConfirmDelete(e.target.checked)}
-                    style={{ opacity: 0, width: 0, height: 0 }}
+                    id="nombre"
+                    type="text"
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    required
+                    placeholder="Nombre del club"
                   />
-                  <span style={{
-                    position: 'absolute',
-                    cursor: 'pointer',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: confirmDelete ? '#dc2626' : '#ccc',
-                    transition: '0.4s',
-                    borderRadius: '30px'
-                  }}>
-                    <span style={{
-                      position: 'absolute',
-                      content: '',
-                      height: '22px',
-                      width: '22px',
-                      left: confirmDelete ? '34px' : '4px',
-                      bottom: '4px',
-                      backgroundColor: 'white',
-                      transition: '0.4s',
-                      borderRadius: '50%'
-                    }}></span>
-                  </span>
-                </label>
-              </div>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="slug">Slug (URL) *</label>
+                  <input
+                    id="slug"
+                    type="text"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
+                    required
+                    placeholder="ej: club-madrid"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="descripcion">Descripción *</label>
+                  <textarea
+                    id="descripcion"
+                    value={descripcion}
+                    onChange={(e) => setDescripcion(e.target.value)}
+                    required
+                    placeholder="Breve descripción del club"
+                  />
+                </div>
+                <div className="form-actions">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowForm(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Guardar Club
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
 
-              {/* Botones */}
-              <div style={{ 
-                display: 'flex', 
-                gap: '10px', 
-                justifyContent: 'flex-end' 
-              }}>
-                <button
-                  onClick={handleCancelDelete}
-                  className="btn btn-secondary"
-                  style={{ padding: '10px 20px' }}
-                  disabled={deleting}
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleConfirmDelete}
-                  className="btn btn-danger"
-                  style={{ 
-                    padding: '10px 20px',
-                    opacity: confirmDelete ? 1 : 0.5,
-                    cursor: confirmDelete ? 'pointer' : 'not-allowed'
-                  }}
-                  disabled={!confirmDelete || deleting}
-                >
-                  {deleting ? 'Eliminando...' : '🗑️ Eliminar Club'}
-                </button>
-              </div>
+          {loading ? (
+            <div className="admin-clubs-skeleton">
+              <div className="admin-skeleton-row" />
+              <div className="admin-skeleton-row" />
+              <div className="admin-skeleton-row" />
+            </div>
+          ) : clubs.length === 0 ? (
+            <div className="admin-clubs-empty">
+              <Building2 size={48} strokeWidth={1.2} />
+              <h3>No hay clubes</h3>
+              <p>Crea el primero con el botón de arriba</p>
+            </div>
+          ) : (
+            <div className="admin-clubs-list">
+              {clubs.map(club => (
+                <div key={club.id} className="admin-club-card">
+                  <div className="admin-club-id">#{club.id}</div>
+                  <div className="admin-club-info">
+                    <p className="admin-club-name">{club.nombre}</p>
+                    <span className="admin-club-slug">{club.slug}</span>
+                  </div>
+                  <div className="admin-club-actions">
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => navigate(`/clubes/${club.id}`)}
+                    >
+                      <Eye size={13} /> Ver
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleDeleteClick(club)}
+                    >
+                      <Trash2 size={13} /> Borrar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+        </div>
+      </main>
+
+      {showDeleteModal && clubToDelete && (
+        <div
+          className="admin-modal-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget) handleCancelDelete() }}
+        >
+          <div className="admin-modal">
+            <h2 className="admin-modal-title">
+              <AlertTriangle size={20} /> Confirmar eliminación
+            </h2>
+            <p className="admin-modal-body">
+              ¿Estás seguro de que deseas eliminar este club?
+            </p>
+            <div className="admin-modal-club-info">
+              <strong>{clubToDelete.nombre}</strong>
+              <span>Slug: {clubToDelete.slug}</span>
+            </div>
+            <p className="admin-modal-warning">
+              Esta acción no se puede deshacer. Se eliminarán todos los datos asociados al club.
+            </p>
+            <div className="admin-modal-confirm-row">
+              <label htmlFor="confirm-toggle">
+                Estoy seguro de lo que estoy haciendo
+              </label>
+              <label className="modal-toggle">
+                <input
+                  id="confirm-toggle"
+                  type="checkbox"
+                  checked={confirmDelete}
+                  onChange={(e) => setConfirmDelete(e.target.checked)}
+                />
+                <span className="modal-toggle-track" />
+              </label>
+            </div>
+            <div className="admin-modal-actions">
+              <button
+                className="btn btn-secondary"
+                onClick={handleCancelDelete}
+                disabled={deleting}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleConfirmDelete}
+                disabled={!confirmDelete || deleting}
+              >
+                <Trash2 size={14} />
+                {deleting ? 'Eliminando...' : 'Eliminar Club'}
+              </button>
             </div>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   )
 }

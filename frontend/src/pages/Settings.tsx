@@ -64,7 +64,7 @@ export default function Settings() {
   return (
     <>
       <Navbar />
-      <div className="settings-layout">
+      <main className="form-main">
         <div className="settings-container">
           <div className="settings-header">
             <h1>Configuración</h1>
@@ -76,7 +76,7 @@ export default function Settings() {
 
           {/* Sección de Notificaciones */}
           <section className="settings-section">
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Bell size={18} /> Notificaciones</h2>
+            <h2 className="settings-section-title"><Bell size={18} /> Notificaciones</h2>
             <div className="setting-item">
               <div className="setting-content">
                 <h3>Habilitar Notificaciones</h3>
@@ -113,7 +113,7 @@ export default function Settings() {
 
           {/* Sección de Apariencia */}
           <section className="settings-section">
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Palette size={18} /> Apariencia</h2>
+            <h2 className="settings-section-title"><Palette size={18} /> Apariencia</h2>
             <div className="setting-item">
               <div className="setting-content">
                 <h3>Tema Oscuro</h3>
@@ -147,7 +147,7 @@ export default function Settings() {
 
           {/* Sección de Privacidad */}
           <section className="settings-section">
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Lock size={18} /> Privacidad</h2>
+            <h2 className="settings-section-title"><Lock size={18} /> Privacidad</h2>
             <div className="setting-description">
               <p>Controla cómo compartimos tus datos en los clubs</p>
             </div>
@@ -177,7 +177,7 @@ export default function Settings() {
 
           {/* Sección de Seguridad */}
           <section className="settings-section danger-section">
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><AlertTriangle size={18} /> Zona de Peligro</h2>
+            <h2 className="settings-section-title"><AlertTriangle size={18} /> Zona de Peligro</h2>
             <div className="setting-item danger">
               <div className="setting-content">
                 <h3>Eliminar Cuenta</h3>
@@ -208,7 +208,7 @@ export default function Settings() {
             </button>
           </div>
         </div>
-      </div>
+      </main>
     </>
   )
 }

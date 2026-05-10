@@ -8,15 +8,17 @@ import '../styles/ChatPanel.css'
 interface ChatPanelProps {
   clubId: number
   clubName: string
+  initialExpanded?: boolean
+  onClose?: () => void
 }
 
-export default function ChatPanel({ clubId, clubName }: ChatPanelProps) {
+export default function ChatPanel({ clubId, clubName, initialExpanded, onClose }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [activeSessionId, setActiveSessionId] = useState<number | null>(null)
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(initialExpanded ?? false)
   const [showSessions, setShowSessions] = useState(false)
   const [debugMode, setDebugMode] = useState(false)
   const [debugLog, setDebugLog] = useState<string[]>([])
@@ -184,10 +186,10 @@ export default function ChatPanel({ clubId, clubName }: ChatPanelProps) {
               </button>
               <button
                 className="btn-icon"
-                onClick={() => setIsExpanded(false)}
-                title="Minimizar"
+                onClick={() => onClose ? onClose() : setIsExpanded(false)}
+                title={onClose ? 'Cerrar' : 'Minimizar'}
               >
-                −
+                {onClose ? '✕' : '−'}
               </button>
             </div>
           </div>

@@ -227,27 +227,6 @@ export default function Dashboard() {
             )}
           </section>
 
-          {/* Estadísticas Rápidas */}
-          <section className="section stats-section">
-            <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-value">{clubs.length}</div>
-                <div className="stat-label">Clubes</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-value">0</div>
-                <div className="stat-label">Eventos Próximos</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-value">0</div>
-                <div className="stat-label">Noticias</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-value">{invitaciones.length}</div>
-                <div className="stat-label">Invitaciones</div>
-              </div>
-            </div>
-          </section>
         </div>
       </main>
     </div>

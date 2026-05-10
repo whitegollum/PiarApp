@@ -1,0 +1,322 @@
+.admin-clubs-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 12px;
+}
+
+.header-actions h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: white;
+  border: none;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Create form panel */
+.admin-clubs-form-panel {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.admin-clubs-form-panel h3 {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Club list */
+.admin-clubs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-club-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: box-shadow 0.2s ease;
+}
+
+.admin-club-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.admin-club-id {
+  width: 36px;
+  height: 36px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
+
+.admin-club-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-club-name {
+  margin: 0 0 2px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-club-slug {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.admin-club-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Empty state */
+.admin-clubs-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-muted);
+}
+
+.admin-clubs-empty svg {
+  margin-bottom: 16px;
+  color: var(--color-border);
+}
+
+.admin-clubs-empty h3 {
+  font-size: 18px;
+  margin: 0 0 8px 0;
+  color: var(--color-text);
+}
+
+.admin-clubs-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Skeleton */
+.admin-clubs-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-skeleton-row {
+  background: var(--color-border);
+  border-radius: 12px;
+  height: 66px;
+  opacity: 0.5;
+}
+
+/* Delete modal */
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.admin-modal {
+  background: var(--color-card);
+  border-radius: 12px;
+  padding: 28px;
+  max-width: 460px;
+  width: 100%;
+}
+
+.admin-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.admin-modal-body {
+  margin-bottom: 16px;
+  font-size: 15px;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.admin-modal-club-info {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.admin-modal-club-info strong {
+  display: block;
+  font-size: 16px;
+  color: var(--color-text);
+  margin-bottom: 3px;
+}
+
+.admin-modal-club-info span {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.admin-modal-warning {
+  font-size: 13px;
+  color: #dc2626;
+  margin: 0 0 20px 0;
+  line-height: 1.4;
+}
+
+.admin-modal-confirm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #f9fafb;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.admin-modal-confirm-row label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  flex: 1;
+}
+
+/* Toggle switch (inline, self-contained) */
+.modal-toggle {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.modal-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.modal-toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--color-border);
+  border-radius: 26px;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.modal-toggle-track::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.modal-toggle input:checked + .modal-toggle-track {
+  background: #dc2626;
+}
+
+.modal-toggle input:checked + .modal-toggle-track::before {
+  transform: translateX(22px);
+}
+
+.admin-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 600px) {
+  .admin-club-card {
+    flex-wrap: wrap;
+  }
+
+  .admin-club-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .admin-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .admin-modal-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

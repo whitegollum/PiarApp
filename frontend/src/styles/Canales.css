@@ -1,240 +1,234 @@
-/* Estilos para Panel de Canales */
+/* ===== Panel de Canales ===== */
 
-.canales-header {
-  margin-bottom: 24px;
+.canales-page {
+  max-width: 720px;
+  margin: 0 auto;
 }
 
-.canales-header .btn-back {
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0;
-  margin-bottom: 12px;
-  display: inline-block;
-}
-
-.canales-header .btn-back:hover {
-  text-decoration: underline;
-}
-
-.canales-header h1 {
-  font-size: 1.75rem;
-  margin: 0 0 8px 0;
+.canales-page .header-actions h1 {
+  flex: 1;
+  font-size: 1.3rem;
+  font-weight: 700;
   color: var(--color-text);
-}
-
-.canales-subtitle {
-  color: var(--color-text-secondary);
   margin: 0;
-  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
 }
 
+/* Indicador live pulsante */
+.canales-live-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  animation: live-pulse 2s infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+  50% { opacity: 0.8; box-shadow: 0 0 0 4px rgba(34,197,94,0); }
+}
+
+.canales-desc {
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  margin: -0.5rem 0 1.25rem;
+}
+
+/* Toast de notificación */
 .canales-notificacion {
-  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #1e1b4b;
   color: white;
-  padding: 12px 20px;
+  padding: 0.65rem 1rem;
   border-radius: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
   font-weight: 500;
-  animation: slideIn 0.3s ease;
+  animation: slideDown 0.25s ease;
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.canales-error {
-  background: #fee2e2;
-  color: #dc2626;
-  padding: 12px 20px;
-  border-radius: 8px;
-  margin-bottom: 16px;
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .canales-loading {
   text-align: center;
-  padding: 40px;
-  color: var(--color-text-secondary);
+  padding: 3rem;
+  color: var(--color-muted);
 }
 
+/* Grid de canales */
 .canales-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  gap: 0.75rem;
 }
 
-/* Card de Canal */
+/* ===== Card de canal ===== */
 .canal-card {
   background: var(--color-card);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 2px solid transparent;
-  transition: all 0.2s ease;
+  padding: 1.1rem 1.25rem;
+  transition: box-shadow 0.2s ease;
 }
 
 .canal-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .canal-card.canal-activo {
   border-color: var(--color-primary);
+  border-width: 2px;
 }
 
+/* Estado de seguridad: alguien está volando */
 .canal-card.canal-en-vuelo {
   border-color: #dc2626;
+  border-width: 2px;
   background: #fef2f2;
 }
 
-.canal-header {
+.canal-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
 }
 
 .canal-numero {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--color-text);
 }
 
 .canal-badge-vuelo {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: #dc2626;
   background: #fee2e2;
-  padding: 3px 8px;
-  border-radius: 12px;
-  animation: pulse 1.5s infinite;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  animation: badge-pulse 1.5s infinite;
 }
 
-@keyframes pulse {
+@keyframes badge-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  50%       { opacity: 0.55; }
 }
 
-/* Usuarios en canal */
-.canal-usuarios {
-  min-height: 60px;
-  margin-bottom: 12px;
+/* Lista de pilotos */
+.canal-pilotos {
+  min-height: 48px;
+  margin-bottom: 0.75rem;
 }
 
 .canal-vacio {
-  color: var(--color-text-secondary);
+  color: var(--color-muted);
+  font-size: 0.85rem;
   font-style: italic;
-  font-size: 0.9rem;
   margin: 0;
 }
 
-.canal-lista-usuarios {
+.canal-lista-pilotos {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
-.canal-lista-usuarios li {
-  padding: 4px 0;
-  font-size: 0.9rem;
+.canal-lista-pilotos li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.88rem;
   color: var(--color-text);
 }
 
-.canal-lista-usuarios li.usuario-volando {
+.canal-lista-pilotos li.piloto-en-vuelo {
   font-weight: 600;
   color: #dc2626;
 }
 
-.badge-volando {
-  font-size: 0.7rem;
+.badge-en-vuelo {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
   background: #dc2626;
   color: white;
-  padding: 2px 6px;
-  border-radius: 8px;
-  margin-left: 6px;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
 }
 
 /* Acciones */
 .canal-acciones {
   display: flex;
+  gap: 0.5rem;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
 }
 
-.btn-canal {
-  padding: 8px 16px;
+.canal-btn-full {
+  flex: 1;
+}
+
+.canal-btn-vuelo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
   border: none;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  background: #d97706;
+  color: white;
+  transition: background 0.2s ease;
   flex: 1;
-  min-width: 120px;
+  justify-content: center;
 }
 
-.btn-canal:disabled {
-  opacity: 0.5;
+.canal-btn-vuelo:hover:not(:disabled) {
+  background: #b45309;
+}
+
+.canal-btn-vuelo:disabled {
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
-.btn-ocupar {
-  background: var(--color-primary);
-  color: white;
-}
-
-.btn-ocupar:hover {
-  opacity: 0.9;
-}
-
-.btn-liberar {
-  background: #e5e7eb;
-  color: #374151;
-}
-
-.btn-liberar:hover {
-  background: #d1d5db;
-}
-
-.btn-vuelo {
-  background: #f59e0b;
-  color: white;
-}
-
-.btn-vuelo:hover:not(:disabled) {
-  background: #d97706;
-}
-
-.btn-vuelo-activo {
+.canal-btn-aterrizar {
   background: #dc2626;
 }
 
-.btn-vuelo-activo:hover {
+.canal-btn-aterrizar:hover:not(:disabled) {
   background: #b91c1c;
 }
 
-/* Aviso de vuelo */
+/* Aviso de seguridad */
 .canal-aviso-vuelo {
-  margin-top: 12px;
-  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
   background: #fef3c7;
   color: #92400e;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 500;
 }
 
-/* Responsive */
 @media (max-width: 640px) {
   .canales-grid {
     grid-template-columns: 1fr;

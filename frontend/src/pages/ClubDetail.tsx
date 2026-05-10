@@ -13,8 +13,8 @@ import { useClubRole } from '../hooks/useClubRole'
 import { CanalesService, CanalesPanel } from '../services/canalesService'
 import {
   Home, Users, Newspaper, Calendar, ShoppingCart, Wrench,
-  Radio, Key, Cloud, Sparkles, Tag, FileText, Globe, Smartphone,
-  Siren, Star, ShoppingBag, PlaneLanding, Plane, Trophy, Medal
+  Radio, Key, Sparkles, Siren, Star, ShoppingBag, PlaneLanding, Plane, Trophy, Medal,
+  AlertTriangle, ChevronRight, Bot
 } from 'lucide-react'
 import NewsList from '../components/NewsList'
 import EventList from '../components/EventList'
@@ -95,7 +95,8 @@ export default function ClubDetail() {
   const [tareas, setTareas] = useState<TareaComunitaria[]>([])
   const [ranking, setRanking] = useState<RankingEntry[]>([])
   const [productos, setProductos] = useState<ProductoAfiliacion[]>([])
-  
+  const [chatOpen, setChatOpen] = useState(false)
+
   const canEdit = role === 'administrador' || usuario?.es_superadmin;
 
   useEffect(() => {
@@ -307,6 +308,22 @@ export default function ClubDetail() {
     )
   }
 
+  // Derived data for resumen tab
+  const miCanal = canalPanel?.canales.find(c => c.usuarios.some(u => u.usuario_id === usuario?.id))
+  const yoVolando = miCanal?.usuarios.some(u => u.usuario_id === usuario?.id && u.en_vuelo) ?? false
+  const otroVolando = (miCanal?.en_vuelo && !yoVolando) ?? false
+  const pilotsEnVuelo = miCanal?.usuarios.filter(u => u.en_vuelo).length ?? 0
+  const miRanking = ranking.find(e => e.usuario_id === usuario?.id)
+  const ahora = new Date()
+  const proximoEvento = [...eventos]
+    .filter(e => new Date(e.fecha_inicio) > ahora)
+    .sort((a, b) => new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime())[0]
+  const diasParaEvento = proximoEvento
+    ? Math.ceil((new Date(proximoEvento.fecha_inicio).getTime() - ahora.getTime()) / (1000 * 60 * 60 * 24))
+    : null
+  const tareasAbiertasCount = tareas.filter(t => t.estado === 'abierta').length
+  const gustsAltas = weather?.wind_gusts_10m !== undefined && weather.wind_gusts_10m > 40
+
   return (
     <>
 
@@ -371,218 +388,171 @@ export default function ClubDetail() {
           <div className="club-content">
             {tab === 'resumen' && (
               <div className="tab-content">
-                
-                {/* Canal de Vuelo Widget */}
-                {canalPanel && (() => {
-                  const miCanal = canalPanel.canales.find(c => c.usuarios.some(u => u.usuario_id === usuario?.id))
-                  const otroVolando = miCanal?.en_vuelo && !miCanal.usuarios.some(u => u.usuario_id === usuario?.id && u.en_vuelo)
-                  const yoVolando = miCanal?.usuarios.some(u => u.usuario_id === usuario?.id && u.en_vuelo)
 
-                  return (
-                    <div
-                      className="canal-vuelo-widget"
-                      style={{ background: otroVolando ? '#fef2f2' : undefined, borderColor: otroVolando ? '#dc2626' : undefined }}
-                      onClick={() => navigate(`/clubes/${clubId}/canales`)}
-                    >
-                      <div className="canal-widget-info">
-                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Radio size={18} /> Canal de Vuelo</h3>
-                        {miCanal ? (
-                          <p className="canal-widget-estado">
-                            Estás en <strong>Canal {miCanal.canal_numero}</strong>
-                            {miCanal.usuarios.length > 1 && ` · ${miCanal.usuarios.length} pilotos`}
-                          </p>
-                        ) : (
-                          <p className="canal-widget-estado canal-widget-vacio">No estás en ningún canal</p>
-                        )}
-                        {otroVolando && (
-                          <p className="canal-widget-alerta"><Siren size={14} /> {miCanal?.piloto_volando} está volando — NO volar</p>
-                        )}
+                {/* Hero Operacional Unificado */}
+                {(canalPanel || weather || instalacionPass) && (
+                  <div className={`hero-operacional${otroVolando ? ' hero-alerta' : ''}`}>
+                    {canalPanel && (
+                      <div className="hero-canal-header" onClick={() => navigate(`/clubes/${clubId}/canales`)}>
+                        <Radio size={15} />
+                        <span>
+                          {miCanal
+                            ? <><strong>Canal {miCanal.canal_numero}</strong>{pilotsEnVuelo > 0 && ` · ${pilotsEnVuelo} piloto${pilotsEnVuelo > 1 ? 's' : ''} en vuelo`}</>
+                            : <span className="hero-canal-vacio">Sin canal asignado</span>
+                          }
+                        </span>
+                        <ChevronRight size={14} />
                       </div>
+                    )}
+
+                    {weather && (
+                      <div className="hero-weather-grid">
+                        <div className="hero-stat">
+                          <span className="hero-stat-label">VIENTO</span>
+                          <span className="hero-stat-value">
+                            {weather.wind_speed_10m ?? weather.windspeed}
+                            <span className="hero-stat-unit"> km/h</span>
+                          </span>
+                        </div>
+                        {weather.wind_gusts_10m !== undefined && (
+                          <div className="hero-stat">
+                            <span className="hero-stat-label">RÁFAGAS</span>
+                            <span className={`hero-stat-value${gustsAltas ? ' hero-stat-warn' : ''}`}>
+                              {weather.wind_gusts_10m}
+                              <span className="hero-stat-unit"> km/h</span>
+                            </span>
+                          </div>
+                        )}
+                        <div className="hero-stat">
+                          <span className="hero-stat-label">DIRECCIÓN</span>
+                          <span className="hero-stat-value">
+                            <span style={{ transform: `rotate(${weather.wind_direction_10m ?? weather.winddirection}deg)`, display: 'inline-block' }}>↓</span>
+                            {' '}{weather.wind_direction_10m ?? weather.winddirection}°
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {gustsAltas && (
+                      <div className="hero-safety-alert">
+                        <AlertTriangle size={14} /> Ráfagas elevadas. Vuela con cautela.
+                      </div>
+                    )}
+
+                    {otroVolando && (
+                      <div className="hero-safety-alert hero-safety-critical">
+                        <Siren size={14} /> {miCanal?.piloto_volando} está volando — NO volar
+                      </div>
+                    )}
+
+                    <div className="hero-footer">
+                      {instalacionPass && (
+                        <span className="hero-access-code">
+                          <Key size={13} /> Acceso · {instalacionPass.codigo}
+                        </span>
+                      )}
                       {miCanal && (
                         <button
-                          className={`btn-canal-vuelo-widget ${yoVolando ? 'volando' : ''} ${otroVolando ? 'bloqueado' : ''}`}
-                          disabled={otroVolando || false}
-                          onClick={(e) => {
-                            e.stopPropagation()
+                          className={`btn-avolar${yoVolando ? ' btn-aterrizar' : ''}`}
+                          disabled={otroVolando}
+                          onClick={() => {
                             if (!clubId || !miCanal) return
                             CanalesService.toggleVuelo(parseInt(clubId), miCanal.canal_numero)
                               .then(setCanalPanel)
                               .catch(() => {})
                           }}
                         >
-                          {yoVolando ? <><PlaneLanding size={16} /> Aterrizar</> : <><Plane size={16} /> A volar</>}
+                          {yoVolando ? <><PlaneLanding size={15} /> Aterrizar</> : <><Plane size={15} /> A volar</>}
                         </button>
                       )}
                     </div>
-                  )
-                })()}
-
-                {/* Facility Password Section */}
-                {instalacionPass && (
-                  <div className="facility-access-section">
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Key size={18} /> Código de Acceso</h3>
-                    <div className="access-code-container">
-                      <div className="access-code">{instalacionPass.codigo}</div>
-                      <p className="access-desc">{instalacionPass.descripcion || 'Contraseña actual de las instalaciones'}</p>
-                    </div>
                   </div>
                 )}
 
-                {/* Weather Widget */}
-                {weather && (
-                  <div className="weather-widget-container" style={{ 
-                    marginTop: '0', 
-                    marginBottom: '2rem',
-                    padding: '1.5rem', 
-                    background: 'linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%)', 
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
-                  }}>
-                    <h3 style={{ marginTop: 0, color: '#006064', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Cloud size={18} /> Condiciones Actuales
-                    </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
-                      <div className="weather-item">
-                        <span style={{ display: 'block', fontSize: '0.85rem', color: '#00838f', marginBottom: '0.25rem' }}>Viento</span>
-                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#006064' }}>
-                          {weather.wind_speed_10m ?? weather.windspeed} <span style={{ fontSize: '1rem' }}>km/h</span>
-                        </span>
-                      </div>
-                      
-                      {weather.wind_gusts_10m !== undefined && (
-                        <div className="weather-item">
-                          <span style={{ display: 'block', fontSize: '0.85rem', color: '#00838f', marginBottom: '0.25rem' }}>Ráfagas</span>
-                          <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#006064' }}>
-                            {weather.wind_gusts_10m} <span style={{ fontSize: '1rem' }}>km/h</span>
-                          </span>
-                        </div>
-                      )}
+                {/* Tu Actividad */}
+                {(miRanking || proximoEvento || tareasAbiertasCount > 0) && (
+                  <div className="actividad-section">
+                    <h3 className="section-label">TU ACTIVIDAD</h3>
 
-                      <div className="weather-item">
-                        <span style={{ display: 'block', fontSize: '0.85rem', color: '#00838f', marginBottom: '0.25rem' }}>Dirección</span>
-                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#006064', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ transform: `rotate(${weather.wind_direction_10m ?? weather.winddirection}deg)`, display: 'inline-block' }}>⬇</span>
-                          {weather.wind_direction_10m ?? weather.winddirection}°
+                    {miRanking && (
+                      <button className="actividad-row" onClick={() => navigate(`/clubes/${clubId}/ranking`)}>
+                        <span className="actividad-icon-wrap actividad-icon-gold"><Trophy size={16} /></span>
+                        <span className="actividad-text">
+                          Estás {miRanking.posicion}º en el ranking
+                          {miRanking.puntos_totales > 0 && ` · ${miRanking.puntos_totales} pts`}
                         </span>
-                      </div>
-                    </div>
+                        <ChevronRight size={16} />
+                      </button>
+                    )}
+
+                    {proximoEvento && diasParaEvento !== null && (
+                      <button className="actividad-row" onClick={() => navigate(`/clubes/${clubId}/eventos`)}>
+                        <span className="actividad-icon-wrap actividad-icon-blue"><Calendar size={16} /></span>
+                        <span className="actividad-text">
+                          {proximoEvento.nombre}
+                          {diasParaEvento === 0 ? ' · hoy' : diasParaEvento === 1 ? ' · mañana' : ` · en ${diasParaEvento} días`}
+                        </span>
+                        <ChevronRight size={16} />
+                      </button>
+                    )}
+
+                    {tareasAbiertasCount > 0 && (
+                      <button className="actividad-row" onClick={() => navigate(`/clubes/${clubId}/tareas`)}>
+                        <span className="actividad-icon-wrap actividad-icon-green"><Wrench size={16} /></span>
+                        <span className="actividad-text">
+                          {tareasAbiertasCount} tarea{tareasAbiertasCount > 1 ? 's' : ''} abierta{tareasAbiertasCount > 1 ? 's' : ''} a la que puedes apuntarte
+                        </span>
+                        <ChevronRight size={16} />
+                      </button>
+                    )}
                   </div>
                 )}
 
-                {/* Novedades Recientes */}
+                {/* Novedades Recientes — formato compacto */}
                 {contenidoReciente.length > 0 && (
-                  <div className="recent-content-section">
-                    <h3 className="recent-content-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Sparkles size={18} /> Novedades Recientes</h3>
-                    <div className="recent-content-grid">
-                      {contenidoReciente.map((item) => {
-                        const badgeIcon = item.tipo === 'noticia' ? 'Noticia' : item.tipo === 'evento' ? 'Evento' : 'Producto'
-                        const badgeColor = item.tipo === 'noticia' ? '#2196F3' : item.tipo === 'evento' ? '#4CAF50' : '#FF9800'
-                        
+                  <div className="novedades-section">
+                    <div className="novedades-header">
+                      <h3 className="section-label">NOVEDADES RECIENTES</h3>
+                      <button className="novedades-ver-todo" onClick={() => navigate(`/clubes/${clubId}/noticias`)}>
+                        Ver todo →
+                      </button>
+                    </div>
+                    <div className="novedades-list">
+                      {contenidoReciente.slice(0, 5).map((item) => {
+                        const badgeLabel = item.tipo === 'noticia' ? 'Noticia' : item.tipo === 'evento' ? 'Evento' : 'Producto'
+                        const diff = Math.floor((ahora.getTime() - new Date(item.fecha).getTime()) / (1000 * 60 * 60 * 24))
+                        const fechaStr = diff === 0 ? 'Hoy' : diff === 1 ? 'Ayer' : diff < 7 ? `Hace ${diff} días` : new Date(item.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
                         return (
-                          <div
+                          <button
                             key={`${item.tipo}-${item.id}`}
-                            className="recent-content-card"
+                            className="novedad-row"
                             onClick={() => {
-                              if (item.tipo === 'noticia') {
-                                navigate(`/clubes/${clubId}/noticias`)
-                              } else if (item.tipo === 'evento') {
-                                navigate(`/clubes/${clubId}/eventos`)
-                              } else if (item.tipo === 'producto') {
-                                navigate(`/clubes/${clubId}/productos`)
-                              }
+                              if (item.tipo === 'noticia') navigate(`/clubes/${clubId}/noticias`)
+                              else if (item.tipo === 'evento') navigate(`/clubes/${clubId}/eventos`)
+                              else navigate(`/clubes/${clubId}/productos`)
                             }}
-                            style={{ cursor: 'pointer' }}
                           >
-                            <div className="recent-content-badge" style={{ backgroundColor: badgeColor }}>
-                              {badgeIcon}
-                            </div>
-                            <h4 className="recent-content-title">{item.titulo}</h4>
-                            {item.descripcion && (
-                              <p className="recent-content-description">{item.descripcion}</p>
-                            )}
-                            <div className="recent-content-date">
-                              {new Date(item.fecha).toLocaleDateString('es-ES', { 
-                                day: 'numeric', 
-                                month: 'short', 
-                                year: 'numeric' 
-                              })}
-                            </div>
-                          </div>
+                            <span className={`novedad-badge novedad-badge-${item.tipo}`}>{badgeLabel}</span>
+                            <span className="novedad-titulo">{item.titulo}</span>
+                            <span className="novedad-fecha">{fechaStr}</span>
+                          </button>
                         )
                       })}
                     </div>
                   </div>
                 )}
 
-                {/* Información de Contacto */}
-                {(club.slug || club.descripcion || club.pais || club.region || club.email_contacto || club.telefono || club.sitio_web) && (
-                  <div className="contact-section">
-                    <h3>Información de Contacto</h3>
-                    <div className="contact-grid">
-                      {club.slug && (
-                        <div className="contact-item">
-                          <span className="contact-label"><Tag size={14} /> Identificador</span>
-                          <span className="contact-value">{club.slug}</span>
-                        </div>
-                      )}
-                      {club.descripcion && (
-                        <div className="contact-item" style={{ gridColumn: '1 / -1' }}>
-                          <span className="contact-label"><FileText size={14} /> Descripción</span>
-                          <span className="contact-value">{club.descripcion}</span>
-                        </div>
-                      )}
-                      {club.pais && (
-                        <div className="contact-item">
-                          <span className="contact-label"><Globe size={14} /> País</span>
-                          <span className="contact-value">{club.pais}</span>
-                        </div>
-                      )}
-                      {club.region && (
-                        <div className="contact-item">
-                          <span className="contact-label"><Globe size={14} /> Región</span>
-                          <span className="contact-value">{club.region}</span>
-                        </div>
-                      )}
-                      {club.email_contacto && (
-                        <div className="contact-item">
-                          <span className="contact-label"><Smartphone size={14} /> Email</span>
-                          <a href={`mailto:${club.email_contacto}`} className="contact-value link">
-                            {club.email_contacto}
-                          </a>
-                        </div>
-                      )}
-                      {club.telefono && (
-                        <div className="contact-item">
-                          <span className="contact-label"><Smartphone size={14} /> Teléfono</span>
-                          <a href={`tel:${club.telefono}`} className="contact-value link">
-                            {club.telefono}
-                          </a>
-                        </div>
-                      )}
-                      {club.sitio_web && (
-                        <div className="contact-item">
-                          <span className="contact-label"><Globe size={14} /> Sitio Web</span>
-                          <a href={club.sitio_web} target="_blank" rel="noopener noreferrer" className="contact-value link">
-                            {club.sitio_web}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Cámara en vivo RTSP/HLS */}
-                {club.rtsp_url && (
-                  <div style={{ marginTop: '2rem' }}>
+                {/* Cámara — al fondo, manejo de estados */}
+                {club.rtsp_url ? (
+                  <div className="camara-section">
                     <RTSPViewer url={club.rtsp_url} title={`Cámara ${club.nombre}`} />
                   </div>
-                )}
+                ) : canEdit ? (
+                  <button className="camara-placeholder" onClick={() => navigate(`/clubes/${clubId}/editar`)}>
+                    Configura la cámara →
+                  </button>
+                ) : null}
 
-                {canEdit && (
-                <div style={{ marginTop: '2rem' }}>
-                  <ChatPanel clubId={club.id} clubName={club.nombre} />
-                </div>
-                )}
               </div>
             )}
 
@@ -870,6 +840,32 @@ export default function ClubDetail() {
           </div>
         </div>
       </main>
+
+      {/* Flybot FAB */}
+      <button
+        className="chat-fab"
+        onClick={() => setChatOpen(true)}
+        title="Flybot — Asistente del club"
+      >
+        <Bot size={22} />
+      </button>
+
+      {/* Chat overlay */}
+      {chatOpen && (
+        <div
+          className="chat-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget) setChatOpen(false) }}
+        >
+          <div className="chat-overlay-panel">
+            <ChatPanel
+              clubId={club.id}
+              clubName={club.nombre}
+              initialExpanded={true}
+              onClose={() => setChatOpen(false)}
+            />
+          </div>
+        </div>
+      )}
     </>
   )
 }

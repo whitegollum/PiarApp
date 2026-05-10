@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import APIService from '../services/api'
@@ -11,7 +11,11 @@ import { ProductoService } from '../services/productoService'
 import { affiliateUrl } from '../utils/affiliate'
 import { useClubRole } from '../hooks/useClubRole'
 import { CanalesService, CanalesPanel } from '../services/canalesService'
-import Navbar from '../components/Navbar'
+import {
+  Home, Users, Newspaper, Calendar, ShoppingCart, Wrench,
+  Radio, Key, Cloud, Sparkles, Tag, FileText, Globe, Smartphone,
+  Siren, Star, ShoppingBag, PlaneLanding, Plane, Trophy, Medal
+} from 'lucide-react'
 import NewsList from '../components/NewsList'
 import EventList from '../components/EventList'
 import ChatPanel from '../components/ChatPanel'
@@ -280,7 +284,6 @@ export default function ClubDetail() {
   if (loading) {
     return (
       <div className="club-detail-layout">
-        <Navbar />
         <main className="club-detail-main">
           <div className="loading">
             <div className="spinner"></div>
@@ -294,7 +297,6 @@ export default function ClubDetail() {
   if (error || !club) {
     return (
       <div className="club-detail-layout">
-         <Navbar />
         <main className="club-detail-main">
           <div className="alert alert-error">{error || 'Club no encontrado'}</div>
           <button className="btn btn-primary" onClick={() => navigate('/', { state: { fromHomeButton: true } })}>
@@ -307,12 +309,6 @@ export default function ClubDetail() {
 
   return (
     <>
-      <Navbar 
-        clubName={club.nombre} 
-        clubId={clubId}
-        canEdit={canEdit}
-        totalAlertas={totalAlertas}
-      />
 
       <main className="club-detail-main">
         <div className="club-detail-container">
@@ -322,14 +318,14 @@ export default function ClubDetail() {
               className={`tab ${tab === 'resumen' ? 'active' : ''}`}
               onClick={() => setTab('resumen')}
             >
-              🏠 <span className="tab-text">Resumen</span>
+              <Home size={16} /> <span className="tab-text">Resumen</span>
             </button>
             <button
               className={`tab ${tab === 'miembros' ? 'active' : ''}`}
               onClick={() => setTab('miembros')}
               style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
-              <span>👥 <span className="tab-text">Miembros</span> ({miembros.length})</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Users size={16} /> <span className="tab-text">Miembros</span> ({miembros.length})</span>
               {totalAlertas > 0 && (
                 <span
                   style={{
@@ -349,25 +345,25 @@ export default function ClubDetail() {
               className={`tab ${tab === 'noticias' ? 'active' : ''}`}
               onClick={() => setTab('noticias')}
             >
-              📰 <span className="tab-text">Noticias</span> ({noticias.length})
+              <Newspaper size={16} /> <span className="tab-text">Noticias</span> ({noticias.length})
             </button>
             <button
               className={`tab ${tab === 'eventos' ? 'active' : ''}`}
               onClick={() => setTab('eventos')}
             >
-              📅 <span className="tab-text">Eventos</span> ({eventos.length})
+              <Calendar size={16} /> <span className="tab-text">Eventos</span> ({eventos.length})
             </button>
             <button
               className={`tab ${tab === 'productos' ? 'active' : ''}`}
               onClick={() => setTab('productos')}
             >
-              🛒 <span className="tab-text">Tienda</span> ({productos.length})
+              <ShoppingCart size={16} /> <span className="tab-text">Tienda</span> ({productos.length})
             </button>
             <button
               className={`tab ${tab === 'tareas' ? 'active' : ''}`}
               onClick={() => setTab('tareas')}
             >
-              🛠️ <span className="tab-text">Tareas</span>
+              <Wrench size={16} /> <span className="tab-text">Tareas</span>
             </button>
           </div>
 
@@ -389,7 +385,7 @@ export default function ClubDetail() {
                       onClick={() => navigate(`/clubes/${clubId}/canales`)}
                     >
                       <div className="canal-widget-info">
-                        <h3>📡 Canal de Vuelo</h3>
+                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Radio size={18} /> Canal de Vuelo</h3>
                         {miCanal ? (
                           <p className="canal-widget-estado">
                             Estás en <strong>Canal {miCanal.canal_numero}</strong>
@@ -399,7 +395,7 @@ export default function ClubDetail() {
                           <p className="canal-widget-estado canal-widget-vacio">No estás en ningún canal</p>
                         )}
                         {otroVolando && (
-                          <p className="canal-widget-alerta">🔴 {miCanal?.piloto_volando} está volando — NO volar</p>
+                          <p className="canal-widget-alerta"><Siren size={14} /> {miCanal?.piloto_volando} está volando — NO volar</p>
                         )}
                       </div>
                       {miCanal && (
@@ -414,7 +410,7 @@ export default function ClubDetail() {
                               .catch(() => {})
                           }}
                         >
-                          {yoVolando ? '🛬 Aterrizar' : '✈️ A volar'}
+                          {yoVolando ? <><PlaneLanding size={16} /> Aterrizar</> : <><Plane size={16} /> A volar</>}
                         </button>
                       )}
                     </div>
@@ -424,7 +420,7 @@ export default function ClubDetail() {
                 {/* Facility Password Section */}
                 {instalacionPass && (
                   <div className="facility-access-section">
-                    <h3>🔑 Código de Acceso</h3>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Key size={18} /> Código de Acceso</h3>
                     <div className="access-code-container">
                       <div className="access-code">{instalacionPass.codigo}</div>
                       <p className="access-desc">{instalacionPass.descripcion || 'Contraseña actual de las instalaciones'}</p>
@@ -443,7 +439,7 @@ export default function ClubDetail() {
                     boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
                   }}>
                     <h3 style={{ marginTop: 0, color: '#006064', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      🌤️ Condiciones Actuales
+                      <Cloud size={18} /> Condiciones Actuales
                     </h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
                       <div className="weather-item">
@@ -476,10 +472,10 @@ export default function ClubDetail() {
                 {/* Novedades Recientes */}
                 {contenidoReciente.length > 0 && (
                   <div className="recent-content-section">
-                    <h3 className="recent-content-header">🆕 Novedades Recientes</h3>
+                    <h3 className="recent-content-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Sparkles size={18} /> Novedades Recientes</h3>
                     <div className="recent-content-grid">
                       {contenidoReciente.map((item) => {
-                        const badgeEmoji = item.tipo === 'noticia' ? '📰' : item.tipo === 'evento' ? '📅' : '🛒'
+                        const badgeIcon = item.tipo === 'noticia' ? 'Noticia' : item.tipo === 'evento' ? 'Evento' : 'Producto'
                         const badgeColor = item.tipo === 'noticia' ? '#2196F3' : item.tipo === 'evento' ? '#4CAF50' : '#FF9800'
                         
                         return (
@@ -498,7 +494,7 @@ export default function ClubDetail() {
                             style={{ cursor: 'pointer' }}
                           >
                             <div className="recent-content-badge" style={{ backgroundColor: badgeColor }}>
-                              {badgeEmoji} {item.tipo === 'noticia' ? 'Noticia' : item.tipo === 'evento' ? 'Evento' : 'Producto'}
+                              {badgeIcon}
                             </div>
                             <h4 className="recent-content-title">{item.titulo}</h4>
                             {item.descripcion && (
@@ -525,31 +521,31 @@ export default function ClubDetail() {
                     <div className="contact-grid">
                       {club.slug && (
                         <div className="contact-item">
-                          <span className="contact-label">🏷️ Identificador</span>
+                          <span className="contact-label"><Tag size={14} /> Identificador</span>
                           <span className="contact-value">{club.slug}</span>
                         </div>
                       )}
                       {club.descripcion && (
                         <div className="contact-item" style={{ gridColumn: '1 / -1' }}>
-                          <span className="contact-label">📝 Descripción</span>
+                          <span className="contact-label"><FileText size={14} /> Descripción</span>
                           <span className="contact-value">{club.descripcion}</span>
                         </div>
                       )}
                       {club.pais && (
                         <div className="contact-item">
-                          <span className="contact-label">🌍 País</span>
+                          <span className="contact-label"><Globe size={14} /> País</span>
                           <span className="contact-value">{club.pais}</span>
                         </div>
                       )}
                       {club.region && (
                         <div className="contact-item">
-                          <span className="contact-label">📍 Región</span>
+                          <span className="contact-label"><Globe size={14} /> Región</span>
                           <span className="contact-value">{club.region}</span>
                         </div>
                       )}
                       {club.email_contacto && (
                         <div className="contact-item">
-                          <span className="contact-label">📧 Email</span>
+                          <span className="contact-label"><Smartphone size={14} /> Email</span>
                           <a href={`mailto:${club.email_contacto}`} className="contact-value link">
                             {club.email_contacto}
                           </a>
@@ -557,7 +553,7 @@ export default function ClubDetail() {
                       )}
                       {club.telefono && (
                         <div className="contact-item">
-                          <span className="contact-label">📱 Teléfono</span>
+                          <span className="contact-label"><Smartphone size={14} /> Teléfono</span>
                           <a href={`tel:${club.telefono}`} className="contact-value link">
                             {club.telefono}
                           </a>
@@ -565,7 +561,7 @@ export default function ClubDetail() {
                       )}
                       {club.sitio_web && (
                         <div className="contact-item">
-                          <span className="contact-label">🌐 Sitio Web</span>
+                          <span className="contact-label"><Globe size={14} /> Sitio Web</span>
                           <a href={club.sitio_web} target="_blank" rel="noopener noreferrer" className="contact-value link">
                             {club.sitio_web}
                           </a>
@@ -643,7 +639,7 @@ export default function ClubDetail() {
                                   onMouseOver={(e) => e.currentTarget.style.background = '#cc0000'}
                                   onMouseOut={(e) => e.currentTarget.style.background = '#ff4444'}
                                 >
-                                  🚨 {numAlertas}
+                                  <Siren size={12} /> {numAlertas}
                                 </button>
                               )}
                             </div>
@@ -683,7 +679,7 @@ export default function ClubDetail() {
             {tab === 'productos' && (
               <div className="tab-content">
                 <div className="content-header-row">
-                  <h3>🛒 Tienda de Afiliación</h3>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ShoppingBag size={18} /> Tienda de Afiliación</h3>
                   <button
                     className="btn btn-sm btn-primary"
                     onClick={() => navigate(`/clubes/${clubId}/productos`)}
@@ -701,7 +697,7 @@ export default function ClubDetail() {
                     {/* Productos Destacados */}
                     {productos.some(p => p.destacado) && (
                       <div className="productos-tab-section">
-                        <h3>⭐ Productos Destacados</h3>
+                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Star size={18} /> Productos Destacados</h3>
                         <div className="productos-tab-grid">
                           {productos.filter(p => p.destacado).map(producto => (
                             <div
@@ -747,7 +743,7 @@ export default function ClubDetail() {
                       
                       return (
                         <div className="productos-tab-section">
-                          <h3>🆕 Añadidos Recientemente</h3>
+                          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Sparkles size={18} /> Añadidos Recientemente</h3>
                           <div className="productos-tab-grid">
                             {recientes.map(producto => (
                               <div
@@ -789,7 +785,7 @@ export default function ClubDetail() {
             {tab === 'tareas' && (
               <div className="tab-content">
                 <div className="content-header-row">
-                  <h3>🛠️ Tareas Comunitarias</h3>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Wrench size={18} /> Tareas Comunitarias</h3>
                   <button
                     className="btn btn-sm btn-primary"
                     onClick={() => navigate(`/clubes/${clubId}/tareas`)}
@@ -801,13 +797,12 @@ export default function ClubDetail() {
                 {/* Ranking Top 3 */}
                 {ranking.length > 0 && (
                   <div className="tareas-ranking-summary">
-                    <h3>🏆 Top Ranking</h3>
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Trophy size={18} /> Top Ranking</h3>
                     <div className="ranking-podium">
                       {ranking.slice(0, 3).map((entry, index) => {
-                        const medals = ['🥇', '🥈', '🥉']
                         return (
                           <div key={entry.usuario_id} className={`podium-item podium-${index + 1}`}>
-                            <span className="podium-medal">{medals[index]}</span>
+                            <span className="podium-medal"><Medal size={20} /></span>
                             <span className="podium-name">{entry.nombre}</span>
                             <span className="podium-points">{entry.puntos_totales} pts</span>
                           </div>

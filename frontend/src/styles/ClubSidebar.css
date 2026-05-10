@@ -1,0 +1,167 @@
+/* ================================================
+   ClubSidebar — Vertical navigation for club context
+   ================================================ */
+
+:root {
+  --sidebar-width: 200px;
+  --sidebar-collapsed-width: 64px;
+  --sidebar-rail-width: 64px;
+  --navbar-height: 70px;
+}
+
+/* ---------- Base sidebar ---------- */
+.club-sidebar {
+  display: none; /* Hidden on mobile — bottom tab bar takes over */
+}
+
+/* ---------- Tablet: icon rail (768–1024px) ---------- */
+@media (min-width: 768px) {
+  .club-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: var(--sidebar-rail-width);
+    flex-shrink: 0;
+    background: var(--color-card);
+    border-right: 1px solid var(--color-border);
+    position: sticky;
+    top: var(--navbar-height);
+    height: calc(100vh - var(--navbar-height));
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 50;
+    transition: width 0.22s ease;
+  }
+
+  /* Tablet always shows rail (collapsed) */
+  .club-sidebar--collapsed {
+    width: var(--sidebar-rail-width);
+  }
+}
+
+/* ---------- Desktop: full labels (>1024px) ---------- */
+@media (min-width: 1024px) {
+  .club-sidebar {
+    width: var(--sidebar-width);
+  }
+
+  .club-sidebar--collapsed {
+    width: var(--sidebar-rail-width);
+  }
+}
+
+/* ---------- Nav ---------- */
+.club-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 8px;
+  flex: 1;
+}
+
+/* ---------- Nav item ---------- */
+.club-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--color-muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.club-sidebar-item:hover {
+  background: rgba(var(--color-primary-rgb), 0.07);
+  color: var(--color-primary);
+}
+
+.club-sidebar-item--active {
+  background: rgba(var(--color-primary-rgb), 0.1);
+  color: var(--color-primary);
+  font-weight: 600;
+  border-left: 3px solid var(--color-primary);
+  padding-left: 7px; /* compensate for 3px border */
+}
+
+/* ---------- Icon + label ---------- */
+.club-sidebar-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.club-sidebar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Divider ---------- */
+.club-sidebar-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 8px 4px;
+}
+
+/* ---------- Collapse/expand toggle (desktop only) ---------- */
+.club-sidebar-toggle {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .club-sidebar-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px 14px;
+    border: none;
+    background: none;
+    color: var(--color-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: color 0.15s ease;
+    flex-shrink: 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .club-sidebar-toggle:hover {
+    color: var(--color-text);
+    background: none;
+  }
+}
+
+/* Tooltip for collapsed items on tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .club-sidebar-item[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    left: calc(var(--sidebar-rail-width) + 8px);
+    background: #1e293b;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .club-sidebar-item[title] {
+    position: relative;
+  }
+}

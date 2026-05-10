@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { Bell, Palette, Lock, AlertTriangle, Save } from 'lucide-react'
 import APIService from '../services/api'
 import Navbar from '../components/Navbar'
 import '../styles/Settings.css'
@@ -75,7 +76,7 @@ export default function Settings() {
 
           {/* Sección de Notificaciones */}
           <section className="settings-section">
-            <h2>🔔 Notificaciones</h2>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Bell size={18} /> Notificaciones</h2>
             <div className="setting-item">
               <div className="setting-content">
                 <h3>Habilitar Notificaciones</h3>
@@ -112,7 +113,7 @@ export default function Settings() {
 
           {/* Sección de Apariencia */}
           <section className="settings-section">
-            <h2>🎨 Apariencia</h2>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Palette size={18} /> Apariencia</h2>
             <div className="setting-item">
               <div className="setting-content">
                 <h3>Tema Oscuro</h3>
@@ -146,7 +147,7 @@ export default function Settings() {
 
           {/* Sección de Privacidad */}
           <section className="settings-section">
-            <h2>🔐 Privacidad</h2>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Lock size={18} /> Privacidad</h2>
             <div className="setting-description">
               <p>Controla cómo compartimos tus datos en los clubs</p>
             </div>
@@ -176,7 +177,7 @@ export default function Settings() {
 
           {/* Sección de Seguridad */}
           <section className="settings-section danger-section">
-            <h2>⚠️ Zona de Peligro</h2>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><AlertTriangle size={18} /> Zona de Peligro</h2>
             <div className="setting-item danger">
               <div className="setting-content">
                 <h3>Eliminar Cuenta</h3>
@@ -203,7 +204,7 @@ export default function Settings() {
               onClick={handleSavePreferences}
               disabled={saving}
             >
-              {saving ? 'Guardando...' : '💾 Guardar Preferencias'}
+              {saving ? 'Guardando...' : <><Save size={16} /> Guardar Preferencias</>}
             </button>
           </div>
         </div>

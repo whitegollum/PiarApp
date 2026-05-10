@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import APIService from '../services/api'
 import { startGoogleOAuth } from '../services/googleOAuth'
+import { Eye, EyeOff } from 'lucide-react'
 import '../styles/Auth.css'
 
 interface RegisterResponse {
@@ -149,7 +150,7 @@ export default function Register() {
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               <small style={{ color: '#999', marginTop: '5px', display: 'block' }}>
@@ -176,7 +177,7 @@ export default function Register() {
                   onClick={() => setShowPassword2(!showPassword2)}
                   tabIndex={-1}
                 >
-                  {showPassword2 ? '🙈' : '👁️'}
+                  {showPassword2 ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>

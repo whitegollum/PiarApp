@@ -60,8 +60,8 @@ export const EventService = {
      return APIService.post<Asistencia>(`/clubes/${clubId}/eventos/${eventoId}/asistencia`, { estado });
   },
 
-  getMyAttendance: async (clubId: number, eventoId: number): Promise<Asistencia> => {
-    return APIService.get<Asistencia>(`/clubes/${clubId}/eventos/${eventoId}/mi-asistencia`);
+  getMyAttendance: async (clubId: number, eventoId: number): Promise<Asistencia | null> => {
+    return APIService.get<Asistencia | null>(`/clubes/${clubId}/eventos/${eventoId}/mi-asistencia`);
   },
 
   getAttendees: async (clubId: number, eventoId: number): Promise<Asistencia[]> => {

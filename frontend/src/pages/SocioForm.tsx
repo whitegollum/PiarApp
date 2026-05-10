@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import SocioService, { Socio, SocioCreate } from '../services/socioService';
-import Navbar from '../components/Navbar';
 import '../styles/Forms.css';
 
 export default function SocioForm() {
@@ -82,7 +81,6 @@ export default function SocioForm() {
 
   return (
     <>
-      <Navbar />
       <div className="form-container">
         <h1>{isEdit ? 'Editar Socio' : 'Nuevo Socio'}</h1>
         {error && <div className="alert alert-error">{error}</div>}

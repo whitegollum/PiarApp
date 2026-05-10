@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Bot, Microscope, List, Plus, Trash2, Send } from 'lucide-react'
 import { ChatService, ChatMessage, SessionSummary } from '../services/chatService'
 import '../styles/ChatPanel.css'
 
@@ -152,7 +153,7 @@ export default function ChatPanel({ clubId, clubName }: ChatPanelProps) {
         <>
           <div className="chat-panel-header">
             <div className="header-left">
-              <div className="chat-avatar">🤖</div>
+              <div className="chat-avatar"><Bot size={20} /></div>
               <div className="chat-title">
                 <h3>Flybot</h3>
                 <span className="chat-subtitle">{clubName}</span>
@@ -165,21 +166,21 @@ export default function ChatPanel({ clubId, clubName }: ChatPanelProps) {
                 title={debugMode ? 'Desactivar debug' : 'Activar debug'}
                 style={debugMode ? { background: '#fef3c7', borderRadius: '4px' } : undefined}
               >
-                🔬
+                <Microscope size={16} />
               </button>
               <button
                 className="btn-icon"
                 onClick={() => setShowSessions(!showSessions)}
                 title="Sesiones"
               >
-                📋
+                <List size={16} />
               </button>
               <button
                 className="btn-icon"
                 onClick={startNewSession}
                 title="Nueva conversación"
               >
-                ✚
+                <Plus size={16} />
               </button>
               <button
                 className="btn-icon"
@@ -216,7 +217,7 @@ export default function ChatPanel({ clubId, clubName }: ChatPanelProps) {
                       onClick={() => handleArchive(s.id)}
                       title="Eliminar"
                     >
-                      🗑
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 ))
@@ -285,7 +286,7 @@ export default function ChatPanel({ clubId, clubName }: ChatPanelProps) {
           disabled={isLoading}
         />
         <button type="submit" disabled={isLoading || !inputText.trim()}>
-          ➤
+          <Send size={16} />
         </button>
       </form>
     </div>

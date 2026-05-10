@@ -47,6 +47,7 @@ class NoticiaResponse(BaseModel):
     estado: str
     visible_para: str
     permite_comentarios: bool
+    comentarios_count: int = 0
     fecha_creacion: datetime
     fecha_actualizacion: Optional[datetime] = None
 

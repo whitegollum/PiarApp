@@ -1,15 +1,424 @@
-/* Estilos para Tareas Comunitarias */
+/* ===== Tareas Comunitarias - Design System v2 ===== */
 
+/* Page header */
+.page-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.club-detail-container .page-header-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Kebab menu */
+.tareas-kebab {
+  position: relative;
+}
+
+.tareas-kebab-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.tareas-kebab-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.tareas-kebab-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  min-width: 160px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.tareas-kebab-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #374151;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.tareas-kebab-item:hover {
+  background: #f9fafb;
+}
+
+/* Pill tabs */
+.tareas-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.tarea-tab {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.tarea-tab.active {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: white;
+}
+
+/* ===== Top del Mes widget ===== */
+.top-mes-widget {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 1rem;
+}
+
+.top-mes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.top-mes-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.top-mes-ver-link {
+  font-size: 0.82rem;
+  color: #E91E63;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.top-mes-ver-link:hover {
+  text-decoration: underline;
+}
+
+.top-mes-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+}
+
+.top-mes-medal {
+  font-size: 1.1rem;
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.top-mes-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.top-mes-nombre {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #111827;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-mes-puntos {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #E91E63;
+  white-space: nowrap;
+}
+
+/* ===== Tarea List v2 ===== */
+.tarea-list-v2 {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ===== Tarea Card v2 ===== */
+.tarea-card-v2 {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.tarea-card-v2-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.tarea-card-v2-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Card kebab */
+.tarea-card-kebab {
+  position: relative;
+}
+
+.tarea-card-kebab-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tarea-card-kebab-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.tarea-card-kebab-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  min-width: 210px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.tarea-card-kebab-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #374151;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.tarea-card-kebab-item:hover {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.tarea-card-v2-titulo {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.tarea-prioridad-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tarea-prioridad-alta {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.tarea-prioridad-media {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.tarea-prioridad-baja {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.tarea-card-v2-desc {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.45;
+}
+
+.tarea-card-v2-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.tarea-puntos-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #d97706;
+}
+
+.tarea-categoria-pill {
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 0.76rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.tarea-fecha-badge {
+  font-size: 0.78rem;
+  color: #6b7280;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.tarea-fecha-badge.urgent {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.tarea-fecha-badge.warning {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.tarea-card-v2-plazas {
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin: 0 0 12px;
+}
+
+.tarea-card-v2-plazas.llena {
+  color: #dc2626;
+}
+
+.tarea-card-v2-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.btn-apuntarme {
+  background: white;
+  border: 1.5px solid #0f172a;
+  color: #0f172a;
+  padding: 7px 18px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-apuntarme:hover {
+  background: #0f172a;
+  color: white;
+}
+
+.btn-apuntarme:disabled {
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-apuntarme.inscrito {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+.btn-apuntarme.inscrito:hover {
+  background: #dcfce7;
+}
+
+/* ===== Legacy page wrapper (reset) ===== */
+.tareas-page-card {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+/* ===== Legacy: keep for TareaDetail / form pages ===== */
 .tareas-page {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.tareas-page-card {
-  background: var(--color-card);
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .btn-volver-tareas {

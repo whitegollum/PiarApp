@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
+import { Star, Calendar, MoreVertical, CheckCircle } from 'lucide-react'
 import { TareaComunitaria } from '../services/tareasComunitariasService'
 
 interface TareaCardProps {
@@ -7,85 +8,151 @@ interface TareaCardProps {
   esAdmin?: boolean
   onInscribirse?: (tareaId: number) => void
   onDesinscribirse?: (tareaId: number) => void
-  onVer?: (tareaId: number) => void
+  onAprobar?: (tareaId: number) => void
 }
 
-const prioridadColors: Record<string, string> = {
-  alta: '#ef4444',
-  media: '#f59e0b',
-  baja: '#10b981'
+const PRIORIDAD_CLASS: Record<string, string> = {
+  alta: 'tarea-prioridad-alta',
+  media: 'tarea-prioridad-media',
+  baja: 'tarea-prioridad-baja',
 }
 
-const estadoLabels: Record<string, string> = {
-  abierta: 'Abierta',
-  en_progreso: 'En progreso',
-  completada: 'Completada',
-  rechazada: 'Rechazada',
-  expirada: 'Expirada'
+const PRIORIDAD_LABEL: Record<string, string> = {
+  alta: 'Alta',
+  media: 'Media',
+  baja: 'Baja',
+}
+
+const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
+
+function formatFechaLimite(fecha: string): { text: string; level: 'normal' | 'warning' | 'urgent' } {
+  const now = new Date()
+  const deadline = new Date(fecha)
+  const diffMs = deadline.getTime() - now.getTime()
+  const diffHours = diffMs / (1000 * 60 * 60)
+  const diffDays = diffMs / (1000 * 60 * 60 * 24)
+
+  if (diffMs < 0) {
+    return { text: `Venció el ${deadline.getDate()} ${MESES[deadline.getMonth()]}`, level: 'normal' }
+  } else if (diffHours < 24) {
+    return { text: 'Vence hoy', level: 'urgent' }
+  } else if (diffHours < 48) {
+    return { text: 'Mañana', level: 'warning' }
+  } else if (diffDays < 7) {
+    return { text: `En ${Math.ceil(diffDays)} días`, level: 'normal' }
+  } else {
+    return { text: `${deadline.getDate()} ${MESES[deadline.getMonth()]}`, level: 'normal' }
+  }
 }
 
 export const TareaCard: React.FC<TareaCardProps> = ({
-  tarea, usuarioId, esAdmin: _esAdmin, onInscribirse, onDesinscribirse, onVer
+  tarea, usuarioId, esAdmin, onInscribirse, onDesinscribirse, onAprobar
 }) => {
   const estaInscrito = tarea.participantes.some(p => p.usuario_id === usuarioId)
-  const plazasDisponibles = tarea.max_participantes
-    ? tarea.max_participantes - tarea.num_participantes
-    : null
+  const plazasOcupadas = tarea.num_participantes
+  const totalPlazas = tarea.max_participantes
+  const sinPlazas = totalPlazas != null && plazasOcupadas >= totalPlazas
+  const esAbierta = tarea.estado === 'abierta' || tarea.estado === 'en_progreso'
+  const fechaInfo = tarea.fecha_limite ? formatFechaLimite(tarea.fecha_limite) : null
+
+  const [showKebab, setShowKebab] = useState(false)
+  const kebabRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showKebab) return
+    const handler = (e: MouseEvent) => {
+      if (kebabRef.current && !kebabRef.current.contains(e.target as Node)) {
+        setShowKebab(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showKebab])
 
   return (
-    <div className="tarea-card" onClick={() => onVer?.(tarea.id)}>
-      <div className="tarea-card-header">
-        <h3 className="tarea-card-titulo">{tarea.titulo}</h3>
-        <span
-          className="tarea-card-prioridad"
-          style={{ backgroundColor: prioridadColors[tarea.prioridad] || '#6b7280' }}
-        >
-          {tarea.prioridad}
-        </span>
+    <article className="tarea-card-v2">
+      <div className="tarea-card-v2-header">
+        <h3 className="tarea-card-v2-titulo">{tarea.titulo}</h3>
+        <div className="tarea-card-v2-header-right">
+          <span className={`tarea-prioridad-pill ${PRIORIDAD_CLASS[tarea.prioridad] ?? 'tarea-prioridad-baja'}`}>
+            {PRIORIDAD_LABEL[tarea.prioridad] ?? tarea.prioridad}
+          </span>
+          {esAdmin && esAbierta && (
+            <div className="tarea-card-kebab" ref={kebabRef}>
+              <button
+                className="tarea-card-kebab-btn"
+                onClick={() => setShowKebab(v => !v)}
+                aria-label="Opciones"
+              >
+                <MoreVertical size={16} />
+              </button>
+              {showKebab && (
+                <div className="tarea-card-kebab-menu">
+                  <button
+                    className="tarea-card-kebab-item"
+                    onClick={() => {
+                      setShowKebab(false)
+                      onAprobar?.(tarea.id)
+                    }}
+                  >
+                    <CheckCircle size={14} /> Completar y asignar puntos
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {tarea.descripcion && (
-        <p className="tarea-card-descripcion">{tarea.descripcion}</p>
+        <p className="tarea-card-v2-desc">{tarea.descripcion}</p>
       )}
 
-      <div className="tarea-card-info">
-        <span className="tarea-card-puntos">{tarea.puntos} pts</span>
-        <span className="tarea-card-estado">{estadoLabels[tarea.estado] || tarea.estado}</span>
-        {tarea.categoria && <span className="tarea-card-categoria">{tarea.categoria}</span>}
-      </div>
-
-      <div className="tarea-card-participantes">
-        <span>{tarea.num_participantes} participante(s)</span>
-        {plazasDisponibles !== null && (
-          <span> | {plazasDisponibles} plaza(s) disponible(s)</span>
+      <div className="tarea-card-v2-meta">
+        <span className="tarea-puntos-badge">
+          <Star size={13} />
+          {tarea.puntos} pts
+        </span>
+        {tarea.categoria && (
+          <span className="tarea-categoria-pill">{tarea.categoria}</span>
+        )}
+        {fechaInfo && (
+          <span className={`tarea-fecha-badge${fechaInfo.level !== 'normal' ? ` ${fechaInfo.level}` : ''}`}>
+            <Calendar size={12} />
+            {fechaInfo.text}
+          </span>
         )}
       </div>
 
-      {tarea.fecha_limite && (
-        <div className="tarea-card-fecha">
-          Fecha límite: {new Date(tarea.fecha_limite).toLocaleDateString()}
-        </div>
+      {totalPlazas != null && (
+        <p className={`tarea-card-v2-plazas${sinPlazas ? ' llena' : ''}`}>
+          {plazasOcupadas} de {totalPlazas} plazas ocupadas
+        </p>
       )}
 
-      {tarea.estado === 'abierta' && (
-        <div className="tarea-card-actions" onClick={e => e.stopPropagation()}>
+      {esAbierta && (
+        <div className="tarea-card-v2-footer">
           {estaInscrito ? (
-            <button className="btn-desinscribirse" onClick={() => onDesinscribirse?.(tarea.id)}>
-              Desinscribirse
+            <button
+              className="btn-apuntarme inscrito"
+              onClick={() => onDesinscribirse?.(tarea.id)}
+            >
+              Apuntado ✓
             </button>
           ) : (
             <button
-              className="btn-inscribirse"
+              className="btn-apuntarme"
               onClick={() => onInscribirse?.(tarea.id)}
-              disabled={plazasDisponibles !== null && plazasDisponibles <= 0}
+              disabled={sinPlazas}
             >
-              {plazasDisponibles !== null && plazasDisponibles <= 0 ? 'Sin plazas' : 'Inscribirse'}
+              {sinPlazas ? 'Sin plazas' : 'Apuntarme'}
             </button>
           )}
         </div>
       )}
-    </div>
+    </article>
   )
 }
 
 export default TareaCard
+

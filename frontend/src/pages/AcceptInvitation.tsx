@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { Eye, EyeOff } from 'lucide-react'
 import APIService from '../services/api'
 import '../styles/Auth.css'
 
@@ -207,7 +208,7 @@ export default function AcceptInvitation() {
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               <small style={{ color: '#999', marginTop: '5px', display: 'block' }}>
@@ -233,7 +234,7 @@ export default function AcceptInvitation() {
                   onClick={() => setShowPassword2(!showPassword2)}
                   tabIndex={-1}
                 >
-                  {showPassword2 ? '🙈' : '👁️'}
+                  {showPassword2 ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>

@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.db import Base
@@ -31,7 +32,11 @@ class Noticia(Base):
 
     # Relaciones
     comentarios = relationship("Comentario", back_populates="noticia", cascade="all, delete-orphan")
-    
+
+    @hybrid_property
+    def comentarios_count(self):
+        return len(self.comentarios) if self.comentarios else 0
+
     # Auditoría
     fecha_creacion = Column(DateTime, server_default=func.now())
     fecha_publicacion = Column(DateTime, nullable=True)

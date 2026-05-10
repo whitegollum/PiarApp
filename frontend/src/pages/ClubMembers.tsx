@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import Navbar from '../components/Navbar'
+import { Mail, Siren, Crown, User, Clock, Check, Download, MoreVertical } from 'lucide-react'
 import APIService from '../services/api'
 import SocioService, { Socio } from '../services/socioService'
 import { DocumentacionService, DocumentacionResponse } from '../services/documentacionService'
@@ -51,7 +51,7 @@ export default function ClubMembers() {
   const { clubId } = useParams<{ clubId: string }>()
   const { usuario } = useAuth()
   const { role } = useClubRole(clubId)
-  const [club, setClub] = useState<Club | null>(null)
+  const [, setClub] = useState<Club | null>(null)
   const [miembros, setMiembros] = useState<Miembro[]>([])
   const [socios, setSocios] = useState<Record<number, Socio>>({})
   const [socioPhotoUrls, setSocioPhotoUrls] = useState<Record<number, string>>({})
@@ -68,12 +68,26 @@ export default function ClubMembers() {
   const [docsError, setDocsError] = useState<string | null>(null)
   const [alertasPorUsuario, setAlertasPorUsuario] = useState<Record<number, number>>({})
   const [, setLoadingAlertas] = useState(false)
+  const [activeTab, setActiveTab] = useState<'activos' | 'inactivos'>('activos')
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null)
+
+  const activos = useMemo(() => miembros.filter(m => m.estado === 'activo'), [miembros])
+  const inactivos = useMemo(() => miembros.filter(m => m.estado !== 'activo'), [miembros])
+  const visibleMiembros = activeTab === 'activos' ? activos : inactivos
 
   useEffect(() => {
     if (clubId) {
       loadClubAndMembers()
     }
   }, [clubId])
+
+  useEffect(() => {
+    if (!clubId) return
+    const isAdmin = role === 'administrador' || role === 'propietario' || usuario?.es_superadmin
+    if (isAdmin) {
+      loadAlertasPorUsuario()
+    }
+  }, [role, usuario?.es_superadmin, clubId])
 
   useEffect(() => {
     let isActive = true
@@ -140,9 +154,6 @@ export default function ClubMembers() {
       setSocios(sociosMap)
 
       setMiembros(miembrosData)
-      
-      // Cargar alertas por usuario
-      loadAlertasPorUsuario()
     } catch (err) {
       setError('Error al cargar los datos del club')
       console.error(err)
@@ -381,12 +392,83 @@ export default function ClubMembers() {
   }
 
   const isAdmin = miembros.some(m => m.usuario_id === usuario?.id && m.rol === 'administrador')
-  const canEdit = role === 'administrador' || usuario?.es_superadmin
+
+  const MemberKebab = useCallback(({ miembro }: { miembro: Miembro }) => {
+    const ref = useRef<HTMLDivElement>(null)
+    const isOpen = openMenuId === miembro.id
+    const isSelf = miembro.usuario_id === usuario?.id
+    const isAdminRole = miembro.rol === 'administrador'
+    const hasSocio = Boolean(socios[miembro.usuario_id])
+    const isInactive = miembro.estado === 'inactivo'
+    const isBusy = roleUpdatingId === miembro.usuario_id || estadoUpdatingId === miembro.usuario_id
+
+    useEffect(() => {
+      if (!isOpen) return
+      const handler = (e: MouseEvent) => {
+        if (ref.current && !ref.current.contains(e.target as Node)) setOpenMenuId(null)
+      }
+      document.addEventListener('mousedown', handler)
+      return () => document.removeEventListener('mousedown', handler)
+    }, [isOpen])
+
+    const doAction = (action: string) => {
+      setOpenMenuId(null)
+      handleMemberAction(miembro, action)
+    }
+
+    return (
+      <div className="member-kebab" ref={ref}>
+        <button
+          className="member-kebab-btn"
+          onClick={() => setOpenMenuId(isOpen ? null : miembro.id)}
+          disabled={isBusy}
+        >
+          <MoreVertical size={18} />
+        </button>
+        {isOpen && (
+          <div className="member-kebab-menu">
+            <button className="member-kebab-item" onClick={() => doAction('docs')}>
+              <Download size={14} /> Ver Docs
+            </button>
+            {hasSocio && (
+              <button className="member-kebab-item member-kebab-item--danger" onClick={() => doAction('baja_socio')}>
+                Baja Socio
+              </button>
+            )}
+            {!isSelf && isAdminRole && (
+              <button className="member-kebab-item" onClick={() => doAction('rol_miembro')}>
+                <User size={14} /> Quitar Admin
+              </button>
+            )}
+            {!isSelf && !isAdminRole && (
+              <button className="member-kebab-item" onClick={() => doAction('rol_admin')}>
+                <Crown size={14} /> Hacer Admin
+              </button>
+            )}
+            {!isSelf && !isAdminRole && !isInactive && (
+              <button className="member-kebab-item member-kebab-item--danger" onClick={() => doAction('desactivar')}>
+                Desactivar
+              </button>
+            )}
+            {!isSelf && !isAdminRole && isInactive && (
+              <button className="member-kebab-item" onClick={() => doAction('activar')}>
+                <Check size={14} /> Activar
+              </button>
+            )}
+            {!isSelf && !isAdminRole && isInactive && (
+              <button className="member-kebab-item member-kebab-item--danger" onClick={() => doAction('eliminar')}>
+                Eliminar del club
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }, [openMenuId, socios, roleUpdatingId, estadoUpdatingId, usuario?.id, handleMemberAction])
 
   if (loading) {
     return (
       <>
-        <Navbar clubName={club?.nombre} clubId={clubId} canEdit={canEdit} />
         <div className="loading-wrapper">
           <div className="spinner"></div>
         </div>
@@ -396,166 +478,117 @@ export default function ClubMembers() {
 
   return (
     <>
-      <Navbar clubName={club?.nombre} clubId={clubId} canEdit={canEdit} />
       <main className="club-detail-main">
         <div className="club-detail-container">
-          <button
-            className="btn-volver-tareas"
-            onClick={() => navigate(`/clubes/${clubId}`)}
-          >
-            ← Volver al club
-          </button>
 
-          <div className="members-header">
-            <h1>Miembros de {club?.nombre}</h1>
-            <p>Administra los miembros de tu club</p>
+          {/* Header */}
+          <div className="page-header-row">
+            <h1 className="page-title">Miembros</h1>
+            {isAdmin && (
+              <form onSubmit={handleInvitarMiembro} className="members-invite-row">
+                <input
+                  type="text"
+                  placeholder="Email para invitar"
+                  value={invitacionEmail}
+                  onChange={(e) => setInvitacionEmail(e.target.value)}
+                  className="form-input members-invite-input"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-sm members-invite-btn"
+                  disabled={enviandoInvitacion}
+                  title="Enviar invitación"
+                >
+                  <Mail size={16} />
+                </button>
+              </form>
+            )}
           </div>
 
           {error && <div className="alert alert-error">{error}</div>}
           {success && <div className="alert alert-success">{success}</div>}
 
-          {/* Sección de invitaciones (solo para administradores) */}
-          {isAdmin && (
-            <section className="members-section">
-              <h2>Invitar Nuevo Miembro</h2>
-              <form onSubmit={handleInvitarMiembro} className="invite-form">
-                <div className="form-row">
-                  <input
-                    type="text"
-                    placeholder="Email(s) del/los nuevo(s) miembro(s) (separados por comas)"
-                    value={invitacionEmail}
-                    onChange={(e) => setInvitacionEmail(e.target.value)}
-                    className="form-input"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={enviandoInvitacion}
-                  >
-                    {enviandoInvitacion ? 'Enviando...' : '📧 Invitar'}
-                  </button>
-                </div>
-              </form>
-            </section>
-          )}
+          {/* Tabs */}
+          <div className="content-tabs">
+            <button
+              className={`content-tab ${activeTab === 'activos' ? 'active' : ''}`}
+              onClick={() => setActiveTab('activos')}
+            >
+              Activos · {activos.length}
+            </button>
+            <button
+              className={`content-tab ${activeTab === 'inactivos' ? 'active' : ''}`}
+              onClick={() => setActiveTab('inactivos')}
+            >
+              Inactivos · {inactivos.length}
+            </button>
+          </div>
 
           {/* Lista de miembros */}
-          <section className="members-section">
-            <h2>Lista de Miembros ({miembros.length})</h2>
-            
-            {miembros.length === 0 ? (
-              <div className="empty-state">
-                <p>No hay miembros en este club aún</p>
-              </div>
-            ) : (
-              <div className="members-list">
-                {miembros.map(miembro => {
-                  const isSelf = miembro.usuario_id === usuario?.id
-                  const isAdminRole = miembro.rol === 'administrador'
-                  const hasSocio = Boolean(socios[miembro.usuario_id])
-                  const isInactive = miembro.estado === 'inactivo'
-                  const isBusy = roleUpdatingId === miembro.usuario_id || estadoUpdatingId === miembro.usuario_id
-                  const photoUrl = socioPhotoUrls[miembro.usuario_id]
-                  const numAlertas = alertasPorUsuario[miembro.usuario_id] || 0
+          {visibleMiembros.length === 0 ? (
+            <div className="empty-state">
+              <p>No hay miembros en esta categoría</p>
+            </div>
+          ) : (
+            <div className="members-list-v2">
+              {visibleMiembros.map(miembro => {
+                const numAlertas = alertasPorUsuario[miembro.usuario_id] || 0
+                const photoUrl = socioPhotoUrls[miembro.usuario_id]
 
-                  return (
-                  <div key={miembro.id} className="member-item">
-                    <div className="member-avatar-col">
-                      <div className="member-avatar">
+                return (
+                  <article key={miembro.id} className="member-card-v2">
+                    <div className="member-card-left">
+                      <div className="member-avatar-v2">
                         {photoUrl ? (
-                          <img src={photoUrl} alt={`Foto de ${miembro.usuario?.nombre_completo || 'socio'}`} />
+                          <img src={photoUrl} alt={miembro.usuario?.nombre_completo} />
                         ) : (
-                          miembro.usuario?.nombre_completo.charAt(0).toUpperCase() || 'U'
+                          (miembro.usuario?.nombre_completo || 'U').charAt(0).toUpperCase()
                         )}
                       </div>
-                      <span className={`member-status-mini status-${miembro.estado}`}>
-                        {miembro.estado === 'activo' && 'Activo'}
-                        {miembro.estado === 'pendiente' && 'Pendiente'}
-                        {miembro.estado === 'inactivo' && 'Inactivo'}
-                      </span>
-                    </div>
-                    <div className="member-info">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <h3>{miembro.usuario?.nombre_completo || 'Usuario desconocido'}</h3>
-                        {numAlertas > 0 && (
-                          <button
-                            onClick={() => navigate(`/admin/alertas?club=${clubId}&usuario=${miembro.usuario_id}`)}
-                            className="alert-badge-button"
-                            title={`${numAlertas} alerta(s) activa(s)`}
-                            style={{
-                              background: '#ff4444',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '12px',
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              fontWeight: 'bold',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              transition: 'all 0.2s ease',
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.background = '#cc0000'}
-                            onMouseOut={(e) => e.currentTarget.style.background = '#ff4444'}
-                          >
-                            🚨 {numAlertas}
-                          </button>
-                        )}
-                      </div>
-                      <p className="member-email">{miembro.usuario?.email || 'Sin email'}</p>
-                      <div className="member-meta">
-                        <span
-                          className={`role-badge role-${miembro.rol}`}
-                          data-role-label={miembro.rol === 'administrador' ? 'Administrador' : 'Miembro'}
-                        >
-                          {miembro.rol === 'administrador' ? '👑 Administrador' : '👤 Miembro'}
-                        </span>
-                        <span className={`status-badge status-estado status-${miembro.estado}`}>
-                          {miembro.estado === 'activo' && '✓ Activo'}
-                          {miembro.estado === 'pendiente' && '⏳ Pendiente'}
-                          {miembro.estado === 'inactivo' && '× Inactivo'}
-                        </span>
-                        {socios[miembro.usuario_id] && (
-                          <span className="status-badge status-activo">Socio Activo</span>
-                        )}
+                      <div className="member-card-info">
+                        <div className="member-card-name-row">
+                          <span className="member-card-name">
+                            {miembro.usuario?.nombre_completo || 'Usuario desconocido'}
+                          </span>
+                          {numAlertas > 0 && (
+                            <button
+                              onClick={() => navigate(`/admin/alertas?club=${clubId}&usuario=${miembro.usuario_id}`)}
+                              className="alert-badge-button"
+                              title={`${numAlertas} alerta(s)`}
+                            >
+                              <Siren size={12} /> {numAlertas}
+                            </button>
+                          )}
+                        </div>
+                        <p className="member-card-email">{miembro.usuario?.email}</p>
+                        <div className="member-card-meta">
+                          {miembro.rol === 'administrador' ? (
+                            <span className="member-role-pill member-role-admin">
+                              <Crown size={11} /> Admin
+                            </span>
+                          ) : (
+                            <span className="member-role-pill member-role-member">
+                              <User size={11} /> Miembro
+                            </span>
+                          )}
+                          {miembro.estado === 'pendiente' && (
+                            <span className="member-status-pill member-status-pending">
+                              <Clock size={11} /> Pendiente
+                            </span>
+                          )}
+                          {socios[miembro.usuario_id] && (
+                            <span className="member-role-pill member-role-socio">Socio</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    {isAdmin && (
-                      <div className="member-actions">
-                        <select
-                          className="actions-select"
-                          defaultValue=""
-                          onChange={(e) => {
-                            const value = e.target.value
-                            e.currentTarget.value = ''
-                            handleMemberAction(miembro, value)
-                          }}
-                          disabled={isBusy}
-                        >
-                          <option value="" disabled>Acciones...</option>
-                          <option value="docs">Ver Docs</option>
-                          {hasSocio && <option value="baja_socio">Baja Socio</option>}
-                          {!isSelf && miembro.rol === 'miembro' && <option value="rol_admin">Cambiar a Admin</option>}
-                          {!isSelf && miembro.rol === 'administrador' && <option value="rol_miembro">Cambiar a Miembro</option>}
-                          {!isSelf && !isAdminRole && !isInactive && <option value="desactivar">Desactivar</option>}
-                          {!isSelf && !isAdminRole && isInactive && <option value="activar">Cambiar a Activo</option>}
-                          {!isSelf && !isAdminRole && isInactive && <option value="eliminar">Eliminar del club</option>}
-                        </select>
-                        {miembro.fecha_aprobacion && (
-                          <small className="approval-date approval-date-inline">
-                            Aprobado: {new Date(miembro.fecha_aprobacion).toLocaleDateString('es-ES')}
-                          </small>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  )
-                })}
-              </div>
-            )}
-          </section>
+                    {isAdmin && <MemberKebab miembro={miembro} />}
+                  </article>
+                )
+              })}
+            </div>
+          )}
         </div>
       </main>
 
@@ -587,8 +620,8 @@ export default function ClubMembers() {
                             <p><strong>Número:</strong> {docsData.rc_numero || 'No registrado'}</p>
                             <p><strong>Vencimiento:</strong> {docsData.rc_fecha_vencimiento ? new Date(docsData.rc_fecha_vencimiento).toLocaleDateString() : '-'}</p>
                             {docsData.rc_tiene_archivo ? (
-                                <button className="btn btn-primary btn-sm" onClick={() => handleDownloadDoc('rc')}>
-                                    📥 Descargar PDF
+                                <button className="btn btn-primary btn-sm" onClick={() => handleDownloadDoc('rc')} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                                    <Download size={14} /> Descargar PDF
                                 </button>
                             ) : (
                                 <span className="badge badge-warning">Sin archivo</span>
@@ -600,8 +633,8 @@ export default function ClubMembers() {
                             <p><strong>Número:</strong> {docsData.carnet_numero || 'No registrado'}</p>
                             <p><strong>Vencimiento:</strong> {docsData.carnet_fecha_vencimiento ? new Date(docsData.carnet_fecha_vencimiento).toLocaleDateString() : '-'}</p>
                             {docsData.carnet_tiene_archivo ? (
-                                <button className="btn btn-primary btn-sm" onClick={() => handleDownloadDoc('carnet')}>
-                                    📥 Descargar Archivo
+                                <button className="btn btn-primary btn-sm" onClick={() => handleDownloadDoc('carnet')} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                                    <Download size={14} /> Descargar Archivo
                                 </button>
                             ) : (
                                 <span className="badge badge-warning">Sin archivo</span>

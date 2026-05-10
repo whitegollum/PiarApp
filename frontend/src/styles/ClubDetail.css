@@ -3,7 +3,6 @@
 .club-detail-layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
   background-color: var(--color-bg);
 }
 
@@ -357,8 +356,7 @@
   }
 
   .club-tabs {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    display: none !important;
   }
 
   .tab {
@@ -371,7 +369,29 @@
   }
 }
 
-.header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+  flex-wrap: nowrap;
+}
+
+.header-actions h1 {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.header-actions .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  width: auto !important;
+}
 
 /* Sección de Contraseña de Instalaciones */
 .facility-access-section {

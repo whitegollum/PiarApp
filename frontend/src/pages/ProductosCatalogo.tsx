@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { Package, Store, ExternalLink, Heart, MoreVertical } from 'lucide-react'
 import { ProductoService } from '../services/productoService'
 import { ProductoAfiliacion } from '../types/models'
 import { useClubRole } from '../hooks/useClubRole'
 import { affiliateUrl } from '../utils/affiliate'
 import APIService from '../services/api'
-import Navbar from '../components/Navbar'
 import '../styles/Productos.css'
 import '../styles/ClubDetail.css'
 
@@ -22,11 +22,13 @@ export default function ProductosCatalogo() {
   const navigate = useNavigate()
   const { role } = useClubRole(clubId)
 
-  const [club, setClub] = useState<Club | null>(null)
+  const [, setClub] = useState<Club | null>(null)
   const [productos, setProductos] = useState<ProductoAfiliacion[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [categoriaFiltro, setCategoriaFiltro] = useState<string>('')
+  const [showMenu, setShowMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const canEdit = role === 'administrador' || usuario?.es_superadmin
 
@@ -42,12 +44,7 @@ export default function ProductosCatalogo() {
     const cargarProductos = async () => {
       try {
         setLoading(true)
-        const data = await ProductoService.getAll(
-          id,
-          categoriaFiltro || undefined,
-          true,
-          false
-        )
+        const data = await ProductoService.getAll(id, undefined, true, false)
         setProductos(data.productos)
       } catch (err) {
         setError('Error al cargar productos')
@@ -58,172 +55,157 @@ export default function ProductosCatalogo() {
     }
 
     cargarProductos()
-  }, [clubId, usuario, navigate, categoriaFiltro])
+  }, [clubId, usuario, navigate])
+
+  useEffect(() => {
+    if (!showMenu) return
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showMenu])
 
   const handleClickProducto = async (producto: ProductoAfiliacion) => {
     try {
-      // Registrar click para estadísticas
       await ProductoService.registrarClick(parseInt(clubId!), producto.id)
-      // Abrir enlace en nueva pestaña (con redirect de afiliación para AliExpress)
       window.open(affiliateUrl(producto.url_afiliacion), '_blank', 'noopener,noreferrer')
-    } catch (err) {
-      console.error('Error al registrar click:', err)
-      // Abrir enlace aunque falle el registro
+    } catch {
       window.open(affiliateUrl(producto.url_afiliacion), '_blank', 'noopener,noreferrer')
     }
   }
 
-  const categorias = [...new Set(productos.map(p => p.categoria).filter(Boolean))]
+  const categorias = useMemo(() =>
+    [...new Set(productos.map(p => p.categoria).filter(Boolean))] as string[],
+    [productos]
+  )
+
+  const filtered = useMemo(() =>
+    categoriaFiltro ? productos.filter(p => p.categoria === categoriaFiltro) : productos,
+    [productos, categoriaFiltro]
+  )
+
+  // Count per category
+  const countFor = (cat: string) => productos.filter(p => p.categoria === cat).length
 
   if (!usuario) return null
 
   return (
     <>
-      <Navbar clubName={club?.nombre} clubId={clubId} canEdit={canEdit} />
       <main className="club-detail-main">
         <div className="club-detail-container">
-          <button
-            className="btn-volver-tareas"
-            onClick={() => navigate(`/clubes/${clubId}`)}
-          >
-            ← Volver al club
-          </button>
 
-          <div className="productos-header">
-            <h1>🛒 Tienda de Afiliación</h1>
+          {/* Header */}
+          <div className="page-header-row">
+            <h1 className="page-title">Tienda</h1>
             {canEdit && (
-              <button
-                className="btn btn-sm btn-primary"
-                onClick={() => navigate(`/clubes/${clubId}/productos/admin`)}
-              >
-                Administrar Catálogo
-              </button>
+              <div className="news-kebab" ref={menuRef}>
+                <button
+                  className="news-kebab-btn"
+                  onClick={() => setShowMenu(v => !v)}
+                >
+                  <MoreVertical size={20} />
+                </button>
+                {showMenu && (
+                  <div className="news-kebab-menu">
+                    <button
+                      className="news-kebab-item"
+                      onClick={() => { setShowMenu(false); navigate(`/clubes/${clubId}/productos/admin`) }}
+                    >
+                      Gestionar catálogo
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
-            <p className="subtitle">Productos recomendados por el club. Al comprar a través de estos enlaces, apoyas al club.</p>
           </div>
 
+          {/* Subtitle banner */}
+          <p className="tienda-subtitle">
+            <Heart size={13} fill="currentColor" />
+            Cada compra apoya al club sin coste extra para ti
+          </p>
+
+          {/* Category tabs */}
           {categorias.length > 0 && (
-            <div className="categorias-filter">
-              <button 
-                className={`filter-btn ${categoriaFiltro === '' ? 'active' : ''}`}
+            <div className="content-tabs">
+              <button
+                className={`content-tab ${categoriaFiltro === '' ? 'active' : ''}`}
                 onClick={() => setCategoriaFiltro('')}
               >
-                Todos
+                Todos · {productos.length}
               </button>
               {categorias.map(cat => (
-                <button 
+                <button
                   key={cat}
-                  className={`filter-btn ${categoriaFiltro === cat ? 'active' : ''}`}
-                  onClick={() => setCategoriaFiltro(cat!)}
+                  className={`content-tab ${categoriaFiltro === cat ? 'active' : ''}`}
+                  onClick={() => setCategoriaFiltro(cat)}
                 >
-                  {cat}
+                  {cat} · {countFor(cat)}
                 </button>
               ))}
             </div>
           )}
 
+          {/* States */}
           {loading ? (
             <div className="loading">
               <div className="spinner"></div>
-              <p>Cargando productos...</p>
             </div>
           ) : error ? (
             <div className="alert alert-error">{error}</div>
-          ) : productos.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <div className="empty-state">
-              <p>📦 No hay productos disponibles en este momento</p>
+              <p>No hay productos disponibles</p>
               {canEdit && (
-                <button 
-                  className="btn btn-primary"
-                  onClick={() => navigate(`/clubes/${clubId}/productos/admin`)}
-                >
-                  Añadir Primer Producto
+                <button className="btn btn-primary" onClick={() => navigate(`/clubes/${clubId}/productos/admin`)}>
+                  Añadir producto
                 </button>
               )}
             </div>
           ) : (
-            <>
-              {/* Productos Destacados */}
-              {productos.some(p => p.destacado) && (
-                <section className="productos-section">
-                  <h2>⭐ Productos Destacados</h2>
-                  <div className="productos-grid">
-                    {productos.filter(p => p.destacado).map(producto => (
-                      <div key={producto.id} className="producto-card destacado">
-                        {producto.imagen_url && (
-                          <div className="producto-imagen">
-                            <img src={producto.imagen_url} alt={producto.nombre} />
-                            {producto.destacado && <span className="badge-destacado">⭐ Destacado</span>}
-                          </div>
-                        )}
-                        <div className="producto-content">
-                          <h3>{producto.nombre}</h3>
-                          {producto.proveedor && (
-                            <span className="producto-proveedor">🏪 {producto.proveedor}</span>
-                          )}
-                          {producto.precio_referencia && (
-                            <div className="producto-precio">{producto.precio_referencia}</div>
-                          )}
-                          {producto.descripcion && (
-                            <p className="producto-descripcion">{producto.descripcion}</p>
-                          )}
-                          <div className="producto-footer">
-                            {producto.categoria && (
-                              <span className="producto-categoria">{producto.categoria}</span>
-                            )}
-                            <button 
-                              className="btn btn-primary btn-sm"
-                              onClick={() => handleClickProducto(producto)}
-                            >
-                              🔗 Ver Producto
-                            </button>
-                          </div>
-                        </div>
+            <div className="productos-list">
+              {filtered.map(producto => (
+                <article key={producto.id} className={`producto-card-v2 ${producto.destacado ? 'destacado' : ''}`}>
+                  <div className="producto-card-image">
+                    {producto.imagen_url ? (
+                      <img src={producto.imagen_url} alt={producto.nombre} />
+                    ) : (
+                      <div className="producto-card-placeholder">
+                        <Package size={36} strokeWidth={1.2} />
                       </div>
-                    ))}
+                    )}
                   </div>
-                </section>
-              )}
-
-              {/* Todos los Productos */}
-              <section className="productos-section">
-                <h2>📦 Todos los Productos</h2>
-                <div className="productos-grid">
-                  {productos.filter(p => !p.destacado).map(producto => (
-                    <div key={producto.id} className="producto-card">
-                      {producto.imagen_url && (
-                        <div className="producto-imagen">
-                          <img src={producto.imagen_url} alt={producto.nombre} />
-                        </div>
+                  <div className="producto-card-body">
+                    <div className="producto-card-title-row">
+                      <h3 className="producto-card-name">{producto.nombre}</h3>
+                      {producto.precio_referencia && (
+                        <span className="producto-card-price">{producto.precio_referencia}</span>
                       )}
-                      <div className="producto-content">
-                        <h3>{producto.nombre}</h3>
-                        {producto.proveedor && (
-                          <span className="producto-proveedor">🏪 {producto.proveedor}</span>
-                        )}
-                        {producto.precio_referencia && (
-                          <div className="producto-precio">{producto.precio_referencia}</div>
-                        )}
-                        {producto.descripcion && (
-                          <p className="producto-descripcion">{producto.descripcion}</p>
-                        )}
-                        <div className="producto-footer">
-                          {producto.categoria && (
-                            <span className="producto-categoria">{producto.categoria}</span>
-                          )}
-                          <button 
-                            className="btn btn-primary btn-sm"
-                            onClick={() => handleClickProducto(producto)}
-                          >
-                            🔗 Ver Producto
-                          </button>
-                        </div>
-                      </div>
                     </div>
-                  ))}
-                </div>
-              </section>
-            </>
+                    {producto.proveedor && (
+                      <p className="producto-card-provider">
+                        <Store size={12} /> {producto.proveedor}
+                      </p>
+                    )}
+                    {producto.descripcion && (
+                      <p className="producto-card-desc">{producto.descripcion}</p>
+                    )}
+                    <div className="producto-card-footer">
+                      {producto.categoria && (
+                        <span className="producto-category-pill">{producto.categoria}</span>
+                      )}
+                      <button
+                        className="btn btn-outline btn-sm producto-card-cta"
+                        onClick={() => handleClickProducto(producto)}
+                      >
+                        <ExternalLink size={13} /> Ver producto
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
           )}
         </div>
       </main>

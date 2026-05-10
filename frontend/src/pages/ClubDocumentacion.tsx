@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
+﻿import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import { DocumentacionService, DocumentacionResponse } from '../services/documentacionService'
 import APIService from '../services/api'
 import ReactMarkdown from 'react-markdown'
@@ -169,7 +168,6 @@ export default function ClubDocumentacion() {
   if (loading) {
     return (
       <>
-        <Navbar />
         <main className="club-detail-main">
           <div className="club-detail-container">
             <div className="loading">Cargando...</div>
@@ -181,7 +179,6 @@ export default function ClubDocumentacion() {
 
   return (
     <>
-      <Navbar />
       <main className="club-detail-main">
         <div className="club-detail-container">
           <div className="header-actions">

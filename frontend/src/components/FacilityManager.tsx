@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Key } from 'lucide-react'
 import APIService from '../services/api'
 import '../styles/FacilityManager.css'
 
@@ -75,7 +76,7 @@ export default function FacilityManager({ clubId }: { clubId: number }) {
 
   return (
     <div className="facility-manager-container">
-      <h2>🔑 Gestión de Acceso a Instalaciones</h2>
+      <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Key size={20} /> Gestión de Acceso a Instalaciones</h2>
       
       {message && (
         <div className={`alert alert-${message.type}`}>
@@ -157,7 +158,7 @@ export default function FacilityManager({ clubId }: { clubId: number }) {
                       <td>{new Date(item.fecha_creacion).toLocaleString()}</td>
                       <td>{item.codigo}</td>
                       <td>{item.descripcion}</td>
-                      <td>{item.activa ? '✅ Activa' : '❌ Inactiva'}</td>
+                      <td>{item.activa ? 'Activa' : 'Inactiva'}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -1,5 +1,6 @@
 """Endpoints de gestión de eventos"""
 from fastapi import APIRouter, HTTPException, Depends, status
+from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.database.db import get_db
@@ -350,7 +351,7 @@ async def listar_asistentes(
     return [AsistenciaResponse.model_validate(a) for a in asistentes]
 
 
-@router.get("/clubes/{club_id}/eventos/{evento_id}/mi-asistencia", response_model=AsistenciaResponse)
+@router.get("/clubes/{club_id}/eventos/{evento_id}/mi-asistencia", response_model=Optional[AsistenciaResponse])
 async def obtener_mi_asistencia(
     club_id: int,
     evento_id: int,
@@ -362,11 +363,9 @@ async def obtener_mi_asistencia(
         AsistenciaEvento.evento_id == evento_id,
         AsistenciaEvento.usuario_id == current_user.id
     ).first()
-    
+
     if not asistencia:
-        # Retornar objeto vacío/dummy o 404? 
-        # Mejor 404 para que el front sepa que no hay registro
-        raise HTTPException(status_code=404, detail="No inscrito")
+        return None
 
     return AsistenciaResponse.model_validate(asistencia)
 

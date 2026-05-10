@@ -1,6 +1,11 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import {
+  Menu, Home, Pencil, Users, Newspaper, Calendar, ShoppingCart,
+  ClipboardList, Trophy, Radio, Gift, Lock, Plane,
+  ChevronDown, Settings, Shield, LogOut, User, Search, Bell
+} from 'lucide-react'
 import '../styles/Navbar.css'
 
 interface NavbarProps {
@@ -24,25 +29,25 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        {/* Logo y menú de acciones */}
+        {/* Left: Logo / Club name + hamburger (mobile-only in club context) */}
         <div className="navbar-logo" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {/* Menú hamburguesa solo si hay clubId */}
+          {/* Hamburger — visible on mobile only when inside a club */}
           {clubId ? (
-            <div style={{ position: 'relative' }}>
+            <div className="navbar-hamburger" style={{ position: 'relative' }}>
               <button
                 onClick={() => setAccionesAbiertas(!accionesAbiertas)}
                 style={{
                   background: 'none',
                   border: 'none',
-                  fontSize: '2rem',
                   color: 'white',
                   cursor: 'pointer',
                   padding: '0.5rem',
-                  lineHeight: 1,
+                  display: 'flex',
+                  alignItems: 'center',
                 }}
                 title="Menú de acciones"
               >
-                ☰
+                <Menu size={24} />
               </button>
               {accionesAbiertas && (
                 <div className="dropdown-menu" style={{ 
@@ -59,7 +64,7 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                       setAccionesAbiertas(false)
                     }}
                   >
-                    🏠 Home
+                    <Home size={16} /> Home
                   </button>
                   {canEdit && (
                     <button 
@@ -69,7 +74,7 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                         setAccionesAbiertas(false)
                       }}
                     >
-                      ✏️ Editar Club
+                      <Pencil size={16} /> Editar Club
                     </button>
                   )}
                   <button 
@@ -78,9 +83,9 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                       navigate(`/clubes/${clubId}/miembros`)
                       setAccionesAbiertas(false)
                     }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}
+                    style={{ justifyContent: 'space-between' }}
                   >
-                    <span>👥 Miembros</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Users size={16} /> Miembros</span>
                     {totalAlertas && totalAlertas > 0 && (
                       <span
                         style={{
@@ -103,7 +108,7 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                       setAccionesAbiertas(false)
                     }}
                   >
-                    📰 Añadir noticia
+                    <Newspaper size={16} /> Añadir noticia
                   </button>
                   <button 
                     className="dropdown-item"
@@ -112,7 +117,7 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                       setAccionesAbiertas(false)
                     }}
                   >
-                    📅 Añadir evento
+                    <Calendar size={16} /> Añadir evento
                   </button>
                   {canEdit && (
                     <button 
@@ -122,7 +127,7 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                         setAccionesAbiertas(false)
                       }}
                     >
-                      🛒 Administrar Productos
+                      <ShoppingCart size={16} /> Administrar Productos
                     </button>
                   )}
                   <button 
@@ -132,7 +137,7 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                       setAccionesAbiertas(false)
                     }}
                   >
-                    📋 Tareas Comunitarias
+                    <ClipboardList size={16} /> Tareas Comunitarias
                   </button>
                   <button 
                     className="dropdown-item"
@@ -141,7 +146,7 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                       setAccionesAbiertas(false)
                     }}
                   >
-                    🏆 Ranking
+                    <Trophy size={16} /> Ranking
                   </button>
                   <button 
                     className="dropdown-item"
@@ -150,7 +155,7 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                       setAccionesAbiertas(false)
                     }}
                   >
-                    📡 Canales
+                    <Radio size={16} /> Canales
                   </button>
                   {canEdit && (
                     <button 
@@ -160,7 +165,7 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                         setAccionesAbiertas(false)
                       }}
                     >
-                      🎁 Gestionar Premios
+                      <Gift size={16} /> Gestionar Premios
                     </button>
                   )}
                   <button 
@@ -170,14 +175,14 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                       // TODO: Navegar a editar contraseña
                     }}
                   >
-                    🔒 Editar contraseña de acceso
+                    <Lock size={16} /> Editar contraseña de acceso
                   </button>
                 </div>
               )}
             </div>
           ) : (
             <Link to="/">
-              <span className="logo-icon">🛩️</span>
+              <span className="logo-icon"><Plane size={24} /></span>
               <span className="logo-text">PiarAPP</span>
             </Link>
           )}
@@ -200,17 +205,39 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
           )}
         </div>
 
-        {/* Usuario y menú */}
+        {/* Centre: Search bar — desktop only, in club context */}
+        {clubId && (
+          <div className="navbar-search">
+            <Search size={16} className="navbar-search-icon" />
+            <input
+              type="search"
+              placeholder="Buscar..."
+              className="navbar-search-input"
+              aria-label="Buscar en el club"
+            />
+          </div>
+        )}
+
+        {/* Right: Bell + user avatar */}
         <div className="navbar-end">
+          {/* Notification bell — desktop only */}
+          {clubId && (
+            <div className="navbar-bell">
+              <Bell size={20} />
+              {(totalAlertas ?? 0) > 0 && (
+                <span className="navbar-bell-badge">{totalAlertas}</span>
+              )}
+            </div>
+          )}
           <div className="user-menu">
             <button 
               className="user-button"
               onClick={() => setMenuAbierto(!menuAbierto)}
             >
               <span className="user-avatar">
-                {usuario?.nombre_completo?.charAt(0).toUpperCase() || '👤'}
+                {usuario?.nombre_completo?.charAt(0).toUpperCase() || <User size={16} />}
               </span>
-              <span className="dropdown-arrow">▼</span>
+              <span className="dropdown-arrow"><ChevronDown size={14} /></span>
             </button>
 
             {menuAbierto && (
@@ -225,14 +252,14 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                   className="dropdown-item"
                   onClick={() => setMenuAbierto(false)}
                 >
-                  👤 Mi Perfil
+                  <User size={16} /> Mi Perfil
                 </Link>
                 <Link 
                   to="/configuracion" 
                   className="dropdown-item"
                   onClick={() => setMenuAbierto(false)}
                 >
-                  ⚙️ Configuración
+                  <Settings size={16} /> Configuración
                 </Link>
                 {usuario?.es_superadmin && (
                   <Link 
@@ -240,7 +267,7 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                     className="dropdown-item"
                     onClick={() => setMenuAbierto(false)}
                   >
-                    🛡️ Admin (Super)
+                    <Shield size={16} /> Admin (Super)
                   </Link>
                 )}
                 <hr />
@@ -248,7 +275,7 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
                   className="dropdown-item danger"
                   onClick={handleLogout}
                 >
-                  🚪 Cerrar Sesión
+                  <LogOut size={16} /> Cerrar Sesión
                 </button>
               </div>
             )}

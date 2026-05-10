@@ -1,4 +1,5 @@
 import React from 'react'
+import { Medal } from 'lucide-react'
 import { RankingEntry } from '../services/tareasComunitariasService'
 
 interface RankingTableProps {
@@ -31,7 +32,7 @@ export const RankingTable: React.FC<RankingTableProps> = ({ ranking, usuarioId }
                 <td className="ranking-posicion">
                   {entry.posicion <= 3 ? (
                     <span className={`ranking-medalla ranking-medalla-${entry.posicion}`}>
-                      {entry.posicion === 1 ? '🥇' : entry.posicion === 2 ? '🥈' : '🥉'}
+                      <Medal size={18} />
                     </span>
                   ) : (
                     entry.posicion

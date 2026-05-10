@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { startGoogleOAuth } from '../services/googleOAuth'
+import { Eye, EyeOff } from 'lucide-react'
 import APIService from '../services/api'
 import '../styles/Auth.css'
 
@@ -109,7 +110,7 @@ export default function Login() {
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>

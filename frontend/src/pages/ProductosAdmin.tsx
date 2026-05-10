@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { Settings, Star, Pencil, Trash2 } from 'lucide-react'
 import { ProductoService } from '../services/productoService'
 import { ProductoAfiliacion, ProductoAfiliacionCreate } from '../types/models'
 import { useClubRole } from '../hooks/useClubRole'
-import Navbar from '../components/Navbar'
 import '../styles/Productos.css'
 
 export default function ProductosAdmin() {
@@ -144,7 +144,6 @@ export default function ProductosAdmin() {
 
   return (
     <>
-      <Navbar />
       <main className="productos-main">
         <div className="productos-container">
           <div className="header-actions">
@@ -159,7 +158,7 @@ export default function ProductosAdmin() {
           </div>
 
           <div className="productos-header">
-            <h1>⚙️ Administrar Productos</h1>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Settings size={22} /> Administrar Productos</h1>
             <p className="subtitle">Gestiona los enlaces de afiliación de tu club</p>
           </div>
 
@@ -333,7 +332,7 @@ export default function ProductosAdmin() {
                         <tr key={producto.id} className={!producto.activo ? 'inactivo' : ''}>
                           <td>
                             <div className="producto-info">
-                              {producto.destacado && <span className="badge-destacado">⭐</span>}
+                              {producto.destacado && <span className="badge-destacado"><Star size={12} /></span>}
                               <strong>{producto.nombre}</strong>
                               {producto.precio_referencia && (
                                 <span className="precio-small">{producto.precio_referencia}</span>
@@ -353,14 +352,16 @@ export default function ProductosAdmin() {
                               <button 
                                 className="btn btn-sm btn-secondary"
                                 onClick={() => handleEdit(producto)}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
                               >
-                                ✏️ Editar
+                                <Pencil size={14} /> Editar
                               </button>
                               <button 
                                 className="btn btn-sm btn-danger"
                                 onClick={() => handleDelete(producto.id)}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
                               >
-                                🗑️ Eliminar
+                                <Trash2 size={14} /> Eliminar
                               </button>
                             </div>
                           </td>

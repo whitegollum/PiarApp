@@ -74,20 +74,6 @@ async def crear_club(
     
     db.add(miembro_admin)
     
-    # Añadir el bot OpenClaw automáticamente si está configurado
-    if settings.openclaw_botuser_id:
-        bot_email = settings.openclaw_botuser_id.strip('"')
-        bot_user = db.query(Usuario).filter(Usuario.email == bot_email).first()
-        
-        if bot_user:
-            miembro_bot = MiembroClub(
-                usuario_id=bot_user.id,
-                club_id=nuevo_club.id,
-                rol="miembro",
-                estado="activo"
-            )
-            db.add(miembro_bot)
-    
     db.commit()
     db.refresh(nuevo_club)
     

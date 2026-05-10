@@ -1,0 +1,37 @@
+/* ================================================
+   ClubLayout — Shell for all /clubes/:clubId/* routes
+   ================================================ */
+
+.club-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+/* Navbar sits at top as its own sticky row */
+
+/* Body = sidebar + scrollable content area */
+.club-layout-body {
+  display: flex;
+  flex: 1;
+  /* Allow sidebar to be sticky; content scrolls */
+  align-items: flex-start;
+  min-height: 0;
+}
+
+/* Content area — scrolls independently */
+.club-layout-content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  /* Enough bottom padding so BottomTabBar doesn't overlap on mobile */
+  padding-bottom: 72px;
+}
+
+@media (min-width: 768px) {
+  .club-layout-content {
+    /* No bottom tab bar on tablet/desktop */
+    padding-bottom: 0;
+  }
+}

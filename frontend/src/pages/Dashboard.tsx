@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { Building2 } from 'lucide-react'
 import APIService from '../services/api'
 import Navbar from '../components/Navbar'
 import '../styles/Dashboard.css'
@@ -172,7 +173,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="empty-state">
-                <div className="empty-icon">🏢</div>
+                <div className="empty-icon"><Building2 size={48} strokeWidth={1.2} /></div>
                 <h3>No tienes clubs aún</h3>
                 <p>Espera ser invitado a un club</p>
               </div>

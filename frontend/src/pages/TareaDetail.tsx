@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useClubRole } from '../hooks/useClubRole'
 import { TareasService, TareaComunitaria } from '../services/tareasComunitariasService'
 import APIService from '../services/api'
-import Navbar from '../components/Navbar'
 import '../styles/Tareas.css'
 import '../styles/ClubDetail.css'
 
@@ -20,14 +19,13 @@ export default function TareaDetail() {
   const navigate = useNavigate()
   const { role } = useClubRole(clubId)
 
-  const [club, setClub] = useState<Club | null>(null)
+  const [, setClub] = useState<Club | null>(null)
   const [tarea, setTarea] = useState<TareaComunitaria | null>(null)
   const [loading, setLoading] = useState(true)
   const [motivoRechazo, setMotivoRechazo] = useState('')
   const [showRechazo, setShowRechazo] = useState(false)
 
   const esAdmin = role === 'administrador' || role === 'propietario' || usuario?.es_superadmin
-  const canEdit = role === 'administrador' || usuario?.es_superadmin
   const estaInscrito = tarea?.participantes.some(p => p.usuario_id === usuario?.id)
 
   const cargarTarea = async () => {
@@ -98,11 +96,6 @@ export default function TareaDetail() {
 
   return (
     <>
-      <Navbar
-        clubName={club?.nombre}
-        clubId={clubId}
-        canEdit={canEdit}
-      />
 
       <main className="club-detail-main">
         <div className="club-detail-container">

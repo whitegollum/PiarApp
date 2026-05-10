@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+﻿import { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useClubRole } from '../hooks/useClubRole'
 import { RankingService, PremiosService, RankingEntry, PeriodoPremios } from '../services/tareasComunitariasService'
 import APIService from '../services/api'
 import { RankingTable } from '../components/RankingTable'
-import Navbar from '../components/Navbar'
 import '../styles/Ranking.css'
 import '../styles/ClubDetail.css'
 import '../styles/Tareas.css'
@@ -19,16 +18,14 @@ interface Club {
 export default function ClubRanking() {
   const { usuario } = useAuth()
   const { clubId } = useParams<{ clubId: string }>()
-  const navigate = useNavigate()
-  const { role } = useClubRole(clubId)
+  const { role: _role } = useClubRole(clubId)
 
-  const [club, setClub] = useState<Club | null>(null)
+  const [, setClub] = useState<Club | null>(null)
   const [ranking, setRanking] = useState<RankingEntry[]>([])
   const [periodos, setPeriodos] = useState<PeriodoPremios[]>([])
   const [periodoSeleccionado, setPeriodoSeleccionado] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const canEdit = role === 'administrador' || usuario?.es_superadmin
 
   useEffect(() => {
     if (!clubId) return
@@ -71,20 +68,9 @@ export default function ClubRanking() {
 
   return (
     <>
-      <Navbar
-        clubName={club?.nombre}
-        clubId={clubId}
-        canEdit={canEdit}
-      />
 
       <main className="club-detail-main">
         <div className="club-detail-container">
-          <button
-            className="btn-volver-tareas"
-            onClick={() => navigate(`/clubes/${clubId}`)}
-          >
-            ← Volver al club
-          </button>
 
           <div className="ranking-page">
             <h1>Ranking del Club</h1>

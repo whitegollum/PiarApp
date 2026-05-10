@@ -1,11 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import ClubLayout from './components/ClubLayout'
 import './App.css'
 import APIService from './services/api'
 import { useEffect } from 'react'
+import BottomTabBar from './components/BottomTabBar'
 
-// Páginas de autenticación
 import Login from './pages/Login'
 import FirstAccess from './pages/FirstAccess'
 import Register from './pages/Register'
@@ -29,6 +30,7 @@ import CreateNews from './pages/CreateNews'
 import EditNews from './pages/EditNews'
 import CreateEvent from './pages/CreateEvent'
 import EditEvent from './pages/EditEvent'
+import EventDetail from './pages/EventDetail'
 import AdminClubs from './pages/admin/AdminClubs'
 import AdminEmailConfig from './pages/admin/AdminEmailConfig'
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -47,28 +49,22 @@ import ClubRanking from './pages/ClubRanking'
 import AdminPremios from './pages/AdminPremios'
 import ClubCanales from './pages/ClubCanales'
 
-// Componente para verificar configuración inicial
 const SetupCheck = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
   useEffect(() => {
     const checkSetup = async () => {
-      // Evitar loop infinito si ya estamos en la página de setup
       if (location.pathname === '/auth/setup-inicial') return
-
       try {
         const response = await APIService.get<{ setup_required: boolean }>('/auth/setup-required', { skipAuth: true })
-        
         if (response && response.setup_required) {
-          console.log("Redirigiendo a configuración inicial...")
           navigate('/auth/setup-inicial')
         }
       } catch (error) {
-        console.error('Error verificando estado de configuración:', error)
+        console.error('Error verificando estado de configuracion:', error)
       }
     }
-
     checkSetup()
   }, [navigate, location.pathname])
 
@@ -76,13 +72,12 @@ const SetupCheck = () => {
 }
 
 function App() {
-
   return (
     <AuthProvider>
       <Router>
         <SetupCheck />
         <Routes>
-          {/* Rutas de admin */}
+          {/* Admin routes */}
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/clubes" element={<ProtectedRoute><AdminClubs /></ProtectedRoute>} />
           <Route path="/admin/email" element={<ProtectedRoute><AdminEmailConfig /></ProtectedRoute>} />
@@ -91,7 +86,7 @@ function App() {
           <Route path="/admin/agent" element={<ProtectedRoute><AdminAgentConfig /></ProtectedRoute>} />
           <Route path="/admin/afiliacion" element={<ProtectedRoute><AdminAfiliacion /></ProtectedRoute>} />
 
-          {/* Rutas públicas */}
+          {/* Public routes */}
           <Route path="/auth/setup-inicial" element={<FirstAccess />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/registro" element={<Register />} />
@@ -100,173 +95,43 @@ function App() {
           <Route path="/auth/recuperar-contrasena" element={<ForgotPassword />} />
           <Route path="/auth/reset-contrasena" element={<ResetPassword />} />
 
-          {/* Rutas protegidas */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/clubes/crear"
-            element={
-              <ProtectedRoute>
-                <CreateClub />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/clubes/:clubId"
-            element={
-              <ProtectedRoute>
-                <ClubDetail />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/clubes/:clubId/editar"
-            element={
-              <ProtectedRoute>
-                <ClubEdit />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/clubes/:clubId/miembros"
-            element={
-              <ProtectedRoute>
-                <ClubMembers />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/clubes/:clubId/socios/crear"
-            element={
-              <ProtectedRoute>
-                <SocioForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clubes/:clubId/socios/:socioId/editar"
-            element={
-              <ProtectedRoute>
-                <SocioForm />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/clubes/:clubId/noticias"
-            element={
-              <ProtectedRoute>
-                <ClubNews />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clubes/:clubId/noticias/crear"
-            element={
-              <ProtectedRoute>
-                <CreateNews />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clubes/:clubId/noticias/:noticiaId/editar"
-            element={
-              <ProtectedRoute>
-                <EditNews />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clubes/:clubId/eventos"
-            element={
-              <ProtectedRoute>
-                <ClubEvents />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clubes/:clubId/eventos/crear"
-            element={
-              <ProtectedRoute>
-                <CreateEvent />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clubes/:clubId/eventos/:eventoId/editar"
-            element={
-              <ProtectedRoute>
-                <EditEvent />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/clubes/:clubId/productos"
-            element={
-              <ProtectedRoute>
-                <ProductosCatalogo />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clubes/:clubId/productos/admin"
-            element={
-              <ProtectedRoute>
-                <ProductosAdmin />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route path="/clubes/:clubId/tareas" element={<ProtectedRoute><ClubTareas /></ProtectedRoute>} />
-          <Route path="/clubes/:clubId/tareas/crear" element={<ProtectedRoute><CreateTarea /></ProtectedRoute>} />
-          <Route path="/clubes/:clubId/tareas/:tareaId" element={<ProtectedRoute><TareaDetail /></ProtectedRoute>} />
-          <Route path="/clubes/:clubId/tareas/:tareaId/editar" element={<ProtectedRoute><EditTarea /></ProtectedRoute>} />
-          <Route path="/clubes/:clubId/ranking" element={<ProtectedRoute><ClubRanking /></ProtectedRoute>} />
-          <Route path="/clubes/:clubId/canales" element={<ProtectedRoute><ClubCanales /></ProtectedRoute>} />
-          <Route path="/clubes/:clubId/premios" element={<ProtectedRoute><AdminPremios /></ProtectedRoute>} />
-
-          <Route
-            path="/perfil"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
+          {/* Protected non-club routes */}
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/clubes/crear" element={<ProtectedRoute><CreateClub /></ProtectedRoute>} />
+          <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/perfil/socio" element={<Navigate to="/perfil" />} />
-          <Route
-            path="/perfil/documentacion"
-            element={
-              <ProtectedRoute>
-                <ClubDocumentacion />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/perfil/documentacion" element={<ProtectedRoute><ClubDocumentacion /></ProtectedRoute>} />
+          <Route path="/configuracion" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
-          <Route
-            path="/configuracion"
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            }
-          />
+          {/* Club routes wrapped in ClubLayout (Navbar + Sidebar + Outlet) */}
+          <Route path="/clubes/:clubId" element={<ProtectedRoute><ClubLayout /></ProtectedRoute>}>
+            <Route index element={<ClubDetail />} />
+            <Route path="editar" element={<ClubEdit />} />
+            <Route path="miembros" element={<ClubMembers />} />
+            <Route path="socios/crear" element={<SocioForm />} />
+            <Route path="socios/:socioId/editar" element={<SocioForm />} />
+            <Route path="noticias" element={<ClubNews />} />
+            <Route path="noticias/crear" element={<CreateNews />} />
+            <Route path="noticias/:noticiaId/editar" element={<EditNews />} />
+            <Route path="eventos" element={<ClubEvents />} />
+            <Route path="eventos/crear" element={<CreateEvent />} />
+            <Route path="eventos/:eventoId" element={<EventDetail />} />
+            <Route path="eventos/:eventoId/editar" element={<EditEvent />} />
+            <Route path="productos" element={<ProductosCatalogo />} />
+            <Route path="productos/admin" element={<ProductosAdmin />} />
+            <Route path="tareas" element={<ClubTareas />} />
+            <Route path="tareas/crear" element={<CreateTarea />} />
+            <Route path="tareas/:tareaId" element={<TareaDetail />} />
+            <Route path="tareas/:tareaId/editar" element={<EditTarea />} />
+            <Route path="ranking" element={<ClubRanking />} />
+            <Route path="canales" element={<ClubCanales />} />
+            <Route path="premios" element={<AdminPremios />} />
+            <Route path="documentacion" element={<ClubDocumentacion />} />
+          </Route>
 
-          {/* Ruta por defecto */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
+        <BottomTabBar />
       </Router>
     </AuthProvider>
   )

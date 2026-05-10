@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { Pencil, Crown, FileText, Lock, Download } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import APIService from '../services/api'
 import SocioService, { Socio, SocioCreate, SocioUpdate } from '../services/socioService'
@@ -408,7 +409,7 @@ export default function Profile() {
                     onClick={() => setIsEditing(true)}
                     disabled={loadingProfile}
                   >
-                    ✏️ Editar Perfil
+                    <><Pencil size={16} /> Editar Perfil</>
                   </button>
                 ) : (
                   <>
@@ -452,14 +453,14 @@ export default function Profile() {
               <div className="profile-info-item">
                 <span className="profile-info-label">Email verificado</span>
                 <span className={`badge ${profileUser?.email_verificado ? 'badge-success' : 'badge-warning'}`}>
-                  {profileUser?.email_verificado ? '✓ Verificado' : 'Pendiente'}
+                  {profileUser?.email_verificado ? 'Verificado' : 'Pendiente'}
                 </span>
               </div>
               {profileUser?.es_superadmin && (
                 <div className="profile-info-item">
                   <span className="profile-info-label">Rol Global</span>
-                  <span className="badge badge-superadmin" style={{ background: '#7c3aed', color: 'white' }}>
-                    👑 Super Administrador
+                  <span className="badge badge-superadmin" style={{ background: '#7c3aed', color: 'white', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <Crown size={14} /> Super Administrador
                   </span>
                 </div>
               )}
@@ -505,7 +506,7 @@ export default function Profile() {
               className="btn btn-secondary"
               onClick={() => navigate('/perfil/documentacion')}
             >
-              📄 Ir a Documentacion
+              <><FileText size={16} /> Ir a Documentacion</>
             </button>
           </section>
 
@@ -659,7 +660,7 @@ export default function Profile() {
                 className="btn btn-secondary"
                 onClick={() => setShowPasswordForm(true)}
               >
-                🔐 Cambiar Contraseña
+                <><Lock size={16} /> Cambiar Contraseña</>
               </button>
             ) : (
               <form onSubmit={handlePasswordChange} className="form-container">
@@ -735,7 +736,7 @@ export default function Profile() {
               onClick={handleDownloadData}
               disabled={loading}
             >
-              📥 Descargar mis Datos
+              <><Download size={16} /> Descargar mis Datos</>
             </button>
           </section>
         </div>

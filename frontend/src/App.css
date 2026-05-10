@@ -65,3 +65,12 @@ input:focus, textarea:focus, select:focus {
     font-size: 14px;
   }
 }
+
+/* Bottom tab bar spacing — prevent content from being hidden behind the fixed bar */
+@media (max-width: 768px) {
+  .club-detail-main,
+  .form-main,
+  .productos-main {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+}

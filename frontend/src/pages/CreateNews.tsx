@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { NewsService } from '../services/contentService';
-import Navbar from '../components/Navbar';
 import '../styles/Forms.css';
 
 const CreateNews: React.FC = () => {
@@ -82,7 +81,6 @@ const CreateNews: React.FC = () => {
 
   return (
     <div className="form-layout">
-      <Navbar />
       <main className="form-main">
         <div className="form-container">
           <div className="form-header">

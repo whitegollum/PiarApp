@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+﻿import { useState, useEffect, useCallback } from 'react'
+import { useParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useClubRole } from '../hooks/useClubRole'
+import { Radio, Plane, PlaneLanding, AlertTriangle } from 'lucide-react'
 import { CanalesService, CanalesPanel, CanalEstado } from '../services/canalesService'
 import APIService from '../services/api'
-import Navbar from '../components/Navbar'
 import '../styles/Canales.css'
 import '../styles/ClubDetail.css'
 
@@ -17,16 +17,14 @@ interface Club {
 export default function ClubCanales() {
   const { usuario } = useAuth()
   const { clubId } = useParams<{ clubId: string }>()
-  const navigate = useNavigate()
-  const { role } = useClubRole(clubId)
+  const { role: _role } = useClubRole(clubId)
 
-  const [club, setClub] = useState<Club | null>(null)
+  const [, setClub] = useState<Club | null>(null)
   const [panel, setPanel] = useState<CanalesPanel | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notificacion, setNotificacion] = useState<string | null>(null)
 
-  const canEdit = role === 'administrador' || usuario?.es_superadmin
 
   const cargarCanales = useCallback(async () => {
     if (!clubId) return
@@ -89,9 +87,9 @@ export default function ClubCanales() {
       // Notificar cambio de estado
       const canalActualizado = data.canales.find(c => c.canal_numero === canalNumero)
       if (canalActualizado?.en_vuelo) {
-        mostrarNotificacion(`✈️ ${canalActualizado.piloto_volando} está volando en Canal ${canalNumero}`)
+            mostrarNotificacion(`✈️ ${canalActualizado.piloto_volando} está volando en Canal ${canalNumero}`)
       } else {
-        mostrarNotificacion(`✅ Canal ${canalNumero} está libre`)
+            mostrarNotificacion(`Canal ${canalNumero} está libre`)
       }
     } catch (err: any) {
       if (err.message?.includes('409')) {
@@ -112,19 +110,11 @@ export default function ClubCanales() {
 
   return (
     <>
-      <Navbar
-        clubName={club?.nombre}
-        clubId={clubId}
-        canEdit={canEdit}
-      />
 
       <main className="club-detail-main">
         <div className="club-detail-container">
           <div className="canales-header">
-            <button className="btn-back" onClick={() => navigate(`/clubes/${clubId}`)}>
-              ← Volver al club
-            </button>
-            <h1>📡 Panel de Canales</h1>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Radio size={24} /> Panel de Canales</h1>
             <p className="canales-subtitle">
               Coordina el uso de frecuencias con otros pilotos del club
             </p>
@@ -178,7 +168,7 @@ function CanalCard({ canal, estoyEnCanal, estoyVolando, onOcupar, onLiberar, onT
       <div className="canal-header">
         <span className="canal-numero">Canal {canal.canal_numero}</span>
         {canal.en_vuelo && (
-          <span className="canal-badge-vuelo">🔴 EN VUELO</span>
+          <span className="canal-badge-vuelo">EN VUELO</span>
         )}
       </div>
 
@@ -189,7 +179,7 @@ function CanalCard({ canal, estoyEnCanal, estoyVolando, onOcupar, onLiberar, onT
           <ul className="canal-lista-usuarios">
             {canal.usuarios.map(u => (
               <li key={u.usuario_id} className={u.en_vuelo ? 'usuario-volando' : ''}>
-                {u.en_vuelo ? '✈️ ' : '👤 '}
+                {u.en_vuelo ? <><Plane size={14} /> </> : ''}
                 {u.nombre}
                 {u.en_vuelo && <span className="badge-volando">volando</span>}
               </li>
@@ -214,7 +204,7 @@ function CanalCard({ canal, estoyEnCanal, estoyVolando, onOcupar, onLiberar, onT
                 onClick={onToggleVuelo}
                 disabled={canal.en_vuelo && !estoyVolando}
               >
-                {estoyVolando ? '🛬 Terminar vuelo' : '✈️ Voy a volar'}
+                {estoyVolando ? <><PlaneLanding size={16} /> Terminar vuelo</> : <><Plane size={16} /> Voy a volar</>}
               </button>
             )}
           </>
@@ -222,8 +212,8 @@ function CanalCard({ canal, estoyEnCanal, estoyVolando, onOcupar, onLiberar, onT
       </div>
 
       {canal.en_vuelo && canal.piloto_volando && !estoyVolando && estoyEnCanal && (
-        <div className="canal-aviso-vuelo">
-          ⚠️ {canal.piloto_volando} está volando en esta frecuencia
+        <div className="canal-aviso-vuelo" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <AlertTriangle size={14} /> {canal.piloto_volando} está volando en esta frecuencia
         </div>
       )}
     </div>

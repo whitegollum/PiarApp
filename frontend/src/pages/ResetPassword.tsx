@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import APIService from '../services/api'
+import { Eye, EyeOff } from 'lucide-react'
 import '../styles/Auth.css'
 
 interface ValidarTokenResponse {
@@ -192,7 +193,7 @@ export default function ResetPassword() {
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>

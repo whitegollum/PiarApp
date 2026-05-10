@@ -1,4 +1,5 @@
 import React from 'react';
+import { AlertTriangle, XCircle, Siren, Info, User, Calendar, Clock, Check, X } from 'lucide-react';
 import { Alerta } from '../types/alerta';
 import '../styles/Alerts.css';
 
@@ -20,13 +21,13 @@ const AlertItem: React.FC<AlertItemProps> = ({
   const getSeverityIcon = (severidad: string) => {
     switch (severidad) {
       case 'warning':
-        return '⚠️';
+        return <AlertTriangle size={16} />;
       case 'danger':
-        return '❌';
+        return <XCircle size={16} />;
       case 'critical':
-        return '🚨';
+        return <Siren size={16} />;
       default:
-        return 'ℹ️';
+        return <Info size={16} />;
     }
   };
 
@@ -73,7 +74,7 @@ const AlertItem: React.FC<AlertItemProps> = ({
         <div className="alert-item-meta">
           {mostrarUsuario && alerta.usuario && (
             <div className="alert-item-meta-item">
-              <span>👤</span>
+              <User size={14} />
               <span className="alert-item-user">{alerta.usuario.nombre}</span>
               <span>({alerta.usuario.email})</span>
             </div>
@@ -81,13 +82,13 @@ const AlertItem: React.FC<AlertItemProps> = ({
           
           {alerta.fecha_referencia && (
             <div className="alert-item-meta-item">
-              <span>📅</span>
+              <Calendar size={14} />
               <span>Vence: {formatDate(alerta.fecha_referencia)}</span>
             </div>
           )}
 
           <div className="alert-item-meta-item">
-            <span>🕐</span>
+            <Clock size={14} />
             <span>Creada: {formatDate(alerta.fecha_creacion)}</span>
           </div>
         </div>
@@ -101,7 +102,7 @@ const AlertItem: React.FC<AlertItemProps> = ({
                 className="alert-btn alert-btn-resolver"
                 onClick={() => onResolver(alerta.id)}
               >
-                ✓ Marcar Resuelta
+                <Check size={14} /> Marcar Resuelta
               </button>
             )}
             {onIgnorar && (
@@ -109,7 +110,7 @@ const AlertItem: React.FC<AlertItemProps> = ({
                 className="alert-btn alert-btn-ignorar"
                 onClick={() => onIgnorar(alerta.id)}
               >
-                ✕ Ignorar
+                <X size={14} /> Ignorar
               </button>
             )}
             {onVerPerfil && alerta.usuario && (

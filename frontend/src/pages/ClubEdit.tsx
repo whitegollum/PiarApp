@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useClubRole } from '../hooks/useClubRole'
 import APIService from '../services/api'
-import Navbar from '../components/Navbar'
 import FacilityManager from '../components/FacilityManager'
 import '../styles/ClubEdit.css'
 
@@ -239,7 +238,6 @@ export default function ClubEdit() {
   if (loading) {
     return (
       <div className="club-edit-layout">
-        <Navbar />
         <main className="club-edit-main">
           <div className="loading">
             <div className="spinner"></div>
@@ -253,7 +251,6 @@ export default function ClubEdit() {
   if (error && !club) {
     return (
       <div className="club-edit-layout">
-        <Navbar />
         <main className="club-edit-main">
           <div className="alert alert-error">{error}</div>
           <button className="btn btn-primary" onClick={() => navigate(`/clubes/${clubId}`)}>
@@ -266,7 +263,6 @@ export default function ClubEdit() {
 
   return (
     <>
-      <Navbar />
 
       <main className="club-edit-main">
         <div className="club-edit-container">
@@ -405,7 +401,7 @@ export default function ClubEdit() {
 
                 <div className="form-group">
                   <label htmlFor="color_acento">
-                    Color Acento
+                    Color Acento (fondo noticias)
                   </label>
                   <div className="color-input-group">
                     <input

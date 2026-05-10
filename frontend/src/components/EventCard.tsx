@@ -1,28 +1,33 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { Clock, MapPin, CheckCircle, Timer, MoreVertical, Pencil } from 'lucide-react'
 import { Evento, Asistencia } from '../types/models'
 import { EventService } from '../services/contentService'
 import '../styles/EventList.css'
 
 interface EventCardProps {
-    evento: Evento & { inscritos_count?: number } // extend interface
+    evento: Evento & { inscritos_count?: number }
     clubId: number
-    canEdit?: boolean // Add optional prop
+    canEdit?: boolean
 }
+
+const HIDDEN_TYPES = ['otro', 'social', '']
 
 const EventCard: React.FC<EventCardProps> = ({ evento, clubId, canEdit = false }) => {
     const [attendance, setAttendance] = useState<Asistencia | null>(null);
     const [inscritosCount, setInscritosCount] = useState(evento.inscritos_count || 0);
     const [loading, setLoading] = useState(false);
     const [statusLoaded, setStatusLoaded] = useState(false);
-    
-    // New state for attendees list
-    const [showAttendees, setShowAttendees] = useState(false);
+    const [showMenu, setShowMenu] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    // Attendees inline
     const [attendeesList, setAttendeesList] = useState<Asistencia[]>([]);
     const [loadingAttendees, setLoadingAttendees] = useState(false);
+    const [attendeesLoaded, setAttendeesLoaded] = useState(false);
 
     useEffect(() => {
-        setInscritosCount(evento.inscritos_count || 0); // Update if prop changes
+        setInscritosCount(evento.inscritos_count || 0);
     }, [evento.inscritos_count]);
 
     useEffect(() => {
@@ -30,9 +35,9 @@ const EventCard: React.FC<EventCardProps> = ({ evento, clubId, canEdit = false }
         const fetchAttendance = async () => {
             try {
                 const data = await EventService.getMyAttendance(clubId, evento.id);
-                if (isMounted) setAttendance(data.estado === 'cancelado' ? null : data);
-            } catch (err: any) {
-                // 404 means no attendance, which is fine
+                if (isMounted) setAttendance(data && data.estado !== 'cancelado' ? data : null);
+            } catch {
+                // ignore
             } finally {
                 if (isMounted) setStatusLoaded(true);
             }
@@ -41,61 +46,69 @@ const EventCard: React.FC<EventCardProps> = ({ evento, clubId, canEdit = false }
         return () => { isMounted = false; };
     }, [clubId, evento.id]);
 
+    // Load attendees for avatar row
+    useEffect(() => {
+        let isMounted = true;
+        const fetchAttendees = async () => {
+            setLoadingAttendees(true);
+            try {
+                const list = await EventService.getAttendees(clubId, evento.id);
+                if (isMounted) {
+                    setAttendeesList(list);
+                    setAttendeesLoaded(true);
+                }
+            } catch {
+                // ignore
+            } finally {
+                if (isMounted) setLoadingAttendees(false);
+            }
+        };
+        fetchAttendees();
+        return () => { isMounted = false; };
+    }, [clubId, evento.id]);
+
+    // Close kebab on outside click
+    useEffect(() => {
+        if (!showMenu) return;
+        const handler = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [showMenu]);
+
     const handleRSVP = async (newStatus: 'inscrito' | 'cancelado') => {
-        setLoading(true); // Button loading state
+        setLoading(true);
         const oldStatus = attendance?.estado || 'cancelado';
         try {
             const result = await EventService.registerAttendance(clubId, evento.id, newStatus);
             const finalStatus = result.estado;
-            
             setAttendance(finalStatus === 'cancelado' ? null : result);
 
-            // Update local count
             if (oldStatus !== 'inscrito' && finalStatus === 'inscrito') {
-                setInscritosCount((prev:any) => prev + 1);
+                setInscritosCount(prev => prev + 1);
             } else if (oldStatus === 'inscrito' && finalStatus !== 'inscrito') {
-                setInscritosCount((prev:any) => Math.max(0, prev - 1));
+                setInscritosCount(prev => Math.max(0, prev - 1));
             }
-            
+
             if (finalStatus === 'lista_espera' && newStatus === 'inscrito') {
                 alert("El evento está completo. Has sido añadido a la lista de espera.");
             }
-            
-            // Invalidate/Refresh attendees list if open
-            if (showAttendees) {
-                const list = await EventService.getAttendees(clubId, evento.id);
-                setAttendeesList(list);
-            }
 
-        } catch (err) {
-            console.error("Error updating attendance", err);
+            // Refresh attendees
+            const list = await EventService.getAttendees(clubId, evento.id);
+            setAttendeesList(list);
+        } catch {
             alert("Error al actualizar inscripción");
         } finally {
             setLoading(false);
         }
     };
 
-    const toggleAttendees = async () => {
-        if (!showAttendees && attendeesList.length === 0) {
-            setLoadingAttendees(true);
-            try {
-                const list = await EventService.getAttendees(clubId, evento.id);
-                setAttendeesList(list);
-            } catch (err) {
-                console.error("Error fetching attendees", err);
-                // Fail silently or show toast
-            } finally {
-                setLoadingAttendees(false);
-            }
-        }
-        setShowAttendees(!showAttendees);
-    };
-
-    const getEventStatus = (evento: Evento) => {
+    const getEventStatus = (ev: Evento) => {
         const now = new Date()
-        const start = new Date(evento.fecha_inicio)
-        const end = evento.fecha_fin ? new Date(evento.fecha_fin) : null
-
+        const start = new Date(ev.fecha_inicio)
+        const end = ev.fecha_fin ? new Date(ev.fecha_fin) : null
         if (end && now > end) return 'finalizado'
         if (now >= start) return 'en_curso'
         return 'proximo'
@@ -104,154 +117,146 @@ const EventCard: React.FC<EventCardProps> = ({ evento, clubId, canEdit = false }
     const eventStatus = getEventStatus(evento);
     const isPast = eventStatus === 'finalizado';
 
+    // Capacity bar
+    const hasCapacity = !!evento.aforo_maximo;
+    const capacityPct = hasCapacity ? Math.min((inscritosCount / evento.aforo_maximo!) * 100, 100) : 0;
+    const capacityLabel = capacityPct >= 90 ? 'Casi completo' : capacityPct >= 60 ? 'Llenándose' : 'Hay sitio';
+    const capacityColor = capacityPct >= 90 ? '#d97706' : capacityPct >= 60 ? '#eab308' : '#22c55e';
+
+    // Type pill: hide generic types
+    const showType = evento.tipo && !HIDDEN_TYPES.includes(evento.tipo.toLowerCase());
+
+    // Avatars: show max 3 + count
+    const visibleAttendees = attendeesList.filter(a => a.estado === 'inscrito').slice(0, 3);
+    const totalInscritos = attendeesLoaded ? attendeesList.filter(a => a.estado === 'inscrito').length : inscritosCount;
+    const extraCount = Math.max(0, totalInscritos - visibleAttendees.length);
+
+    const avatarColors = ['#e0e7ff', '#fce7f3', '#d1fae5', '#fef3c7', '#e0f2fe'];
+
     return (
-        // !flex-col forces vertical stacking to accommodate the attendees list at the bottom
-        <div className={`event-card ${eventStatus} !flex-col`}>
-             {/* Inner container handles the responsive layout of the card content (Row on Desktop, Col on Mobile) */}
-            <div className="w-full flex flex-col sm:flex-row">
+        <div className="event-card-v2">
+            <div className="event-card-top">
                 <div className="event-date-box">
                     <span className="day">{new Date(evento.fecha_inicio).getDate()}</span>
                     <span className="month">
                         {new Date(evento.fecha_inicio).toLocaleDateString('es-ES', { month: 'short' }).toUpperCase()}
                     </span>
                 </div>
-                <div className="event-details min-w-0 flex-grow">
-                    <div className="event-header">
-                        <span className={`event-type ${evento.tipo}`}>{evento.tipo || 'Social'}</span>
-                        <h3 className="event-title">{evento.nombre}</h3>
-                    </div>
-                    <div className="event-meta">
-                        <span className="event-time">
-                            🕒 {new Date(evento.fecha_inicio).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                        {evento.ubicacion && (
-                            <span className="event-location">📍 {evento.ubicacion}</span>
+
+                <div className="event-card-body">
+                    <div className="event-card-title-row">
+                        <Link
+                            to={`/clubes/${clubId}/eventos/${evento.id}`}
+                            className="event-title-link"
+                        >
+                            <h3 className="event-title">{evento.nombre}</h3>
+                        </Link>
+
+                        {canEdit && (
+                            <div className="event-kebab" ref={menuRef}>
+                                <button className="event-kebab-btn" onClick={() => setShowMenu(!showMenu)}>
+                                    <MoreVertical size={18} />
+                                </button>
+                                {showMenu && (
+                                    <div className="event-kebab-menu">
+                                        <Link
+                                            to={`/clubes/${clubId}/eventos/${evento.id}/editar`}
+                                            className="event-kebab-item"
+                                            onClick={() => setShowMenu(false)}
+                                        >
+                                            <Pencil size={14} /> Editar evento
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
 
-                    {/* Capacidad */}
-                    {evento.aforo_maximo && (
-                        <div className="event-capacity" style={{ fontSize: '0.85em', color: '#666', marginTop: '5px' }}>
-                            <span style={{ fontWeight: 500 }}>Aforo: </span>
-                            {inscritosCount} / {evento.aforo_maximo} plazas
-                            
-                            {inscritosCount >= evento.aforo_maximo && (
-                                <span style={{ color: '#d97706', marginLeft: '8px', fontSize: '0.9em' }}>
-                                    (Lista de Espera activa)
-                                </span>
-                            )}
+                    <div className="event-meta">
+                        <span className="event-time">
+                            <Clock size={14} /> {new Date(evento.fecha_inicio).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        {evento.ubicacion && (
+                            <span className="event-location"><MapPin size={14} /> {evento.ubicacion}</span>
+                        )}
+                        {showType && (
+                            <span className="event-type-pill">{evento.tipo}</span>
+                        )}
+                    </div>
+
+                    {/* Capacity bar */}
+                    {hasCapacity && (
+                        <div className="event-capacity-section">
+                            <div className="event-capacity-labels">
+                                <span>{inscritosCount} de {evento.aforo_maximo} plazas</span>
+                                <span style={{ color: capacityColor, fontWeight: 500 }}>{capacityLabel}</span>
+                            </div>
+                            <div className="event-capacity-bar">
+                                <div
+                                    className="event-capacity-fill"
+                                    style={{ width: `${capacityPct}%`, backgroundColor: capacityColor }}
+                                />
+                            </div>
                         </div>
                     )}
 
-                    <p className="event-description">
-                        {evento.descripcion.length > 100
-                            ? `${evento.descripcion.substring(0, 100)}...`
-                            : evento.descripcion}
-                    </p>
-                    
-                    {attendance && (
-                        <div style={{ marginTop: '8px', fontSize: '0.9em' }}>
-                            Estado: 
-                            <span className={`badge ${attendance.estado === 'inscrito' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`} style={{ marginLeft: '5px', padding: '2px 8px', borderRadius: '4px', backgroundColor: attendance.estado === 'inscrito' ? '#d1fae5' : '#fef3c7' }}>
-                                {attendance.estado === 'inscrito' ? '✅ Inscrito' : '⏳ Lista de Espera'}
-                            </span>
-                        </div>
+                    {/* Description */}
+                    {evento.descripcion && (
+                        <p className="event-description">
+                            {evento.descripcion.length > 120
+                                ? `${evento.descripcion.substring(0, 120)}...`
+                                : evento.descripcion}
+                        </p>
                     )}
-                </div>
-                
-                {/* Modified container: vertical stack on mobile, flexible on desktop but with vertical alignment constraint */}
-                <div className="event-actions w-full sm:w-48 flex flex-col gap-2 p-3 sm:p-4 border-t sm:border-t-0 sm:border-l border-gray-100 shrink-0 bg-gray-50 sm:bg-transparent">
+
+                    {/* CTA button */}
                     {!isPast && statusLoaded && (
-                        <>
+                        <div className="event-cta">
                             {(!attendance || attendance.estado === 'cancelado') ? (
-                                <button 
-                                    onClick={() => handleRSVP('inscrito')} 
+                                <button
+                                    onClick={() => handleRSVP('inscrito')}
                                     disabled={loading}
-                                    className="btn-outline w-full justify-center font-medium"
-                                    style={{ backgroundColor: '#3b82f6', color: 'white', border: '1px solid #3b82f6', display: 'flex', alignItems: 'center' }}
+                                    className="event-cta-btn"
                                 >
-                                    {loading ? '...' : 'Inscribirse'}
+                                    {loading ? '...' : 'Inscribirme'}
                                 </button>
                             ) : (
-                                <button 
-                                    onClick={() => handleRSVP('cancelado')} 
+                                <button
+                                    onClick={() => handleRSVP('cancelado')}
                                     disabled={loading}
-                                    className="btn-outline w-full justify-center font-medium"
-                                    style={{ borderColor: '#ef4444', color: '#ef4444', background: 'white', display: 'flex', alignItems: 'center' }}
+                                    className="event-cta-btn event-cta-cancel"
                                 >
-                                    {loading ? '...' : 'Cancelar'}
+                                    {loading ? '...' : (
+                                        attendance.estado === 'inscrito'
+                                            ? <><CheckCircle size={14} /> Inscrito — Cancelar</>
+                                            : <><Timer size={14} /> En espera — Cancelar</>
+                                    )}
                                 </button>
                             )}
-
-                            <button 
-                                onClick={toggleAttendees}
-                                className="btn-outline w-full justify-center font-medium"
-                                style={{ border: '1px solid #d1d5db', color: '#374151', background: 'white', display: 'flex', alignItems: 'center' }}
-                            >
-                                👥 Ver Asistentes ({inscritosCount})
-                            </button>
-                        </>
+                        </div>
                     )}
 
-                    {canEdit && (
-                        <Link to={`/clubes/${clubId}/eventos/${evento.id}/editar`} 
-                            className="btn-outline w-full justify-center font-medium" 
-                            style={{ border: '1px solid #cbd5e1', color: '#64748b', background: 'white', display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-                            ✏️ Editar Evento
+                    {/* Attendees inline */}
+                    {!loadingAttendees && totalInscritos > 0 && (
+                        <Link to={`/clubes/${clubId}/eventos/${evento.id}`} className="event-attendees-row">
+                            <div className="event-avatars">
+                                {visibleAttendees.map((att, i) => (
+                                    <div
+                                        key={att.id}
+                                        className="event-avatar"
+                                        style={{ backgroundColor: avatarColors[i % avatarColors.length], zIndex: visibleAttendees.length - i }}
+                                    >
+                                        {(att.usuario?.nombre_completo || 'U')[0].toUpperCase()}
+                                    </div>
+                                ))}
+                            </div>
+                            <span className="event-attendees-label">
+                                + {extraCount > 0 ? extraCount : ''} {totalInscritos === 1 ? 'socio inscrito' : 'socios inscritos'}
+                            </span>
                         </Link>
                     )}
                 </div>
             </div>
-
-            {showAttendees && (
-                <div className="attendees-section w-full border-t border-gray-200 p-4 bg-gray-50">
-                    <h4 style={{ fontSize: '0.95em', margin: '0 0 12px 0', color: '#4b5563', fontWeight: '600' }}>
-                        Lista de Asistentes ({attendeesList.length})
-                    </h4>
-                    {loadingAttendees ? (
-                        <div style={{ fontSize: '0.9em', color: '#6b7280', padding: '10px 0' }}>Cargando lista...</div>
-                    ) : attendeesList.length === 0 ? (
-                        <div style={{ fontSize: '0.9em', color: '#6b7280', padding: '10px 0', fontStyle: 'italic' }}>
-                            Aún no hay inscritos. ¡Sé el primero!
-                        </div>
-                    ) : (
-                        <ul className="flex flex-col gap-2 w-full">
-                            {attendeesList.map(att => (
-                                <li key={att.id} style={{ 
-                                    background: att.estado === 'inscrito' ? 'white' : '#fff7ed', 
-                                    padding: '10px 12px', 
-                                    borderRadius: '6px', 
-                                    fontSize: '0.9em',
-                                    border: '1px solid',
-                                    borderColor: att.estado === 'inscrito' ? '#e5e7eb' : '#fed7aa',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
-                                }}>
-                                    <div className="flex items-center gap-2">
-                                        <div style={{ 
-                                            width: '24px', height: '24px', borderRadius: '50%', background: '#e0e7ff', 
-                                            color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            fontSize: '0.75em', fontWeight: 'bold'
-                                        }}>
-                                            {(att.usuario?.nombre_completo || 'U')[0].toUpperCase()}
-                                        </div>
-                                        <span style={{ fontWeight: 500, color: '#1f2937' }}>{att.usuario?.nombre_completo || 'Usuario'}</span>
-                                    </div>
-                                    <div>
-                                        {att.estado === 'lista_espera' ? (
-                                            <span style={{ fontSize: '0.75em', color: '#c2410c', background: '#ffedd5', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>En Espera</span>
-                                        ) : (
-                                            <span style={{ fontSize: '0.85em', color: '#10b981' }}>✓</span>
-                                        )}
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-            )}
         </div>
     )
 }

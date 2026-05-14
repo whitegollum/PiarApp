@@ -64,7 +64,7 @@ Tienes acceso a herramientas para consultar y gestionar datos de PiarApp en nomb
 | Tool | Descripción | Parámetros |
 |------|-------------|------------|
 | `list_products` | Listar productos/afiliaciones | club_id |
-| `create_product` | Crear producto | club_id, nombre, descripcion?, url?, precio? |
+| `create_product` | Crear producto | club_id, nombre, url_afiliacion, descripcion?, precio_referencia?, proveedor?, categoria? |
 | `get_product` | Obtener producto | club_id, producto_id |
 | `update_product` | Actualizar producto | club_id, producto_id, data |
 | `delete_product` | Eliminar producto | club_id, producto_id |

@@ -222,12 +222,16 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
         <div className="navbar-end">
           {/* Notification bell — desktop only */}
           {clubId && (
-            <div className="navbar-bell">
+            <Link
+              to={`/admin/alertas?club=${clubId}${usuario?.id ? `&usuario=${usuario.id}` : ''}`}
+              className="navbar-bell"
+              title="Ver alertas"
+            >
               <Bell size={20} />
               {(totalAlertas ?? 0) > 0 && (
                 <span className="navbar-bell-badge">{totalAlertas}</span>
               )}
-            </div>
+            </Link>
           )}
           <div className="user-menu">
             <button 

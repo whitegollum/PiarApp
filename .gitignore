@@ -24,6 +24,12 @@ openclaw/data/.openclaw/agents/main/sessions/
 
 **/old/
 **/tasks/
+**/.aicoder/
+**/.github/
+**/.pytest_cache/
+**/.venv/
+
+
 
 # OpenClaw workspace - excluir archivos temporales y sesiones
 openclaw/data/.openclaw/workspace/**

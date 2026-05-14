@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import os
 import logging
@@ -109,7 +110,7 @@ app.add_middleware(
 )
 
 # Importar rutas
-from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, dashboard, alertas, admin, tareas_comunitarias, canales, afiliacion
+from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, dashboard, alertas, admin, tareas_comunitarias, canales, afiliacion, uploads
 from app.agent.router import router as agent_chat_router
 from app.agent.admin_router import router as agent_admin_router
 
@@ -131,6 +132,12 @@ app.include_router(alertas.router, prefix="/api", tags=["Alertas"])
 app.include_router(tareas_comunitarias.router, prefix="/api/clubes", tags=["Tareas Comunitarias"])
 app.include_router(canales.router, prefix="/api/clubes", tags=["Canales"])
 app.include_router(afiliacion.router)  # SIN prefix /api — sirve HTML público
+app.include_router(uploads.router, prefix="/api", tags=["Uploads"])
+
+# Servir archivos subidos como estáticos
+_uploads_path = os.path.abspath(settings.upload_folder)
+os.makedirs(_uploads_path, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=_uploads_path), name="uploads")
 
 
 @app.get("/")

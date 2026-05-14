@@ -27,6 +27,7 @@ export default function EventDetail() {
   const [loading, setLoading] = useState(true)
   const [rsvpLoading, setRsvpLoading] = useState(false)
   const [inscritosCount, setInscritosCount] = useState(0)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
 
   const canEdit = role === 'administrador' || role === 'propietario' || usuario?.es_superadmin
 
@@ -50,6 +51,13 @@ export default function EventDetail() {
       navigate(`/clubes/${clubId}/eventos`)
     }).finally(() => setLoading(false))
   }, [clubId, eventoId])
+
+  useEffect(() => {
+    if (!lightboxOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightboxOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [lightboxOpen])
 
   const handleRSVP = async (newStatus: 'inscrito' | 'cancelado') => {
     if (!clubId || !eventoId) return
@@ -125,6 +133,54 @@ export default function EventDetail() {
               </Link>
             )}
           </div>
+
+          {/* Event image */}
+          {evento.imagen_url && (
+            <div style={{ marginTop: '16px', borderRadius: '8px', overflow: 'hidden', maxHeight: '320px', cursor: 'zoom-in' }}
+                 onClick={() => setLightboxOpen(true)}>
+              <img
+                src={evento.imagen_url}
+                alt={evento.nombre}
+                style={{ width: '100%', maxHeight: '320px', objectFit: 'cover', display: 'block', transition: 'transform 0.3s ease' }}
+                onError={e => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+              />
+            </div>
+          )}
+
+          {/* Lightbox */}
+          {lightboxOpen && evento.imagen_url && (
+            <div
+              onClick={() => setLightboxOpen(false)}
+              style={{
+                position: 'fixed', inset: 0, zIndex: 1000,
+                background: 'rgba(0,0,0,0.9)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'zoom-out',
+              }}
+            >
+              <img
+                src={evento.imagen_url}
+                alt={evento.nombre}
+                style={{ maxWidth: '95vw', maxHeight: '95vh', objectFit: 'contain', borderRadius: '4px' }}
+                onClick={e => e.stopPropagation()}
+              />
+              <button
+                onClick={() => setLightboxOpen(false)}
+                style={{
+                  position: 'fixed', top: '16px', right: '16px',
+                  background: 'rgba(255,255,255,0.15)', color: '#fff',
+                  border: 'none', borderRadius: '50%',
+                  width: '40px', height: '40px',
+                  fontSize: '20px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                ×
+              </button>
+            </div>
+          )}
 
           {/* Meta info */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '16px' }}>

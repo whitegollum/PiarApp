@@ -1,6 +1,6 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { EventService } from '../services/contentService';
+import { EventService, UploadService } from '../services/contentService';
 import '../styles/Forms.css';
 
 const CreateEvent: React.FC = () => {
@@ -8,6 +8,10 @@ const CreateEvent: React.FC = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [imagenMode, setImagenMode] = useState<'url' | 'file'>('url');
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState({
         nombre: '',
@@ -20,7 +24,8 @@ const CreateEvent: React.FC = () => {
         ubicacion: '',
         aforo_maximo: '',
         requisitos: '',
-        estado: 'no_iniciado'
+        estado: 'no_iniciado',
+        imagen_url: '',
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -29,6 +34,22 @@ const CreateEvent: React.FC = () => {
             ...prev,
             [name]: value
         }));
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setImagePreview(URL.createObjectURL(file));
+        setUploadingImage(true);
+        try {
+            const url = await UploadService.uploadImage(file);
+            setFormData(prev => ({ ...prev, imagen_url: url }));
+        } catch (err: any) {
+            setError(err.message || 'Error subiendo imagen');
+            setImagePreview(null);
+        } finally {
+            setUploadingImage(false);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -54,6 +75,7 @@ const CreateEvent: React.FC = () => {
                 ubicacion: formData.ubicacion || null,
                 aforo_maximo: formData.aforo_maximo ? parseInt(formData.aforo_maximo) : null,
                 requisitos: formData.requisitos ? { notas: formData.requisitos } : {},
+                imagen_url: formData.imagen_url.trim() || null,
             };
 
             console.log('Sending event data:', payload);
@@ -241,6 +263,73 @@ const CreateEvent: React.FC = () => {
                                 onChange={handleChange}
                                 placeholder="Información adicional..."
                             />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Imagen (Opcional)</label>
+                            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                <button
+                                    type="button"
+                                    className={`btn ${imagenMode === 'url' ? 'btn-primary' : 'btn-secondary'}`}
+                                    style={{ fontSize: '0.85rem', padding: '0.3rem 0.8rem' }}
+                                    onClick={() => { setImagenMode('url'); setImagePreview(null); setFormData(p => ({ ...p, imagen_url: '' })); }}
+                                >
+                                    URL
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`btn ${imagenMode === 'file' ? 'btn-primary' : 'btn-secondary'}`}
+                                    style={{ fontSize: '0.85rem', padding: '0.3rem 0.8rem' }}
+                                    onClick={() => { setImagenMode('file'); setFormData(p => ({ ...p, imagen_url: '' })); }}
+                                >
+                                    Subir archivo
+                                </button>
+                            </div>
+                            {imagenMode === 'url' ? (
+                                <input
+                                    type="url"
+                                    id="imagen_url"
+                                    name="imagen_url"
+                                    value={formData.imagen_url}
+                                    onChange={handleChange}
+                                    placeholder="https://ejemplo.com/imagen.jpg"
+                                />
+                            ) : (
+                                <div>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/gif,image/webp"
+                                        onChange={handleFileChange}
+                                        style={{ display: 'none' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={uploadingImage}
+                                        style={{ width: '100%' }}
+                                    >
+                                        {uploadingImage ? 'Subiendo...' : 'Seleccionar imagen'}
+                                    </button>
+                                    {imagePreview && (
+                                        <div style={{ marginTop: '0.75rem', position: 'relative', display: 'inline-block' }}>
+                                            <img
+                                                src={imagePreview}
+                                                alt="Preview"
+                                                style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px', display: 'block' }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => { setImagePreview(null); setFormData(p => ({ ...p, imagen_url: '' })); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                                                style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontSize: '14px', lineHeight: '24px', textAlign: 'center', padding: 0 }}
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="form-actions">

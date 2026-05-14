@@ -1,6 +1,27 @@
 import { APIService } from './api';
 import { Noticia, NoticiaCreate, NoticiaUpdate, Evento, EventoCreate, EventoUpdate, Asistencia, Comentario } from '../types/models';
 
+const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace(/\/api$/, '')
+
+export const UploadService = {
+  uploadImage: async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const token = localStorage.getItem('access_token')
+    const res = await fetch(`${BACKEND_URL}/api/upload/imagen`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || `Error ${res.status}`)
+    }
+    const data = await res.json()
+    return data.url as string
+  },
+}
+
 export const NewsService = {
   getAll: async (clubId: number, skip: number = 0, limit: number = 10): Promise<Noticia[]> => {
     return APIService.get<Noticia[]>(`/clubes/${clubId}/noticias?skip=${skip}&limit=${limit}`);

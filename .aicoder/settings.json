@@ -1,16 +1,16 @@
 {
     "selected_files": [
+        "docs/SCHEDULER_TAREAS_PROGRAMADAS.md",
         "docs/DEVELOPMENT_PHASES.md",
         "docs/TECHNICAL_REQUIREMENTS.md",
-        "docs/FUNCTIONAL_SPECS.md",
+        "docs/TESTING_PLAN.md",
+        "docs/IMPLEMENTATION_PHASE_2.md",
         "docs/UX_STANDARDS.md",
         "docs/DEPLOYMENT.md",
-        "docs/CHANGELOG_MAY_2026.md",
         "docs/CHANGELOG_MAR_2026.md",
-        "docs/SCHEDULER_TAREAS_PROGRAMADAS.md",
-        "docs/DOCUMENTATION.md",
-        "docs/TESTING_PLAN.md",
-        "docs/IMPLEMENTATION_PHASE_2.md"
+        "docs/FUNCTIONAL_SPECS.md",
+        "docs/CHANGELOG_MAY_2026.md",
+        "docs/DOCUMENTATION.md"
     ],
     "include_system_prompt": true,
     "generate_code": false,

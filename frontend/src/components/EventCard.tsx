@@ -135,6 +135,16 @@ const EventCard: React.FC<EventCardProps> = ({ evento, clubId, canEdit = false }
 
     return (
         <div className="event-card-v2">
+            {evento.imagen_url && (
+                <Link to={`/clubes/${clubId}/eventos/${evento.id}`} className="event-card-image-link">
+                    <img
+                        src={evento.imagen_url}
+                        alt={evento.nombre}
+                        className="event-card-banner"
+                        onError={e => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }}
+                    />
+                </Link>
+            )}
             <div className="event-card-top">
                 <div className="event-date-box">
                     <span className="day">{new Date(evento.fecha_inicio).getDate()}</span>

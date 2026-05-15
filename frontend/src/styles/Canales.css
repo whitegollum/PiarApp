@@ -235,6 +235,290 @@
   }
 }
 
+/* ===== Nombre de invitado (rosa) ===== */
+.invitado-nombre-pink {
+  color: #ec4899;
+  font-weight: 600;
+}
+
+/* ===== Botón QR en header de socios ===== */
+.btn-qr-invitado {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-card);
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-qr-invitado:hover {
+  border-color: #ec4899;
+  color: #ec4899;
+  background: #fdf2f8;
+}
+
+/* ===== Modal QR ===== */
+.qr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.qr-modal {
+  background: var(--color-card);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: slideDown 0.2s ease;
+}
+
+.qr-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.qr-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.qr-modal-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-muted);
+  padding: 0.25rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.qr-modal-close:hover {
+  color: var(--color-text);
+}
+
+.qr-modal-body {
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.qr-modal-code {
+  background: #fff;
+  padding: 0.75rem;
+  border-radius: 12px;
+  display: inline-flex;
+}
+
+.qr-modal-instrucciones {
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--color-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.qr-modal-url-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.qr-modal-url {
+  flex: 1;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qr-modal-loading,
+.qr-modal-error {
+  font-size: 0.88rem;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.qr-modal-error {
+  color: #dc2626;
+}
+
+/* ===== Página de bienvenida de invitado ===== */
+.invitado-bienvenida {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+}
+
+.invitado-welcome-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 2rem 1.75rem;
+  max-width: 380px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.invitado-welcome-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.invitado-welcome-desc {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.invitado-nombre-field {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+}
+
+.invitado-nombre-field label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.invitado-nombre-field input {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.invitado-nombre-field input:focus {
+  outline: none;
+  border-color: #ec4899;
+}
+
+.invitado-nombre-hint {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.invitado-btn-entrar {
+  width: 100%;
+  padding: 0.7rem;
+  font-size: 0.95rem;
+}
+
+/* Badge de nombre en el panel de invitado */
+.invitado-nombre-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: -0.5rem 0 1.25rem;
+  flex-wrap: wrap;
+}
+
+.invitado-nombre-badge .canales-desc {
+  margin: 0;
+}
+
+/* Botón del nombre (clicable para editar) */
+.invitado-nombre-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  padding: 0.15rem 0.35rem;
+  border-radius: 6px;
+  cursor: pointer;
+  color: inherit;
+  transition: background 0.15s;
+}
+
+.invitado-nombre-btn:hover {
+  background: #fdf2f8;
+}
+
+.invitado-nombre-btn svg {
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
+
+/* Fila de edición inline del nombre */
+.invitado-nombre-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.invitado-cerdo-prefix {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #ec4899;
+  white-space: nowrap;
+}
+
+.invitado-nombre-edit-input {
+  padding: 0.2rem 0.5rem;
+  border: 1.5px solid #ec4899;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  width: 120px;
+  outline: none;
+}
+
+/* Icono del welcome (sin emoji) */
+.invitado-welcome-icon {
+  color: #ec4899;
+  display: flex;
+  justify-content: center;
+}
+
 /* Widget de Canal en ClubDetail */
 .canal-vuelo-widget {
   display: flex;

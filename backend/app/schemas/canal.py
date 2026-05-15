@@ -18,10 +18,11 @@ class CanalOcupacionResponse(BaseModel):
 
 
 class CanalUsuario(BaseModel):
-    """Usuario en un canal"""
-    usuario_id: int
+    """Usuario (socio o invitado) en un canal"""
+    usuario_id: int  # 0 para invitados
     nombre: str
     en_vuelo: bool
+    es_invitado: bool = False
 
 
 class CanalEstado(BaseModel):

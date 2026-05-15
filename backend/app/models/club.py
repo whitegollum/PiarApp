@@ -49,6 +49,9 @@ class Club(Base):
     # Configuración antigua (removidas por nuevo modelo)
     # es_publico, requiere_aprobacion, permite_autoregistro
     
+    # Token estático para acceso de invitados por QR (generado bajo demanda)
+    token_qr = Column(String(36), nullable=True, unique=True, index=True)
+
     # Metadata
     settings = Column(JSON, nullable=True)
     fecha_creacion = Column(DateTime, server_default=func.now())

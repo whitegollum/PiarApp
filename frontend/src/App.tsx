@@ -48,6 +48,7 @@ import EditTarea from './pages/EditTarea'
 import ClubRanking from './pages/ClubRanking'
 import AdminPremios from './pages/AdminPremios'
 import ClubCanales from './pages/ClubCanales'
+import ClubCanalesInvitado from './pages/ClubCanalesInvitado'
 
 const SetupCheck = () => {
   const navigate = useNavigate()
@@ -85,6 +86,9 @@ function App() {
           <Route path="/admin/database" element={<ProtectedRoute><AdminDatabase /></ProtectedRoute>} />
           <Route path="/admin/agent" element={<ProtectedRoute><AdminAgentConfig /></ProtectedRoute>} />
           <Route path="/admin/afiliacion" element={<ProtectedRoute><AdminAfiliacion /></ProtectedRoute>} />
+
+          {/* Ruta pública de invitados por QR (sin autenticación) */}
+          <Route path="/invitado/:tokenQr" element={<ClubCanalesInvitado />} />
 
           {/* Public routes */}
           <Route path="/auth/setup-inicial" element={<FirstAccess />} />

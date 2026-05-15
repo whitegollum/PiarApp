@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useClubRole } from '../hooks/useClubRole'
-import { ArrowLeft, Radio, Plane, PlaneLanding, AlertTriangle, User } from 'lucide-react'
+import { ArrowLeft, Radio, Plane, PlaneLanding, AlertTriangle, User, QrCode } from 'lucide-react'
 import { CanalesService, CanalesPanel, CanalEstado } from '../services/canalesService'
+import QRInvitadoModal from '../components/QRInvitadoModal'
 import APIService from '../services/api'
 import '../styles/Canales.css'
 import '../styles/ClubDetail.css'
@@ -25,6 +26,7 @@ export default function ClubCanales() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notificacion, setNotificacion] = useState<string | null>(null)
+  const [mostrarQR, setMostrarQR] = useState(false)
 
   const cargarCanales = useCallback(async () => {
     if (!clubId) return
@@ -116,7 +118,17 @@ export default function ClubCanales() {
             <Radio size={20} style={{ verticalAlign: 'middle', marginRight: '0.4rem' }} />
             Canal de Vuelo
           </h1>
-          <span className="canales-live-indicator" title="Actualización en tiempo real" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button
+              className="btn-back"
+              onClick={() => setMostrarQR(true)}
+              title="Mostrar QR para invitar a un piloto"
+              aria-label="Mostrar QR para invitado"
+            >
+              <QrCode size={20} />
+            </button>
+            <span className="canales-live-indicator" title="Actualización en tiempo real" />
+          </div>
         </div>
         <p className="canales-desc">Coordina el uso de frecuencias con otros pilotos del club</p>
 
@@ -129,6 +141,13 @@ export default function ClubCanales() {
         )}
 
         {error && <div className="alert alert-error">{error}</div>}
+
+        {mostrarQR && clubId && (
+          <QRInvitadoModal
+            clubId={parseInt(clubId)}
+            onClose={() => setMostrarQR(false)}
+          />
+        )}
 
         {loading ? (
           <div className="canales-loading">Cargando canales...</div>
@@ -179,10 +198,13 @@ function CanalCard({ canal, estoyEnCanal, estoyVolando, onOcupar, onLiberar, onT
           <p className="canal-vacio">Sin pilotos — canal libre</p>
         ) : (
           <ul className="canal-lista-pilotos">
-            {canal.usuarios.map(u => (
-              <li key={u.usuario_id} className={u.en_vuelo ? 'piloto-en-vuelo' : ''}>
+            {canal.usuarios.map((u, i) => (
+              <li key={u.es_invitado ? `inv-${i}` : u.usuario_id} className={u.en_vuelo ? 'piloto-en-vuelo' : ''}>
                 {u.en_vuelo ? <Plane size={13} /> : <User size={13} />}
-                <span>{u.nombre}</span>
+                {u.es_invitado
+                  ? <span className="invitado-nombre-pink">{u.nombre}</span>
+                  : <span>{u.nombre}</span>
+                }
                 {u.en_vuelo && <span className="badge-en-vuelo">en vuelo</span>}
               </li>
             ))}

@@ -18,7 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Importar modelos para que SQLAlchemy los registre
-from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria, system_config, producto, alerta, tareas_comunitarias, canal
+from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria, system_config, producto, alerta, tareas_comunitarias, canal, invitado
 from app.agent import models as agent_models  # noqa: F401
 
 # Crear tablas en la base de datos
@@ -44,6 +44,17 @@ def _apply_pending_column_migrations():
                 conn.execute(text("CREATE INDEX idx_usuarios_reset_token ON usuarios(reset_token)"))
             except Exception:
                 pass
+
+        # token_qr en clubes (2026-05-15)
+        if "clubes" in inspector.get_table_names():
+            existing_cols = {c["name"] for c in inspector.get_columns("clubes")}
+            if "token_qr" not in existing_cols:
+                conn.execute(text("ALTER TABLE clubes ADD COLUMN token_qr VARCHAR(36) DEFAULT NULL"))
+                logger.info("Migración aplicada: clubes.token_qr")
+                try:
+                    conn.execute(text("CREATE UNIQUE INDEX idx_clubes_token_qr ON clubes(token_qr)"))
+                except Exception:
+                    pass
 
         # aliexpress_banner_url / aliexpress_redirect_enabled en system_config
         if "system_config" in inspector.get_table_names():
@@ -110,7 +121,7 @@ app.add_middleware(
 )
 
 # Importar rutas
-from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, dashboard, alertas, admin, tareas_comunitarias, canales, afiliacion, uploads
+from app.routes import auth, clubes, socios, noticias, eventos, votaciones, instalaciones, documentacion, productos, dashboard, alertas, admin, tareas_comunitarias, canales, afiliacion, uploads, invitados
 from app.agent.router import router as agent_chat_router
 from app.agent.admin_router import router as agent_admin_router
 
@@ -131,6 +142,7 @@ app.include_router(dashboard.router, prefix="/api", tags=["Dashboard"])
 app.include_router(alertas.router, prefix="/api", tags=["Alertas"])
 app.include_router(tareas_comunitarias.router, prefix="/api/clubes", tags=["Tareas Comunitarias"])
 app.include_router(canales.router, prefix="/api/clubes", tags=["Canales"])
+app.include_router(invitados.router, prefix="/api", tags=["Invitados"])
 app.include_router(afiliacion.router)  # SIN prefix /api — sirve HTML público
 app.include_router(uploads.router, prefix="/api", tags=["Uploads"])
 

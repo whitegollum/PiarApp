@@ -3,7 +3,11 @@
     "allow": [
       "Bash(Get-ChildItem -Path \"e:\\\\githubcopilot\\\\piarApp\" -Recurse -ErrorAction SilentlyContinue)",
       "Bash(Select-Object FullName)",
-      "PowerShell(head -50)"
+      "PowerShell(head -50)",
+      "Bash(Get-ChildItem -Path \"e:\\\\githubcopilot\\\\piarApp\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(npx tsc *)",
+      "Bash(node -e \"const l = require\\('lucide-react'\\); console.log\\('QrCode:', typeof l.QrCode\\); console.log\\('QrCodeIcon:', typeof l.QrCodeIcon\\);\")"
     ]
   }
 }

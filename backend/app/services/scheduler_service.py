@@ -64,6 +64,15 @@ class SchedulerService:
             name='Reset diario de canales de vuelo',
             replace_existing=True
         )
+
+        # Tarea diaria: Limpieza de sesiones de invitados inactivas (a las 4:30 AM)
+        cls._scheduler.add_job(
+            func=cls._job_limpiar_invitados,
+            trigger=CronTrigger(hour=4, minute=30),
+            id='limpiar_invitados_diario',
+            name='Limpieza diaria de sesiones de invitados inactivas',
+            replace_existing=True
+        )
         
         cls._scheduler.start()
         logger.info("✅ Scheduler iniciado correctamente")
@@ -71,6 +80,7 @@ class SchedulerService:
         logger.info("  - Alertas: Diario a las 2:00 AM")
         logger.info("  - Backups: Diario a las 3:00 AM")
         logger.info("  - Reset canales: Diario a las 4:00 AM")
+        logger.info("  - Limpieza invitados: Diario a las 4:30 AM")
     
     @classmethod
     def shutdown(cls):
@@ -196,7 +206,7 @@ class SchedulerService:
         Elimina todas las ocupaciones y estados de vuelo.
         """
         logger.info("📡 Iniciando reset diario de canales...")
-        
+
         db = SessionLocal()
         try:
             from app.services.canal_service import CanalService
@@ -204,6 +214,26 @@ class SchedulerService:
             logger.info(f"✅ Reset de canales completado: {count} ocupaciones eliminadas")
         except Exception as e:
             logger.error(f"❌ Error en job de reset de canales: {e}")
+            db.rollback()
+        finally:
+            db.close()
+
+    @classmethod
+    def _job_limpiar_invitados(cls):
+        """
+        Job: Limpieza de sesiones de invitados inactivas
+        Se ejecuta diariamente a las 4:30 AM
+        Elimina sesiones con más de 24h sin actividad.
+        """
+        logger.info("🐷 Iniciando limpieza de sesiones de invitados...")
+
+        db = SessionLocal()
+        try:
+            from app.services.invitado_service import InvitadoService
+            count = InvitadoService.limpiar_sesiones_inactivas(db, horas=24)
+            logger.info(f"✅ Limpieza de invitados completada: {count} sesiones eliminadas")
+        except Exception as e:
+            logger.error(f"❌ Error en job de limpieza de invitados: {e}")
             db.rollback()
         finally:
             db.close()

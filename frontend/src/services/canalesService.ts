@@ -7,6 +7,7 @@ export interface CanalUsuario {
   usuario_id: number
   nombre: string
   en_vuelo: boolean
+  es_invitado: boolean
 }
 
 export interface CanalEstado {

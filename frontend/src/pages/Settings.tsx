@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Bell, Palette, Lock, AlertTriangle, Save } from 'lucide-react'
 import APIService from '../services/api'
-import Navbar from '../components/Navbar'
 import '../styles/Settings.css'
 
 interface UserPreferences {
@@ -62,9 +61,7 @@ export default function Settings() {
   }
 
   return (
-    <>
-      <Navbar />
-      <main className="form-main">
+    <main className="form-main">
         <div className="settings-container">
           <div className="settings-header">
             <h1>Configuración</h1>
@@ -208,7 +205,6 @@ export default function Settings() {
             </button>
           </div>
         </div>
-      </main>
-    </>
+    </main>
   )
 }

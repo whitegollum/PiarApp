@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocat
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import ClubLayout from './components/ClubLayout'
+import UserLayout from './components/UserLayout'
 import './App.css'
 import APIService from './services/api'
 import { useEffect } from 'react'
@@ -102,10 +103,13 @@ function App() {
           {/* Protected non-club routes */}
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/clubes/crear" element={<ProtectedRoute><CreateClub /></ProtectedRoute>} />
-          <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          {/* User routes wrapped in UserLayout (Navbar + Sidebar + Outlet) */}
+          <Route element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
+            <Route path="/perfil" element={<Profile />} />
+            <Route path="/configuracion" element={<Settings />} />
+          </Route>
           <Route path="/perfil/socio" element={<Navigate to="/perfil" />} />
           <Route path="/perfil/documentacion" element={<ProtectedRoute><ClubDocumentacion /></ProtectedRoute>} />
-          <Route path="/configuracion" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
           {/* Club routes wrapped in ClubLayout (Navbar + Sidebar + Outlet) */}
           <Route path="/clubes/:clubId" element={<ProtectedRoute><ClubLayout /></ProtectedRoute>}>

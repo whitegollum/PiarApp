@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Pencil, Crown, FileText, Lock, Download } from 'lucide-react'
-import Navbar from '../components/Navbar'
 import APIService from '../services/api'
 import SocioService, { Socio, SocioCreate, SocioUpdate } from '../services/socioService'
 import '../styles/Forms.css'
@@ -351,9 +350,7 @@ export default function Profile() {
   }
 
   return (
-    <>
-      <Navbar />
-      <main className="form-main">
+    <main className="form-main">
         <div className="profile-container">
           <div className="profile-header">
             <h1>Mi Perfil</h1>
@@ -740,7 +737,6 @@ export default function Profile() {
             </button>
           </section>
         </div>
-      </main>
-    </>
+    </main>
   )
 }

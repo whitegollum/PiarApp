@@ -111,6 +111,28 @@ export class APIService {
   }
 
   /**
+   * Realiza un PATCH request
+   */
+  static async patch<T>(
+    endpoint: string,
+    data?: any,
+    options?: FetchOptions
+  ): Promise<T> {
+    const response = await this.request(endpoint, {
+      ...options,
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.detail || `HTTP ${response.status}`)
+    }
+
+    return response.json() as Promise<T>
+  }
+
+  /**
    * Realiza un DELETE request
    */
   static async delete<T = void>(endpoint: string, options?: FetchOptions): Promise<T> {

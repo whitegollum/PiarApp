@@ -71,6 +71,16 @@ export default function ClubEdit() {
   const [success, setSuccess] = useState('')
   const [generatingData, setGeneratingData] = useState(false)
 
+  // Configuración de alertas
+  const [alertConfig, setAlertConfig] = useState({
+    alertas_documentacion_enabled: true,
+    alertas_doc_ausente_enabled: true,
+  })
+  const [originalAlertConfig, setOriginalAlertConfig] = useState({
+    alertas_documentacion_enabled: true,
+    alertas_doc_ausente_enabled: true,
+  })
+
   // Formulario
   const [formData, setFormData] = useState<ClubUpdate>({
     nombre: '',
@@ -104,7 +114,12 @@ export default function ClubEdit() {
     const cargarClub = async () => {
       try {
         setLoading(true)
-        const clubData = await APIService.get<Club>(`/clubes/${clubId}`)
+        const [clubData, configData] = await Promise.all([
+          APIService.get<Club>(`/clubes/${clubId}`),
+          APIService.get<{ alertas_documentacion_enabled: boolean; alertas_doc_ausente_enabled: boolean }>(
+            `/clubs/${clubId}/alertas/config`
+          ).catch(() => ({ alertas_documentacion_enabled: true, alertas_doc_ausente_enabled: true })),
+        ])
         setClub(clubData)
         setFormData({
           nombre: clubData.nombre,
@@ -123,6 +138,12 @@ export default function ClubEdit() {
           sitio_web: clubData.sitio_web,
           rtsp_url: clubData.rtsp_url
         })
+        const cfg = {
+          alertas_documentacion_enabled: configData.alertas_documentacion_enabled ?? true,
+          alertas_doc_ausente_enabled: configData.alertas_doc_ausente_enabled ?? true,
+        }
+        setAlertConfig(cfg)
+        setOriginalAlertConfig(cfg)
       } catch (err) {
         setError('Error al cargar club: ' + (err as Error).message)
       } finally {
@@ -180,13 +201,24 @@ export default function ClubEdit() {
       if (formData.latitud !== club?.latitud) updateData.latitud = formData.latitud
       if (formData.longitud !== club?.longitud) updateData.longitud = formData.longitud
 
-      if (Object.keys(updateData).length === 0) {
+      const alertConfigChanged =
+        alertConfig.alertas_documentacion_enabled !== originalAlertConfig.alertas_documentacion_enabled ||
+        alertConfig.alertas_doc_ausente_enabled !== originalAlertConfig.alertas_doc_ausente_enabled
+
+      if (Object.keys(updateData).length === 0 && !alertConfigChanged) {
         setError('No hay cambios para guardar')
         return
       }
 
-      await APIService.put(`/clubes/${clubId}`, updateData)
-      
+      const requests: Promise<unknown>[] = []
+      if (Object.keys(updateData).length > 0) {
+        requests.push(APIService.put(`/clubes/${clubId}`, updateData))
+      }
+      if (alertConfigChanged) {
+        requests.push(APIService.patch(`/clubs/${clubId}/alertas/config`, alertConfig))
+      }
+      await Promise.all(requests)
+
       setSuccess('Club actualizado exitosamente')
       setTimeout(() => {
         navigate(`/clubes/${clubId}`)
@@ -551,6 +583,51 @@ export default function ClubEdit() {
                     className="form-input"
                     placeholder="-3.7038"
                   />
+                </div>
+              </div>
+            </section>
+
+            {/* Configuración de Alertas */}
+            <section className="form-section">
+              <h2>Configuración de Alertas de Documentación</h2>
+
+              <div className="alert-config-list">
+                <div className="alert-config-item">
+                  <div className="alert-config-info">
+                    <span className="alert-config-label">Alertas por documentación caducada</span>
+                    <span className="alert-config-desc">
+                      Avisa cuando el carnet de piloto o el seguro RC de un socio está próximo a vencer o ya ha vencido.
+                    </span>
+                  </div>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={alertConfig.alertas_documentacion_enabled}
+                      onChange={(e) =>
+                        setAlertConfig(prev => ({ ...prev, alertas_documentacion_enabled: e.target.checked }))
+                      }
+                    />
+                    <span className="toggle-slider" />
+                  </label>
+                </div>
+
+                <div className="alert-config-item">
+                  <div className="alert-config-info">
+                    <span className="alert-config-label">Alertas por documentación no subida</span>
+                    <span className="alert-config-desc">
+                      Avisa cuando un socio no ha registrado en la plataforma su carnet de piloto o seguro RC.
+                    </span>
+                  </div>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={alertConfig.alertas_doc_ausente_enabled}
+                      onChange={(e) =>
+                        setAlertConfig(prev => ({ ...prev, alertas_doc_ausente_enabled: e.target.checked }))
+                      }
+                    />
+                    <span className="toggle-slider" />
+                  </label>
                 </div>
               </div>
             </section>

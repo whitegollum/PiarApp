@@ -38,7 +38,8 @@ class Club(Base):
     ayuda_documentacion_md = Column(Text, nullable=True)
     
     # Configuración de Alertas
-    alertas_documentacion_enabled = Column(Boolean, default=True)
+    alertas_documentacion_enabled = Column(Boolean, default=True)   # alertas por doc caducada
+    alertas_doc_ausente_enabled = Column(Boolean, server_default='1', nullable=True)  # alertas por doc no subida
     alertas_dias_aviso_previo = Column(Integer, default=30)  # Días antes para warning
     alertas_dias_critico = Column(Integer, default=60)  # Días después para critical
     

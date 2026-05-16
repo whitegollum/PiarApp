@@ -242,6 +242,7 @@ async def obtener_config_alertas(
     
     return AlertasConfigResponse(
         alertas_documentacion_enabled=club.alertas_documentacion_enabled or False,
+        alertas_doc_ausente_enabled=club.alertas_doc_ausente_enabled if club.alertas_doc_ausente_enabled is not None else True,
         dias_aviso_previo=club.alertas_dias_aviso_previo or 30,
         dias_critico=club.alertas_dias_critico or 60
     )
@@ -271,18 +272,20 @@ async def actualizar_config_alertas(
     
     # Actualizar configuración
     club.alertas_documentacion_enabled = config.alertas_documentacion_enabled
+    club.alertas_doc_ausente_enabled = config.alertas_doc_ausente_enabled
     if config.dias_aviso_previo is not None:
         club.alertas_dias_aviso_previo = config.dias_aviso_previo
     if config.dias_critico is not None:
         club.alertas_dias_critico = config.dias_critico
-    
+
     db.commit()
     db.refresh(club)
-    
+
     return {
         "mensaje": "Configuración de alertas actualizada correctamente",
         "config": AlertasConfigResponse(
             alertas_documentacion_enabled=club.alertas_documentacion_enabled,
+            alertas_doc_ausente_enabled=club.alertas_doc_ausente_enabled if club.alertas_doc_ausente_enabled is not None else True,
             dias_aviso_previo=club.alertas_dias_aviso_previo,
             dias_critico=club.alertas_dias_critico
         )

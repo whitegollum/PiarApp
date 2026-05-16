@@ -70,6 +70,7 @@ class AlertaResolverRequest(BaseModel):
 class AlertasConfigUpdate(BaseModel):
     """Actualizar configuración de alertas del club"""
     alertas_documentacion_enabled: bool
+    alertas_doc_ausente_enabled: bool = True
     dias_aviso_previo: Optional[int] = 30
     dias_critico: Optional[int] = 60
 
@@ -77,5 +78,6 @@ class AlertasConfigUpdate(BaseModel):
 class AlertasConfigResponse(BaseModel):
     """Respuesta de configuración de alertas"""
     alertas_documentacion_enabled: bool
+    alertas_doc_ausente_enabled: bool
     dias_aviso_previo: int
     dias_critico: int

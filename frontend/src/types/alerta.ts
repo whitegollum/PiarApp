@@ -40,6 +40,7 @@ export interface AlertaCountResponse {
 
 export interface AlertasConfig {
   alertas_documentacion_enabled: boolean;
+  alertas_doc_ausente_enabled: boolean;
   dias_aviso_previo: number;
   dias_critico: number;
 }

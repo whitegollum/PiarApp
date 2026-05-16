@@ -51,6 +51,7 @@ def init_db():
             ("idioma_por_defecto", "VARCHAR(10) DEFAULT 'es'"),
             ("estado", "VARCHAR(20) DEFAULT 'inactivo'"),
             ("settings", "TEXT"),
+            ("alertas_doc_ausente_enabled", "BOOLEAN DEFAULT 1"),
         ]
 
         for nombre, tipo in columnas:

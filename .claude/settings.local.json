@@ -7,7 +7,9 @@
       "Bash(Get-ChildItem -Path \"e:\\\\githubcopilot\\\\piarApp\" -Force)",
       "Bash(Select-Object Name, PSIsContainer)",
       "Bash(npx tsc *)",
-      "Bash(node -e \"const l = require\\('lucide-react'\\); console.log\\('QrCode:', typeof l.QrCode\\); console.log\\('QrCodeIcon:', typeof l.QrCodeIcon\\);\")"
+      "Bash(node -e \"const l = require\\('lucide-react'\\); console.log\\('QrCode:', typeof l.QrCode\\); console.log\\('QrCodeIcon:', typeof l.QrCodeIcon\\);\")",
+      "Bash(Get-ChildItem -Path \"e:\\\\githubcopilot\\\\piarApp\" -Directory)",
+      "Bash(Select-Object -First 20)"
     ]
   }
 }

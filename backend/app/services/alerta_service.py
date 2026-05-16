@@ -99,7 +99,7 @@ class AlertaService:
             return {"creadas": 0, "actualizadas": 0, "resueltas": 0, "mensaje": "Alertas deshabilitadas"}
         
         stats = {"creadas": 0, "actualizadas": 0, "resueltas": 0}
-        
+
         # Obtener todos los socios activos del club
         socios = (
             db.query(MiembroClub, Usuario, DocumentacionReglamentaria)
@@ -114,39 +114,62 @@ class AlertaService:
             )
             .all()
         )
-        
+
         for miembro, usuario, documentacion in socios:
-            if not documentacion:
-                continue
-            
-            # Verificar carnet de piloto
-            if documentacion.carnet_fecha_vencimiento:
-                result = AlertaService._procesar_documento(
-                    db=db,
-                    club_id=club_id,
-                    usuario_id=usuario.id,
-                    tipo_doc=SubtipoAlerta.CARNET_PILOTO.value,
-                    fecha_vencimiento=documentacion.carnet_fecha_vencimiento,
-                    numero_documento=documentacion.carnet_numero,
-                    dias_aviso_previo=club.alertas_dias_aviso_previo,
-                    dias_critico=club.alertas_dias_critico
+            # --- Carnet de Piloto ---
+            carnet_ausente = (
+                not documentacion
+                or (not documentacion.carnet_numero and not documentacion.carnet_fecha_vencimiento)
+            )
+            if carnet_ausente:
+                result = AlertaService._procesar_documento_ausente(
+                    db=db, club_id=club_id, usuario_id=usuario.id,
+                    tipo_doc=SubtipoAlerta.CARNET_PILOTO.value
                 )
                 stats[result] += 1
-            
-            # Verificar seguro RC
-            if documentacion.rc_fecha_vencimiento:
-                result = AlertaService._procesar_documento(
-                    db=db,
-                    club_id=club_id,
-                    usuario_id=usuario.id,
-                    tipo_doc=SubtipoAlerta.SEGURO_RC.value,
-                    fecha_vencimiento=documentacion.rc_fecha_vencimiento,
-                    numero_documento=documentacion.rc_numero,
-                    dias_aviso_previo=club.alertas_dias_aviso_previo,
-                    dias_critico=club.alertas_dias_critico
+            else:
+                AlertaService._resolver_alerta_ausente(
+                    db=db, club_id=club_id, usuario_id=usuario.id,
+                    tipo_doc=SubtipoAlerta.CARNET_PILOTO.value
+                )
+                if documentacion.carnet_fecha_vencimiento:
+                    result = AlertaService._procesar_documento(
+                        db=db, club_id=club_id, usuario_id=usuario.id,
+                        tipo_doc=SubtipoAlerta.CARNET_PILOTO.value,
+                        fecha_vencimiento=documentacion.carnet_fecha_vencimiento,
+                        numero_documento=documentacion.carnet_numero,
+                        dias_aviso_previo=club.alertas_dias_aviso_previo,
+                        dias_critico=club.alertas_dias_critico
+                    )
+                    stats[result] += 1
+
+            # --- Seguro RC ---
+            rc_ausente = (
+                not documentacion
+                or (not documentacion.rc_numero and not documentacion.rc_fecha_vencimiento)
+            )
+            if rc_ausente:
+                result = AlertaService._procesar_documento_ausente(
+                    db=db, club_id=club_id, usuario_id=usuario.id,
+                    tipo_doc=SubtipoAlerta.SEGURO_RC.value
                 )
                 stats[result] += 1
-        
+            else:
+                AlertaService._resolver_alerta_ausente(
+                    db=db, club_id=club_id, usuario_id=usuario.id,
+                    tipo_doc=SubtipoAlerta.SEGURO_RC.value
+                )
+                if documentacion.rc_fecha_vencimiento:
+                    result = AlertaService._procesar_documento(
+                        db=db, club_id=club_id, usuario_id=usuario.id,
+                        tipo_doc=SubtipoAlerta.SEGURO_RC.value,
+                        fecha_vencimiento=documentacion.rc_fecha_vencimiento,
+                        numero_documento=documentacion.rc_numero,
+                        dias_aviso_previo=club.alertas_dias_aviso_previo,
+                        dias_critico=club.alertas_dias_critico
+                    )
+                    stats[result] += 1
+
         db.commit()
         return stats
     
@@ -174,13 +197,17 @@ class AlertaService:
             dias_critico
         )
         
-        # Buscar alerta existente
+        # Buscar alerta existente de vencimiento (excluye alertas de tipo ausente)
         alerta_existente = db.query(Alerta).filter(
             and_(
                 Alerta.club_id == club_id,
                 Alerta.usuario_id == usuario_id,
                 Alerta.subtipo == tipo_doc,
-                Alerta.estado == EstadoAlerta.ACTIVA.value
+                Alerta.tipo.in_([
+                    TipoAlerta.DOCUMENTO_POR_VENCER.value,
+                    TipoAlerta.DOCUMENTO_VENCIDO.value,
+                ]),
+                Alerta.estado == EstadoAlerta.ACTIVA.value,
             )
         ).first()
         
@@ -236,6 +263,78 @@ class AlertaService:
             db.add(nueva_alerta)
             return "creadas"
     
+    @staticmethod
+    def _procesar_documento_ausente(
+        db: Session,
+        club_id: int,
+        usuario_id: int,
+        tipo_doc: str,
+    ) -> str:
+        """
+        Crear alerta de documento no registrado si no existe ya una activa.
+        Retorna 'creadas' o 'actualizadas'.
+        """
+        doc_nombres = {
+            SubtipoAlerta.CARNET_PILOTO.value: "Carnet de Piloto",
+            SubtipoAlerta.SEGURO_RC.value: "Seguro RC",
+        }
+        doc_nombre = doc_nombres.get(tipo_doc, "Documento")
+
+        alerta_existente = db.query(Alerta).filter(
+            and_(
+                Alerta.club_id == club_id,
+                Alerta.usuario_id == usuario_id,
+                Alerta.subtipo == tipo_doc,
+                Alerta.tipo == TipoAlerta.DOCUMENTO_AUSENTE.value,
+                Alerta.estado == EstadoAlerta.ACTIVA.value,
+            )
+        ).first()
+
+        if alerta_existente:
+            return "actualizadas"
+
+        nueva_alerta = Alerta(
+            club_id=club_id,
+            usuario_id=usuario_id,
+            tipo=TipoAlerta.DOCUMENTO_AUSENTE.value,
+            subtipo=tipo_doc,
+            severidad=SeveridadAlerta.DANGER.value,
+            titulo=f"{doc_nombre} no registrado",
+            descripcion=(
+                f"No has registrado tu {doc_nombre.lower()}. "
+                "Es obligatorio para acceder a las instalaciones del club. "
+                "Por favor, sube tu documentación lo antes posible."
+            ),
+            fecha_referencia=None,
+            estado=EstadoAlerta.ACTIVA.value,
+            notificado_admin=False,
+            notificado_usuario=False,
+        )
+        db.add(nueva_alerta)
+        return "creadas"
+
+    @staticmethod
+    def _resolver_alerta_ausente(
+        db: Session,
+        club_id: int,
+        usuario_id: int,
+        tipo_doc: str,
+    ) -> None:
+        """Resolver alertas de documento ausente cuando el usuario ya registró el documento."""
+        alerta = db.query(Alerta).filter(
+            and_(
+                Alerta.club_id == club_id,
+                Alerta.usuario_id == usuario_id,
+                Alerta.subtipo == tipo_doc,
+                Alerta.tipo == TipoAlerta.DOCUMENTO_AUSENTE.value,
+                Alerta.estado == EstadoAlerta.ACTIVA.value,
+            )
+        ).first()
+
+        if alerta:
+            alerta.estado = EstadoAlerta.RESUELTA.value
+            alerta.fecha_resolucion = datetime.now()
+
     @staticmethod
     def obtener_alertas_club(
         db: Session,

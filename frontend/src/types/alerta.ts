@@ -1,6 +1,6 @@
 export type SeveridadAlerta = 'warning' | 'danger' | 'critical';
 export type EstadoAlerta = 'activa' | 'resuelta' | 'ignorada';
-export type TipoAlerta = 'documento_por_vencer' | 'documento_vencido' | 'cuota_pendiente' | 'evento_proximo';
+export type TipoAlerta = 'documento_ausente' | 'documento_por_vencer' | 'documento_vencido' | 'cuota_pendiente' | 'evento_proximo';
 export type SubtipoAlerta = 'carnet_piloto' | 'seguro_rc' | 'cuota_mensual' | 'cuota_anual';
 
 export interface UsuarioAlertaInfo {

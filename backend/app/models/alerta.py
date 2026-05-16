@@ -8,6 +8,7 @@ import enum
 
 class TipoAlerta(str, enum.Enum):
     """Tipos de alerta disponibles"""
+    DOCUMENTO_AUSENTE = "documento_ausente"
     DOCUMENTO_POR_VENCER = "documento_por_vencer"
     DOCUMENTO_VENCIDO = "documento_vencido"
     CUOTA_PENDIENTE = "cuota_pendiente"

@@ -1,5 +1,5 @@
 import React from 'react'
-import { AlertTriangle, XCircle, Siren, Info, User, Calendar, Check, X } from 'lucide-react'
+import { AlertTriangle, XCircle, Siren, Info, User, Calendar, Check, X, FileX } from 'lucide-react'
 import { Alerta } from '../types/alerta'
 import '../styles/Alerts.css'
 
@@ -12,7 +12,8 @@ interface AlertItemProps {
   compact?: boolean
 }
 
-const getSeverityIcon = (severidad: string) => {
+const getSeverityIcon = (severidad: string, tipo?: string) => {
+  if (tipo === 'documento_ausente') return <FileX size={15} />
   switch (severidad) {
     case 'warning':  return <AlertTriangle size={15} />
     case 'danger':   return <XCircle size={15} />
@@ -63,7 +64,7 @@ const AlertItem: React.FC<AlertItemProps> = ({
         <div className="alert-compact-main">
           <div className="alert-compact-body">
             <div className="alert-compact-title">
-              <span className="alert-item-icon">{getSeverityIcon(alerta.severidad)}</span>
+              <span className="alert-item-icon">{getSeverityIcon(alerta.severidad, alerta.tipo)}</span>
               <span>{alerta.titulo}</span>
             </div>
             <div className="alert-compact-meta">
@@ -73,7 +74,12 @@ const AlertItem: React.FC<AlertItemProps> = ({
               {alerta.fecha_creacion && (
                 <span className="alert-compact-time">{timeAgo(alerta.fecha_creacion)}</span>
               )}
-              {alerta.fecha_referencia && (
+              {alerta.tipo === 'documento_ausente' && (
+                <span className="alert-compact-time">
+                  <FileX size={11} /> No registrado
+                </span>
+              )}
+              {alerta.fecha_referencia && alerta.tipo !== 'documento_ausente' && (
                 <span className="alert-compact-time">
                   <Calendar size={11} /> Vence {formatDate(alerta.fecha_referencia)}
                 </span>
@@ -113,7 +119,7 @@ const AlertItem: React.FC<AlertItemProps> = ({
     <div className={`alert-item ${alerta.severidad}`}>
       <div className="alert-item-header">
         <div className="alert-item-title">
-          <span className="alert-item-icon">{getSeverityIcon(alerta.severidad)}</span>
+          <span className="alert-item-icon">{getSeverityIcon(alerta.severidad, alerta.tipo)}</span>
           <span>{alerta.titulo}</span>
         </div>
         <span className={`alert-severity-badge ${alerta.severidad}`}>
@@ -133,7 +139,13 @@ const AlertItem: React.FC<AlertItemProps> = ({
               <span>({alerta.usuario.email})</span>
             </div>
           )}
-          {alerta.fecha_referencia && (
+          {alerta.tipo === 'documento_ausente' && (
+            <div className="alert-item-meta-item">
+              <FileX size={14} />
+              <span>Documentación no registrada</span>
+            </div>
+          )}
+          {alerta.fecha_referencia && alerta.tipo !== 'documento_ausente' && (
             <div className="alert-item-meta-item">
               <Calendar size={14} />
               <span>Vence: {formatDate(alerta.fecha_referencia)}</span>

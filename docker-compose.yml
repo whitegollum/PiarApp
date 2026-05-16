@@ -27,6 +27,7 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - piar_data:/app/data
+      - piar_uploads:/app/uploads
 
   frontend:
     build:
@@ -52,3 +53,4 @@ networks:
 
 volumes:
   piar_data:
+  piar_uploads:

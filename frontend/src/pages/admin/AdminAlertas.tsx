@@ -214,6 +214,7 @@ const AdminAlertas: React.FC = () => {
                 onChange={(e) => handleFiltroChange('tipo', e.target.value)}
               >
                 <option value="">Todos</option>
+                <option value="documento_ausente">Documento no registrado</option>
                 <option value="documento_por_vencer">Documento por vencer</option>
                 <option value="documento_vencido">Documento vencido</option>
               </select>

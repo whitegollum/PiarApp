@@ -25,7 +25,7 @@ Se ha implementado un sistema de tareas programadas usando **APScheduler** que s
 - **Proceso**:
   1. Verifica si los backups automáticos están habilitados (`backup_automatico_habilitado`)
   2. Comprueba si han pasado suficientes días desde el último backup (`backup_frecuencia_dias`)
-  3. Crea una copia de seguridad de la base de datos
+  3. Crea una copia de seguridad (export lógico en JSON, agnóstico al motor)
   4. Actualiza la fecha del último backup (`backup_ultimo_ejecutado`)
   5. Limpia backups antiguos según `backup_max_archivos`
 
@@ -113,7 +113,7 @@ INFO - ✅ Alertas generadas - Creadas: 5, Actualizadas: 2, Resueltas: 1
 ```
 INFO - 💾 Iniciando verificación de backups automáticos...
 INFO - Creando backup automático...
-INFO - ✅ Backup creado: piar_backup_20260409_030000.db (2.45 MB)
+INFO - ✅ Backup creado: piar_backup_20260409_030000.json (2.45 MB)
 ```
 
 ### Panel de Administración
@@ -204,7 +204,7 @@ pip install APScheduler==3.10.4
 ### Los backups no se crean
 1. Verifica que `backup_automatico_habilitado = True`
 2. Comprueba que han pasado suficientes días según `backup_frecuencia_dias`
-3. Revisa los permisos de escritura en el directorio de la base de datos
+3. Revisa los permisos de escritura en el directorio de backups (`BACKUP_FOLDER`, por defecto `./data/backups`)
 
 ### Las alertas no se generan
 1. Verifica que el club tiene `alertas_documentacion_enabled = True`

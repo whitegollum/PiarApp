@@ -9,8 +9,6 @@ Maneja tareas periódicas como:
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, timedelta
-from pathlib import Path
-import shutil
 import logging
 from typing import Optional
 
@@ -166,24 +164,14 @@ class SchedulerService:
                     )
                     return
             
-            # Crear backup
+            # Crear backup (export lógico JSON, agnóstico al motor)
             logger.info("Creando backup automático...")
-            db_path = cls._get_db_path()
-            
-            if not db_path.exists():
-                logger.error(f"Base de datos no encontrada: {db_path}")
-                return
-            
-            # Generar nombre de backup
-            timestamp = ahora.strftime("%Y%m%d_%H%M%S")
-            backup_name = f"{db_path.stem}_backup_{timestamp}{db_path.suffix}"
-            backup_path = db_path.parent / backup_name
-            
-            # Copiar archivo
-            shutil.copy2(db_path, backup_path)
+            from app.services import data_transfer
+
+            backup_path = data_transfer.create_backup_file(db)
             file_size_mb = backup_path.stat().st_size / (1024 * 1024)
-            
-            logger.info(f"✅ Backup creado: {backup_name} ({file_size_mb:.2f} MB)")
+
+            logger.info(f"✅ Backup creado: {backup_path.name} ({file_size_mb:.2f} MB)")
             
             # Actualizar fecha de último backup
             config.backup_ultimo_ejecutado = ahora
@@ -239,37 +227,13 @@ class SchedulerService:
             db.close()
     
     @staticmethod
-    def _get_db_path() -> Path:
-        """Obtener ruta del archivo de base de datos"""
-        db_url = settings.database_url
-        if not db_url.startswith("sqlite:///"):
-            raise ValueError("Backups automáticos solo soportan SQLite")
-        db_path = db_url.replace("sqlite:///", "")
-        return Path(db_path)
-    
-    @staticmethod
     def _cleanup_old_backups(max_archivos: int):
         """Eliminar backups antiguos manteniendo solo los últimos N"""
         try:
-            db_path = SchedulerService._get_db_path()
-            backups_dir = db_path.parent
-            backup_pattern = f"{db_path.stem}_backup_*{db_path.suffix}"
-            
-            # Listar todos los backups ordenados por fecha (más recientes primero)
-            backups = sorted(
-                backups_dir.glob(backup_pattern),
-                key=lambda x: x.stat().st_mtime,
-                reverse=True
-            )
-            
-            if len(backups) > max_archivos:
-                # Eliminar los más antiguos
-                for old_backup in backups[max_archivos:]:
-                    old_backup.unlink()
-                    logger.info(f"🗑️  Backup antiguo eliminado: {old_backup.name}")
-                
-                logger.info(f"Limpieza completada. Conservados: {max_archivos} backups")
-        
+            from app.services import data_transfer
+            eliminados = data_transfer.cleanup_old_backups(max_archivos)
+            if eliminados:
+                logger.info(f"Limpieza completada. Eliminados: {eliminados} backups antiguos")
         except Exception as e:
             logger.error(f"Error al limpiar backups antiguos: {e}")
     

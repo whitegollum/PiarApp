@@ -31,26 +31,19 @@
   - Testing: Vitest + React Testing Library
 - **Nota**: API REST consumida desde PWA y futuros clientes móviles (iOS/Android)
 
-### Base de Datos (Versión 1 - Ágil / Versión 2 - Definitiva)
+### Base de Datos
 
-#### Fase Actual - Backend Ágil (MVP)
-- **Almacenamiento**: JSON Files / SQLite
-- **ORM**: SQLAlchemy (flexible, preparado para migración)
-- **Ventajas**:
-  - Sin instalación de servidor DB
-  - Rápido para desarrollo
-  - Fácil de testear
-  - Portabilidad
-
-#### Fase 2 - Base de Datos Relacional
-- **Opciones**:
-  - PostgreSQL (recomendado - mejor para escalabilidad)
-  - MySQL 8.0+
-- **Razones**:
-  - Mejor rendimiento con muchos datos
-  - Escalabilidad
-  - Seguridad mejorada
-  - Transacciones ACID
+- **ORM**: SQLAlchemy 2.0
+- **Motores (dual-dialect, mismo código)**:
+  - **SQLite** en desarrollo local (`sqlite:///./data/piar.db`) — cero instalación, rápido para desarrollo.
+  - **PostgreSQL** en Docker/producción (`postgresql+psycopg2://...`) — rendimiento, escalabilidad y transacciones ACID.
+  - El motor lo determina únicamente `DATABASE_URL`.
+- **Migraciones**: **Alembic** es la única fuente de verdad del esquema. Se aplican
+  automáticamente al arrancar (`alembic upgrade head`). Para cambios de esquema:
+  `alembic revision --autogenerate -m "..."`.
+- **Backups / portabilidad**: export/import lógico en JSON (agnóstico al motor),
+  que además permite la migración de datos SQLite → PostgreSQL
+  (`scripts/migrate_sqlite_to_postgres.py`).
 
 ### Other Components
 - **Autenticación**: JWT (JSON Web Tokens) ou sesiones seguras

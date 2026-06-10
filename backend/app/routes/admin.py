@@ -21,13 +21,10 @@ from app.schemas.system_config import EmailConfigUpdate, EmailConfigResponse, Te
 from app.schemas.backup import BackupConfigSchema, BackupInfo, BackupListResponse, BackupCreateResponse, BackupRestoreResponse
 from app.routes.auth import get_current_user
 from app.services.email_service import EmailService
+from app.services import data_transfer
 from app.config import settings
-import subprocess
-import sys
 from pathlib import Path
 from datetime import datetime
-import shutil
-import os
 
 router = APIRouter()
 
@@ -240,7 +237,7 @@ async def check_database_schema(
     db: Session = Depends(get_db)
 ):
     """
-    Verificar el estado del esquema de la base de datos (dry-run)
+    Verificar si hay migraciones de Alembic pendientes (dry-run)
     Solo superadmin
     """
     if not current_user.es_superadmin:
@@ -248,63 +245,33 @@ async def check_database_schema(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Requiere privilegios de superadministrador"
         )
-    
+
     try:
-        # Ejecutar migrate_schema.py en modo dry-run
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "migrate_schema.py"
-        
-        result = subprocess.run(
-            [sys.executable, str(script_path), "--dry-run"],
-            capture_output=True,
-            text=True,
-            cwd=Path(__file__).parent.parent.parent,
-            timeout=30
+        from app.database.migrations import get_migration_state
+        state = get_migration_state()
+
+        necesita = not state["up_to_date"]
+        output = (
+            f"Revisión actual: {state['current']}\n"
+            f"Revisión objetivo (head): {state['head']}\n"
+            f"{'Hay migraciones pendientes.' if necesita else 'La base de datos está al día.'}"
         )
-        
-        # Parsear el output para extraer información útil
-        output = result.stdout
-        
-        # Buscar información clave en el output usando regex para evitar conflictos con timestamps
-        import re
-        
-        tablas_faltantes = 0
-        columnas_faltantes = 0
-        tipo_incompatibilidades = 0
-        
-        for line in output.split('\n'):
-            # Buscar patrón: "Tablas faltantes: N" o "[INFO] Tablas faltantes: N"
-            match = re.search(r'Tablas faltantes:\s*(\d+)', line, re.IGNORECASE)
-            if match:
-                tablas_faltantes = int(match.group(1))
-            
-            match = re.search(r'Columnas faltantes:\s*(\d+)', line, re.IGNORECASE)
-            if match:
-                columnas_faltantes = int(match.group(1))
-            
-            match = re.search(r'Posibles incompatibilidades de tipo:\s*(\d+)', line, re.IGNORECASE)
-            if match:
-                tipo_incompatibilidades = int(match.group(1))
-        
-        total_cambios = tablas_faltantes + columnas_faltantes + tipo_incompatibilidades
-        
+
         return {
             "success": True,
-            "necesita_migracion": total_cambios > 0,
+            "necesita_migracion": necesita,
             "estadisticas": {
-                "tablas_faltantes": tablas_faltantes,
-                "columnas_faltantes": columnas_faltantes,
-                "tipo_incompatibilidades": tipo_incompatibilidades,
-                "total_cambios": total_cambios
+                "tablas_faltantes": 0,
+                "columnas_faltantes": 0,
+                "tipo_incompatibilidades": 0,
+                "total_cambios": 1 if necesita else 0,
             },
+            "revision_actual": state["current"],
+            "revision_objetivo": state["head"],
             "output": output,
-            "mensaje": "Esquema actualizado" if total_cambios == 0 else f"Se requieren {total_cambios} cambios"
+            "mensaje": "Esquema actualizado" if not necesita else "Hay migraciones pendientes",
         }
-    
-    except subprocess.TimeoutExpired:
-        raise HTTPException(
-            status_code=status.HTTP_408_REQUEST_TIMEOUT,
-            detail="La verificación tardó demasiado tiempo"
-        )
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -318,8 +285,8 @@ async def migrate_database_schema(
     db: Session = Depends(get_db)
 ):
     """
-    Aplicar migraciones pendientes a la base de datos
-    ¡PRECAUCIÓN! Esta operación modifica la base de datos
+    Aplicar migraciones de Alembic pendientes (alembic upgrade head)
+    ¡PRECAUCIÓN! Esta operación modifica el esquema de la base de datos
     Solo superadmin
     """
     if not current_user.es_superadmin:
@@ -327,57 +294,23 @@ async def migrate_database_schema(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Requiere privilegios de superadministrador"
         )
-    
+
     try:
-        # Ejecutar migrate_schema.py con --force
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "migrate_schema.py"
-        
-        result = subprocess.run(
-            [sys.executable, str(script_path), "--force"],
-            capture_output=True,
-            text=True,
-            cwd=Path(__file__).parent.parent.parent,
-            timeout=60
-        )
-        
-        # Parsear el output
-        output = result.stdout
-        
-        # Buscar información de cambios aplicados
-        cambios_aplicados = 0
-        for line in output.split('\n'):
-            if 'cambios aplicados' in line.lower():
-                try:
-                    # Extraer número de cambios
-                    import re
-                    match = re.search(r'(\d+)\s+cambios?\s+aplicados?', line, re.IGNORECASE)
-                    if match:
-                        cambios_aplicados = int(match.group(1))
-                except:
-                    pass
-        
-        if result.returncode == 0:
-            return {
-                "success": True,
-                "mensaje": "Migraciones aplicadas correctamente",
-                "cambios_aplicados": cambios_aplicados,
-                "output": output
-            }
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail={
-                    "mensaje": "Error al aplicar migraciones",
-                    "output": output,
-                    "error": result.stderr
-                }
-            )
-    
-    except subprocess.TimeoutExpired:
-        raise HTTPException(
-            status_code=status.HTTP_408_REQUEST_TIMEOUT,
-            detail="La migración tardó demasiado tiempo. Verifica el estado de la base de datos manualmente."
-        )
+        from app.database.migrations import get_migration_state, run_migrations
+        antes = get_migration_state()
+        run_migrations()
+        despues = get_migration_state()
+
+        return {
+            "success": True,
+            "mensaje": "Migraciones aplicadas correctamente",
+            "cambios_aplicados": 0 if antes["up_to_date"] else 1,
+            "output": (
+                f"Revisión antes: {antes['current']}\n"
+                f"Revisión después: {despues['current']} (head: {despues['head']})"
+            ),
+        }
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -432,18 +365,19 @@ async def get_database_status(
             "estadisticas": estadisticas
         }
         
-        # Obtener migraciones aplicadas
+        # Obtener estado de migraciones (Alembic)
         try:
-            result = db.execute(text("SELECT migration_name, applied_at, description FROM schema_migrations ORDER BY applied_at DESC LIMIT 10"))
-            migraciones = []
-            for row in result:
-                migraciones.append({
-                    "nombre": row[0],
-                    "fecha": str(row[1]) if row[1] else None,
-                    "descripcion": row[2] if row[2] else ""
-                })
-            info["migraciones_recientes"] = migraciones
-        except:
+            from app.database.migrations import get_migration_state
+            state = get_migration_state()
+            info["revision_actual"] = state["current"]
+            info["revision_objetivo"] = state["head"]
+            info["esquema_al_dia"] = state["up_to_date"]
+            info["migraciones_recientes"] = [{
+                "nombre": state["current"] or "(sin revisión)",
+                "fecha": None,
+                "descripcion": "Revisión Alembic aplicada" + (" (al día)" if state["up_to_date"] else " (pendiente de actualizar)"),
+            }] if state["current"] else []
+        except Exception:
             info["migraciones_recientes"] = []
         
         return {
@@ -460,30 +394,16 @@ async def get_database_status(
 
 # ==================== GESTIÓN DE BACKUPS ====================
 
-def _get_db_path() -> Path:
-    """Obtener ruta del archivo de base de datos SQLite"""
-    db_url = settings.database_url
-    if not db_url.startswith("sqlite:///"):
+def _resolve_backup_path(filename: str) -> Path:
+    """Resolver de forma segura la ruta de un backup dentro del directorio de backups."""
+    backups_dir = data_transfer.get_backups_dir()
+    backup_path = (backups_dir / filename).resolve()
+    if not str(backup_path).startswith(str(backups_dir.resolve())):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Los backups solo están disponibles para bases de datos SQLite"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acceso denegado"
         )
-    db_path = db_url.replace("sqlite:///", "")
-    return Path(db_path)
-
-
-def _get_backups_dir() -> Path:
-    """Obtener directorio donde se almacenan los backups"""
-    db_path = _get_db_path()
-    return db_path.parent
-
-
-def _list_backup_files() -> list[Path]:
-    """Listar archivos de backup disponibles"""
-    db_path = _get_db_path()
-    backups_dir = _get_backups_dir()
-    backup_pattern = f"{db_path.stem}_backup_*{db_path.suffix}"
-    return sorted(backups_dir.glob(backup_pattern), key=lambda x: x.stat().st_mtime, reverse=True)
+    return backup_path
 
 
 @router.post("/database/backup", response_model=BackupCreateResponse)
@@ -492,7 +412,7 @@ async def create_database_backup(
     db: Session = Depends(get_db)
 ):
     """
-    Crear un backup manual de la base de datos
+    Crear un backup manual (export lógico JSON, agnóstico al motor)
     Solo superadmin
     """
     if not current_user.es_superadmin:
@@ -500,35 +420,18 @@ async def create_database_backup(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Requiere privilegios de superadministrador"
         )
-    
+
     try:
-        db_path = _get_db_path()
-        
-        if not db_path.exists():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No se encuentra la base de datos en {db_path}"
-            )
-        
-        # Generar nombre de backup con timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_name = f"{db_path.stem}_backup_{timestamp}{db_path.suffix}"
-        backup_path = db_path.parent / backup_name
-        
-        # Crear backup
-        shutil.copy2(db_path, backup_path)
-        file_size_bytes = backup_path.stat().st_size
-        file_size_mb = file_size_bytes / (1024 * 1024)
-        
+        backup_path = data_transfer.create_backup_file(db)
+        file_size_mb = backup_path.stat().st_size / (1024 * 1024)
+
         return BackupCreateResponse(
             success=True,
-            filename=backup_name,
+            filename=backup_path.name,
             size_mb=round(file_size_mb, 2),
-            message=f"Backup creado exitosamente: {backup_name}"
+            message=f"Backup creado exitosamente: {backup_path.name}"
         )
-    
-    except HTTPException:
-        raise
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -550,18 +453,18 @@ async def list_database_backups(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Requiere privilegios de superadministrador"
         )
-    
+
     try:
-        backup_files = _list_backup_files()
-        
+        backup_files = data_transfer.list_backup_files()
+
         backups = []
         total_size_bytes = 0
-        
+
         for backup in backup_files:
             stat = backup.stat()
             size_bytes = stat.st_size
             total_size_bytes += size_bytes
-            
+
             backups.append(BackupInfo(
                 filename=backup.name,
                 size_bytes=size_bytes,
@@ -569,13 +472,13 @@ async def list_database_backups(
                 created_at=datetime.fromtimestamp(stat.st_mtime),
                 full_path=str(backup)
             ))
-        
+
         return BackupListResponse(
             backups=backups,
             total=len(backups),
             total_size_mb=round(total_size_bytes / (1024 * 1024), 2)
         )
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -598,31 +501,22 @@ async def download_backup(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Requiere privilegios de superadministrador"
         )
-    
+
     try:
-        backups_dir = _get_backups_dir()
-        backup_path = backups_dir / filename
-        
-        # Validar que el archivo existe y es un backup válido
+        backup_path = _resolve_backup_path(filename)
+
         if not backup_path.exists():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Backup no encontrado: {filename}"
             )
-        
-        # Validar que el archivo está en el directorio correcto (seguridad)
-        if not str(backup_path.resolve()).startswith(str(backups_dir.resolve())):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Acceso denegado"
-            )
-        
+
         return FileResponse(
             path=str(backup_path),
             filename=filename,
-            media_type="application/octet-stream"
+            media_type="application/json"
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -647,31 +541,23 @@ async def delete_backup(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Requiere privilegios de superadministrador"
         )
-    
+
     try:
-        backups_dir = _get_backups_dir()
-        backup_path = backups_dir / filename
-        
+        backup_path = _resolve_backup_path(filename)
+
         if not backup_path.exists():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Backup no encontrado: {filename}"
             )
-        
-        # Validar seguridad
-        if not str(backup_path.resolve()).startswith(str(backups_dir.resolve())):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Acceso denegado"
-            )
-        
+
         backup_path.unlink()
-        
+
         return {
             "success": True,
             "message": f"Backup eliminado: {filename}"
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -688,9 +574,9 @@ async def restore_database_backup(
     db: Session = Depends(get_db)
 ):
     """
-    Restaurar la base de datos desde un archivo de backup
-    PRECAUCIÓN: Esta operación sobrescribirá la base de datos actual
-    IMPORTANTE: Requiere reiniciar el servidor después de restaurar
+    Restaurar la base de datos desde un backup JSON (export lógico)
+    PRECAUCIÓN: vacía las tablas y recarga los datos del backup.
+    Se crea automáticamente un backup de seguridad previo. No requiere reiniciar.
     Solo superadmin
     """
     if not current_user.es_superadmin:
@@ -698,77 +584,39 @@ async def restore_database_backup(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Requiere privilegios de superadministrador"
         )
-    
-    import sqlite3
-    
+
+    import json
+
     try:
-        db_path = _get_db_path()
-        
-        # Crear backup de seguridad antes de restaurar
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        safety_backup_name = f"{db_path.stem}_before_restore_{timestamp}{db_path.suffix}"
-        safety_backup_path = db_path.parent / safety_backup_name
-        
-        shutil.copy2(db_path, safety_backup_path)
-        
-        # Guardar el archivo subido temporalmente
-        temp_path = db_path.parent / f"temp_restore_{timestamp}.db"
-        
+        # Leer y validar el archivo subido
+        content = await file.read()
         try:
-            # Escribir archivo subido
-            content = await file.read()
-            with open(temp_path, "wb") as f:
-                f.write(content)
-            
-            # Validar que es un archivo SQLite válido
-            try:
-                conn = sqlite3.connect(str(temp_path))
-                cursor = conn.cursor()
-                cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-                tables = cursor.fetchall()
-                num_tables = len(tables)
-                conn.close()
-            except sqlite3.DatabaseError as e:
-                if temp_path.exists():
-                    temp_path.unlink()
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"El archivo subido no es una base de datos SQLite válida: {str(e)}"
-                )
-            
-            # Cerrar conexión actual
-            db.close()
-            
-            # Reemplazar base de datos actual
-            if db_path.exists():
-                db_path.unlink()
-            shutil.move(str(temp_path), str(db_path))
-            
-            return BackupRestoreResponse(
-                success=True,
-                message="Base de datos restaurada exitosamente. IMPORTANTE: Debes reiniciar el servidor.",
-                backup_created=safety_backup_name,
-                tables_restored=num_tables
-            )
-        
-        except HTTPException:
-            raise
-        except Exception as e:
-            # Si algo falla, restaurar el backup de seguridad
-            if temp_path.exists():
-                temp_path.unlink()
-            
-            if safety_backup_path.exists() and not db_path.exists():
-                shutil.copy2(safety_backup_path, db_path)
-            
+            payload = json.loads(content.decode("utf-8"))
+            data_transfer.validate_payload(payload)
+        except (json.JSONDecodeError, UnicodeDecodeError, ValueError) as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error durante la restauración: {str(e)}"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"El archivo subido no es un backup JSON válido: {str(e)}"
             )
-    
+
+        # Backup de seguridad antes de restaurar
+        safety_path = data_transfer.create_backup_file(db, prefix=data_transfer.SAFETY_PREFIX)
+
+        # Importar (vacía y recarga)
+        counts = data_transfer.import_from_dict(db, payload, wipe=True)
+        tablas_con_datos = sum(1 for n in counts.values() if n > 0)
+
+        return BackupRestoreResponse(
+            success=True,
+            message="Base de datos restaurada exitosamente.",
+            backup_created=safety_path.name,
+            tables_restored=tablas_con_datos
+        )
+
     except HTTPException:
         raise
     except Exception as e:
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al restaurar backup: {str(e)}"
@@ -871,12 +719,7 @@ async def update_backup_config(
 def _cleanup_old_backups(max_archivos: int):
     """Eliminar backups antiguos manteniendo solo los últimos N"""
     try:
-        backup_files = _list_backup_files()
-        
-        if len(backup_files) > max_archivos:
-            # Eliminar los más antiguos
-            for old_backup in backup_files[max_archivos:]:
-                old_backup.unlink()
+        data_transfer.cleanup_old_backups(max_archivos)
     except Exception as e:
         print(f"Error al limpiar backups antiguos: {e}")
 

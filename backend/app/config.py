@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     # Rutas
     upload_folder: str = "./uploads"
     max_upload_size: int = 5242880  # 5MB
+    backup_folder: str = "./data/backups"
     
     # Autenticación
     two_factor_enabled: bool = False

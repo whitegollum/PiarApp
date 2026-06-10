@@ -308,7 +308,7 @@ const AdminDatabase: React.FC = () => {
       return;
     }
 
-    if (!confirm('⚠️ ADVERTENCIA ⚠️\n\n¿Estás ABSOLUTAMENTE SEGURO de restaurar este backup?\n\nEsta operación:\n- Sobrescribirá la base de datos actual\n- Creará un backup de seguridad automático\n- REQUIERE REINICIAR EL SERVIDOR después\n- No se puede deshacer\n\n¿Continuar?')) {
+    if (!confirm('⚠️ ADVERTENCIA ⚠️\n\n¿Estás ABSOLUTAMENTE SEGURO de restaurar este backup?\n\nEsta operación:\n- Reemplazará todos los datos actuales por los del backup\n- Creará un backup de seguridad automático\n- No se puede deshacer\n\n¿Continuar?')) {
       return;
     }
 
@@ -330,9 +330,10 @@ const AdminDatabase: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert(`✅ ${data.message}\n\nBackup de seguridad creado: ${data.backup_created}\nTablas restauradas: ${data.tables_restored}\n\n⚠️ IMPORTANTE: Debes REINICIAR EL SERVIDOR AHORA para que los cambios tengan efecto.`);
+        alert(`✅ ${data.message}\n\nBackup de seguridad creado: ${data.backup_created}\nTablas con datos restauradas: ${data.tables_restored}`);
         setRestoreFile(null);
-        // No recargar status porque la BD ha cambiado y el servidor debe reiniciarse
+        await loadStatus();
+        await loadBackups();
       } else {
         setError(data.detail?.mensaje || data.detail || 'Error al restaurar backup');
       }
@@ -610,12 +611,12 @@ const AdminDatabase: React.FC = () => {
         <div className="action-section restore-section">
           <h3>⚠️ Restaurar Backup</h3>
           <p className="warning-text">
-            Restaura la base de datos desde un archivo de backup. Se creará un backup de seguridad automáticamente.
+            Restaura la base de datos desde un archivo de backup JSON. Reemplaza todos los datos actuales. Se creará un backup de seguridad automáticamente.
           </p>
           <div className="file-upload-section">
             <input
               type="file"
-              accept=".db,.sqlite,.sqlite3"
+              accept=".json,application/json"
               onChange={(e) => setRestoreFile(e.target.files?.[0] || null)}
               id="restore-file-input"
             />

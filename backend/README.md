@@ -26,20 +26,26 @@ Backend de la aplicacion de gestion de clubes de aeromodelismo usando FastAPI.
 
 El servidor estará disponible en `http://localhost:8000`
 
-## Actualización de Base de Datos
+## Base de Datos y Migraciones (Alembic)
 
-Si hiciste `git pull` y hay cambios en los modelos, actualiza el esquema de la BD:
+El esquema se gestiona con **Alembic** y se aplica automáticamente al arrancar la app
+(`alembic upgrade head` en el lifespan). En desarrollo se usa SQLite y en producción
+PostgreSQL (la misma URL `DATABASE_URL` controla ambos).
 
 ```bash
-# Método recomendado (con backup automático)
-python scripts/safe_migrate.py
+# Aplicar migraciones manualmente (normalmente no hace falta, se aplica al arrancar)
+alembic upgrade head
 
-# O método manual con control total
-python scripts/migrate_schema.py --dry-run  # Ver cambios
-python scripts/migrate_schema.py            # Aplicar
+# Crear una nueva migración tras cambiar los modelos
+alembic revision --autogenerate -m "descripcion del cambio"
+
+# Ver la revisión actual / historial
+alembic current
+alembic history
 ```
 
-📖 [Guía completa de actualización de BD](scripts/DB_QUICK_GUIDE.md)
+Para migrar datos de una SQLite existente a PostgreSQL, usa
+`scripts/migrate_sqlite_to_postgres.py` (export/import lógico JSON).
 
 ## API Documentation
 

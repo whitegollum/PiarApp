@@ -8,7 +8,6 @@ import os
 import logging
 
 from app.config import settings
-from app.database.db import engine, Base, init_db
 
 # Configure logging
 logging.basicConfig(
@@ -17,71 +16,25 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Importar modelos para que SQLAlchemy los registre
+# Importar modelos para que SQLAlchemy los registre (necesario para Alembic
+# y para metadata.sorted_tables usado por export/import lógico)
 from app.models import usuario, club, socio, miembro_club, evento, noticia, votacion, invitacion, token_google, asistencia, comentario, instalacion, documentacion_reglamentaria, system_config, producto, alerta, tareas_comunitarias, canal, invitado
 from app.agent import models as agent_models  # noqa: F401
-
-# Crear tablas en la base de datos
-Base.metadata.create_all(bind=engine)
-
-# Aplicar migraciones de columnas faltantes (safe: no falla si ya existen)
-def _apply_pending_column_migrations():
-    """Añade columnas nuevas a tablas existentes si aún no existen."""
-    from sqlalchemy import text, inspect as sa_inspect
-    inspector = sa_inspect(engine)
-    with engine.begin() as conn:
-        # reset_token / reset_token_expires en usuarios (2026-05-04)
-        if "usuarios" in inspector.get_table_names():
-            existing_cols = {c["name"] for c in inspector.get_columns("usuarios")}
-            if "reset_token" not in existing_cols:
-                conn.execute(text("ALTER TABLE usuarios ADD COLUMN reset_token VARCHAR(255) DEFAULT NULL"))
-                logger.info("Migración aplicada: usuarios.reset_token")
-            if "reset_token_expires" not in existing_cols:
-                conn.execute(text("ALTER TABLE usuarios ADD COLUMN reset_token_expires DATETIME DEFAULT NULL"))
-                logger.info("Migración aplicada: usuarios.reset_token_expires")
-            # Índice: SQLite no soporta IF NOT EXISTS en CREATE INDEX, ignorar error si ya existe
-            try:
-                conn.execute(text("CREATE INDEX idx_usuarios_reset_token ON usuarios(reset_token)"))
-            except Exception:
-                pass
-
-        # token_qr en clubes (2026-05-15)
-        if "clubes" in inspector.get_table_names():
-            existing_cols = {c["name"] for c in inspector.get_columns("clubes")}
-            if "token_qr" not in existing_cols:
-                conn.execute(text("ALTER TABLE clubes ADD COLUMN token_qr VARCHAR(36) DEFAULT NULL"))
-                logger.info("Migración aplicada: clubes.token_qr")
-                try:
-                    conn.execute(text("CREATE UNIQUE INDEX idx_clubes_token_qr ON clubes(token_qr)"))
-                except Exception:
-                    pass
-
-        # aliexpress_banner_url / aliexpress_redirect_enabled en system_config
-        if "system_config" in inspector.get_table_names():
-            existing_cols = {c["name"] for c in inspector.get_columns("system_config")}
-            if "aliexpress_banner_url" not in existing_cols:
-                conn.execute(text("ALTER TABLE system_config ADD COLUMN aliexpress_banner_url VARCHAR(500) DEFAULT NULL"))
-                logger.info("Migración aplicada: system_config.aliexpress_banner_url")
-            if "aliexpress_redirect_enabled" not in existing_cols:
-                conn.execute(text("ALTER TABLE system_config ADD COLUMN aliexpress_redirect_enabled BOOLEAN DEFAULT 1"))
-                logger.info("Migración aplicada: system_config.aliexpress_redirect_enabled")
-
-try:
-    _apply_pending_column_migrations()
-except Exception as _mig_err:
-    logger.error(f"Error aplicando migraciones de columnas: {_mig_err}")
-
-# Inicializar datos necesarios
-init_db()
 
 
 # Lifespan events para iniciar/detener el scheduler
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Gestionar ciclo de vida de la aplicación"""
-    # Startup: Iniciar scheduler
+    # Startup: aplicar migraciones de esquema (Alembic) e iniciar scheduler
     logger.info("🚀 Iniciando aplicación...")
-    
+
+    try:
+        from app.database.migrations import run_migrations
+        run_migrations()
+    except Exception as e:
+        logger.error(f"❌ Error al aplicar migraciones de base de datos: {e}")
+
     try:
         from app.services.scheduler_service import SchedulerService
         SchedulerService.start()

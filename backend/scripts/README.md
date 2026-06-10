@@ -2,162 +2,39 @@
 
 Este directorio contiene scripts útiles para gestionar la base de datos de PiarAPP.
 
-## 🚀 Inicio Rápido
+## 🚀 Migraciones de esquema → Alembic
 
-### Actualizar la base de datos de forma segura (RECOMENDADO)
+El esquema de la base de datos se gestiona con **Alembic** (no con scripts ad-hoc).
+Las migraciones se aplican automáticamente al arrancar la app, pero también puedes
+ejecutarlas a mano desde `backend/`:
 
 ```bash
-# Método automático con backup incluido
-python scripts/safe_migrate.py
+alembic upgrade head                                  # aplicar migraciones pendientes
+alembic revision --autogenerate -m "descripcion"      # crear migración tras cambiar modelos
+alembic current                                       # revisión actual
+alembic history                                       # historial
 ```
 
-Este script todo-en-uno hace:
-1. ✅ Análisis de cambios (dry-run)
-2. ✅ Backup automático
-3. ✅ Aplicación de migraciones
-4. ✅ Verificación de integridad
+Funciona igual en SQLite (desarrollo) y PostgreSQL (producción); el motor lo
+determina `DATABASE_URL`.
 
 ---
 
-## safe_migrate.py
+## migrate_sqlite_to_postgres.py
 
-**✨ SCRIPT TODO-EN-UNO RECOMENDADO**
-
-Script completo que ejecuta todo el proceso de migración de forma segura y automatizada.
-
-### Uso
+Migración única de datos de una base SQLite existente a PostgreSQL. Reutiliza el
+export/import lógico en JSON de `app/services/data_transfer.py` (mismo formato que
+los backups del panel de administración) y, en PostgreSQL, reinicia las secuencias.
 
 ```bash
-# Modo completo con backup y confirmación
-python scripts/safe_migrate.py
-
-# Sin backup (no recomendado)
-python scripts/safe_migrate.py --no-backup
-
-# Sin confirmación interactiva
-python scripts/safe_migrate.py --force
-```
-
-**Windows:**
-```cmd
-scripts\safe_migrate.bat
-```
-
-### ¿Qué hace?
-
-Este script ejecuta automáticamente:
-1. **Análisis previo**: Muestra qué cambios se aplicarán
-2. **Backup automático**: Guarda copia de seguridad de la BD
-3. **Confirmación**: Pide confirmación antes de aplicar (si no usas --force)
-4. **Migración**: Aplica los cambios al esquema
-5. **Verificación**: Comprueba que todo funcionó correctamente
-
-### Ventajas
-
-- ✅ Proceso guiado paso a paso
-- ✅ Backup automático antes de cambios
-- ✅ Verificación de integridad después de migrar
-- ✅ Mensajes claros y visuales
-- ✅ Manejo de errores robusto
-
----
-
-## migrate_schema.py
-
-**SCRIPT AVANZADO PARA MIGRACIONES**
-
-Script inteligente que compara el esquema actual de la base de datos con los modelos SQLAlchemy y aplica automáticamente las migraciones necesarias sin perder datos existentes.
-
-### Uso
-
-```bash
-# Análisis previo (no aplica cambios, solo muestra qué haría)
-python scripts/migrate_schema.py --dry-run
-
-# Aplicar migraciones con confirmación interactiva
-python scripts/migrate_schema.py
-
-# Aplicar migraciones sin pedir confirmación
-python scripts/migrate_schema.py --force
-```
-
-**Usando los scripts wrapper:**
-
-En **Windows**:
-```cmd
+# En el entorno ya configurado para Postgres (DATABASE_URL apuntando a Postgres)
 cd backend
-scripts\migrate_schema.bat --dry-run
-scripts\migrate_schema.bat
+DATABASE_URL="postgresql+psycopg2://piar:PASS@localhost:5432/piar" \
+    python scripts/migrate_sqlite_to_postgres.py --source sqlite:///./data/piar.db
 ```
 
-En **Linux/Mac**:
-```bash
-cd backend
-chmod +x scripts/migrate_schema.sh  # Solo la primera vez
-./scripts/migrate_schema.sh --dry-run
-./scripts/migrate_schema.sh
-```
-
-### Características
-
-- ✅ **Seguro**: No elimina datos existentes, solo agrega/modifica estructura
-- ✅ **Inteligente**: Detecta automáticamente tablas y columnas faltantes
-- ✅ **Rastreable**: Registra las migraciones aplicadas en `schema_migrations`
-- ✅ **Modo dry-run**: Puedes ver los cambios antes de aplicarlos
-- ✅ **Aplica archivos SQL**: Lee y ejecuta migraciones pendientes de `/migrations`
-- ✅ **Compatible con SQLite y PostgreSQL**
-
-### Cuándo usar este script
-
-- Después de hacer `git pull` y hay cambios en los modelos
-- Cuando aparecen errores de columnas faltantes en la BD
-- Para aplicar cambios del esquema en producción de forma segura
-- Cuando necesitas sincronizar la BD con el código
-
-### Ejemplo de uso típico
-
-```bash
-# 1. Hacer backup (siempre!)
-cp data/piar.db data/piar.db.backup
-
-# 2. Ver qué cambios se aplicarán
-python scripts/migrate_schema.py --dry-run
-
-# 3. Si todo se ve bien, aplicar
-python scripts/migrate_schema.py
-
-# 4. Verificar que la aplicación funciona correctamente
-python run.py
-```
-
-### Qué hace el script
-
-1. **Analiza** el esquema actual de la BD usando SQLAlchemy Inspector
-2. **Compara** con los modelos definidos en `/app/models`
-3. **Detecta** tablas faltantes, columnas faltantes, y tipos incompatibles
-4. **Genera** sentencias SQL `ALTER TABLE` para agregar lo que falta
-5. **Aplica** migraciones SQL pendientes de `/migrations`
-6. **Registra** las migraciones en la tabla `schema_migrations`
-7. **Muestra** un resumen de todas las operaciones realizadas
-
-### Tabla de tracking de migraciones
-
-El script crea automáticamente la tabla `schema_migrations` para rastrear qué migraciones se han aplicado:
-
-```sql
-CREATE TABLE schema_migrations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    migration_name TEXT NOT NULL,
-    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    description TEXT
-);
-```
-
-Puedes consultar qué migraciones se han aplicado:
-
-```sql
-SELECT * FROM schema_migrations ORDER BY applied_at DESC;
-```
+Pasos: aplica Alembic al destino, exporta del origen, importa (vaciando) y valida
+los conteos por tabla (origen vs destino).
 
 ---
 
@@ -178,31 +55,8 @@ python scripts/backup_db.py --output mi_backup.db
 python scripts/backup_db.py --list
 ```
 
-### Características
-
-- ✅ Nombrado automático con timestamp
-- ✅ Conserva metadatos del archivo original
-- ✅ Muestra tamaño y fecha del backup
-- ✅ Puede listar backups previos
-
-### Ejemplo
-
-```bash
-# Crear backup antes de hacer cambios
-python scripts/backup_db.py
-
-# Salida:
-# ✅ Backup creado exitosamente:
-#    Archivo: data/piar_backup_20260329_143025.db
-#    Tamaño: 2048.50 KB
-#    Fecha: 2026-03-29 14:30:25
-
-# Listar backups disponibles
-python scripts/backup_db.py --list
-
-# Restaurar un backup manualmente si es necesario
-# cp data/piar_backup_20260329_143025.db data/piar.db
-```
+> Nota: para backups agnósticos al motor (también PostgreSQL) usa el panel de
+> administración (export lógico JSON) o `app/services/data_transfer.py`.
 
 ---
 
@@ -264,45 +118,3 @@ python reset_database.py recrear
 - **ESTOS SCRIPTS SON DESTRUCTIVOS**: Eliminan datos permanentemente
 - Siempre haz backup antes de ejecutarlos en producción
 - Usa `--yes` solo en scripts automatizados donde estés seguro
-
-### Ejemplos de uso
-
-**Usando el script de Python directamente:**
-```bash
-# Desarrollo: limpiar datos de prueba
-cd backend/scripts
-python reset_database.py limpiar --yes
-
-# Producción: con confirmación
-python reset_database.py limpiar
-# Se te pedirá escribir 'SI' para confirmar
-
-# Aplicar cambios de schema
-python reset_database.py recrear
-# Se te pedirá escribir 'RECREAR' para confirmar
-```
-
-**Usando los scripts wrapper:**
-
-En **Windows**:
-```cmd
-cd backend\scripts
-reset_db.bat limpiar
-```
-
-En **Linux/Mac**:
-```bash
-cd backend/scripts
-chmod +x reset_db.sh  # Solo la primera vez
-./reset_db.sh limpiar
-```
-
-### Backup antes de limpiar
-
-```bash
-# SQLite: copiar archivo
-cp backend/data/piar.db backend/data/piar.db.backup
-
-# O usar el script de reset desde el directorio raíz
-python -m backend.scripts.reset_database limpiar
-```

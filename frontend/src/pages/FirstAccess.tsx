@@ -103,7 +103,7 @@ export default function FirstAccess() {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.toLowerCase())}
               required
               placeholder="admin@ejemplo.com"
             />

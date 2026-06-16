@@ -146,7 +146,7 @@ export default function SocioProfile() {
   const handleChange = (key: keyof SocioFormState, value: string) => {
     setForm((prev) => ({
       ...prev,
-      [key]: value
+      [key]: key === 'email' ? value.toLowerCase() : value
     }))
   }
 

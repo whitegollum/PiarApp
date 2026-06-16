@@ -29,6 +29,9 @@ class InvitacionService:
     ) -> Optional[Invitacion]:
         """Crea una nueva invitación a un club"""
         
+        # Normalizar email
+        email = email.lower().strip()
+        
         # Verificar que el club existe
         club = db.query(Club).filter(Club.id == club_id).first()
         if not club:
@@ -94,6 +97,9 @@ class InvitacionService:
     ) -> List[Invitacion]:
         """Obtiene todas las invitaciones pendientes para un email"""
         
+        # Normalizar email para la búsqueda
+        email = email.lower().strip()
+        
         invitaciones = db.query(Invitacion).filter(
             Invitacion.email == email,
             Invitacion.estado == "pendiente",
@@ -122,7 +128,8 @@ class InvitacionService:
         
         # Verificar que el usuario_id coincida con la invitación
         usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
-        if not usuario or usuario.email != invitacion.email:
+        # Validación agnóstica a mayúsculas por si existen remanentes legacy
+        if not usuario or usuario.email.lower().strip() != invitacion.email.lower().strip():
             return False
         
         # Actualizar invitación

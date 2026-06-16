@@ -490,7 +490,7 @@ export default function ClubMembers() {
                   type="text"
                   placeholder="Email para invitar"
                   value={invitacionEmail}
-                  onChange={(e) => setInvitacionEmail(e.target.value)}
+                  onChange={(e) => setInvitacionEmail(e.target.value.toLowerCase())}
                   className="form-input members-invite-input"
                   required
                 />

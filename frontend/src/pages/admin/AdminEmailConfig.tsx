@@ -184,7 +184,7 @@ const AdminEmailConfig = () => {
                                 id="smtp_from_email"
                                 type="email"
                                 value={config.smtp_from_email}
-                                onChange={(e) => setConfig({ ...config, smtp_from_email: e.target.value })}
+                                onChange={(e) => setConfig({ ...config, smtp_from_email: e.target.value.toLowerCase() })}
                                 disabled={isBusy}
                                 required
                             />
@@ -246,7 +246,7 @@ const AdminEmailConfig = () => {
                                     id="test_email"
                                     type="email"
                                     value={testEmail}
-                                    onChange={(e) => setTestEmail(e.target.value)}
+                                    onChange={(e) => setTestEmail(e.target.value.toLowerCase())}
                                     disabled={isBusy}
                                     placeholder="tu@email.com"
                                 />

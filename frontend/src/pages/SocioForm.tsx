@@ -101,7 +101,7 @@ export default function SocioForm() {
             <input
               type="email"
               value={socioData.email}
-              onChange={(e) => setSocioData({...socioData, email: e.target.value})}
+              onChange={(e) => setSocioData({...socioData, email: e.target.value.toLowerCase()})}
               required
             />
           </div>

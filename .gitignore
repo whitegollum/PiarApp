@@ -33,7 +33,7 @@ openclaw/data/.openclaw/agents/main/sessions/
 **/.pytest_cache/
 emoji_matches.txt
 **/backend/uploads/
-**/.aicoder
+**/uploads/
 
 
 

@@ -25,6 +25,8 @@ from app.services import data_transfer
 from app.config import settings
 from pathlib import Path
 from datetime import datetime
+from pydantic import BaseModel
+from typing import List, Optional
 
 router = APIRouter()
 
@@ -925,6 +927,185 @@ async def get_afiliacion_stats(
             for s in stats_por_proveedor
         ],
     }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Gestión de Usuarios (Superadmin)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class UsuarioClubInfo(BaseModel):
+    club_id: int
+    club_nombre: str
+    rol: str
+    estado: str
+
+
+class UsuarioAdminResponse(BaseModel):
+    id: int
+    email: str
+    nombre_completo: str
+    activo: bool
+    es_superadmin: bool
+    email_verificado: bool
+    fecha_creacion: Optional[datetime] = None
+    ultimo_login: Optional[datetime] = None
+    clubes: List[UsuarioClubInfo] = []
+
+
+class UsuarioAdminUpdate(BaseModel):
+    nombre_completo: Optional[str] = None
+    activo: Optional[bool] = None
+    es_superadmin: Optional[bool] = None
+
+
+class AsociarClubRequest(BaseModel):
+    club_id: int
+    rol: str = "socio"
+
+
+def _require_superadmin(current_user: Usuario) -> None:
+    if not current_user.es_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Requiere privilegios de superadministrador"
+        )
+
+
+def _serializar_usuario(usuario: Usuario, db: Session) -> UsuarioAdminResponse:
+    miembros = (
+        db.query(MiembroClub, Club)
+        .join(Club, Club.id == MiembroClub.club_id)
+        .filter(MiembroClub.usuario_id == usuario.id)
+        .all()
+    )
+    clubes = [
+        UsuarioClubInfo(
+            club_id=club.id,
+            club_nombre=club.nombre,
+            rol=miembro.rol,
+            estado=miembro.estado,
+        )
+        for miembro, club in miembros
+    ]
+    return UsuarioAdminResponse(
+        id=usuario.id,
+        email=usuario.email,
+        nombre_completo=usuario.nombre_completo,
+        activo=usuario.activo,
+        es_superadmin=usuario.es_superadmin,
+        email_verificado=usuario.email_verificado,
+        fecha_creacion=usuario.fecha_creacion,
+        ultimo_login=usuario.ultimo_login,
+        clubes=clubes,
+    )
+
+
+@router.get("/usuarios", response_model=List[UsuarioAdminResponse])
+async def listar_usuarios(
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Listar todos los usuarios con los clubes a los que pertenecen — solo superadmin"""
+    _require_superadmin(current_user)
+
+    usuarios = db.query(Usuario).order_by(Usuario.nombre_completo).all()
+    return [_serializar_usuario(u, db) for u in usuarios]
+
+
+@router.patch("/usuarios/{usuario_id}", response_model=UsuarioAdminResponse)
+async def actualizar_usuario(
+    usuario_id: int,
+    datos: UsuarioAdminUpdate,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Actualizar características básicas de un usuario (activar/desactivar, etc.) — solo superadmin"""
+    _require_superadmin(current_user)
+
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+
+    # Evitar que el superadmin se desactive o se quite el rol a sí mismo
+    if usuario.id == current_user.id:
+        if datos.activo is False:
+            raise HTTPException(status_code=400, detail="No puedes desactivar tu propia cuenta")
+        if datos.es_superadmin is False:
+            raise HTTPException(status_code=400, detail="No puedes quitarte el rol de superadministrador")
+
+    update_data = datos.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(usuario, field, value)
+
+    db.commit()
+    db.refresh(usuario)
+    return _serializar_usuario(usuario, db)
+
+
+@router.post("/usuarios/{usuario_id}/clubes", response_model=UsuarioAdminResponse)
+async def asociar_usuario_club(
+    usuario_id: int,
+    datos: AsociarClubRequest,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Asociar un usuario a un club — solo superadmin"""
+    _require_superadmin(current_user)
+
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+
+    club = db.query(Club).filter(Club.id == datos.club_id).first()
+    if not club:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Club no encontrado")
+
+    existente = db.query(MiembroClub).filter(
+        MiembroClub.usuario_id == usuario_id,
+        MiembroClub.club_id == datos.club_id,
+    ).first()
+    if existente:
+        raise HTTPException(status_code=400, detail="El usuario ya pertenece a este club")
+
+    miembro = MiembroClub(
+        usuario_id=usuario_id,
+        club_id=datos.club_id,
+        rol=datos.rol or "socio",
+        estado="activo",
+        fecha_aprobacion=datetime.utcnow(),
+        aprobado_por_id=current_user.id,
+    )
+    db.add(miembro)
+    db.commit()
+    db.refresh(usuario)
+    return _serializar_usuario(usuario, db)
+
+
+@router.delete("/usuarios/{usuario_id}/clubes/{club_id}", response_model=UsuarioAdminResponse)
+async def retirar_usuario_club(
+    usuario_id: int,
+    club_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Retirar un usuario de un club — solo superadmin"""
+    _require_superadmin(current_user)
+
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+
+    miembro = db.query(MiembroClub).filter(
+        MiembroClub.usuario_id == usuario_id,
+        MiembroClub.club_id == club_id,
+    ).first()
+    if not miembro:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="El usuario no pertenece a este club")
+
+    db.delete(miembro)
+    db.commit()
+    db.refresh(usuario)
+    return _serializar_usuario(usuario, db)
 
 
 

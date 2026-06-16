@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useClubRole } from '../hooks/useClubRole'
 import APIService from '../services/api'
+import { UploadService } from '../services/contentService'
 import FacilityManager from '../components/FacilityManager'
 import '../styles/ClubEdit.css'
 
@@ -70,6 +71,7 @@ export default function ClubEdit() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [generatingData, setGeneratingData] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
 
   // Configuración de alertas
   const [alertConfig, setAlertConfig] = useState({
@@ -170,6 +172,23 @@ export default function ClubEdit() {
       ...prev,
       [name]: value
     }))
+  }
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      setUploadingLogo(true)
+      setError('')
+      const url = await UploadService.uploadImage(file)
+      setFormData(prev => ({ ...prev, logo_url: url }))
+    } catch (err) {
+      setError('Error al subir el logo: ' + (err as Error).message)
+    } finally {
+      setUploadingLogo(false)
+      e.target.value = ''
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -365,7 +384,60 @@ export default function ClubEdit() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="logo_url">URL del Logo</label>
+                <label htmlFor="logo_url">Logo del Club</label>
+                <div className="logo-upload-row" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                  {formData.logo_url ? (
+                    <img
+                      src={formData.logo_url}
+                      alt="Logo del club"
+                      style={{
+                        width: '64px',
+                        height: '64px',
+                        objectFit: 'contain',
+                        borderRadius: '8px',
+                        border: '1px solid #ddd',
+                        background: '#fff',
+                        padding: '4px'
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '8px',
+                      border: '1px dashed #ccc',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#aaa',
+                      fontSize: '0.75rem',
+                      textAlign: 'center'
+                    }}>
+                      Sin logo
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <label className="btn btn-secondary" style={{ cursor: 'pointer', margin: 0 }}>
+                      {uploadingLogo ? '⏳ Subiendo...' : '📤 Subir imagen'}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/gif,image/webp"
+                        onChange={handleLogoUpload}
+                        disabled={uploadingLogo}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                    {formData.logo_url && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => setFormData(prev => ({ ...prev, logo_url: '' }))}
+                      >
+                        Quitar logo
+                      </button>
+                    )}
+                  </div>
+                </div>
                 <input
                   type="url"
                   id="logo_url"
@@ -373,8 +445,12 @@ export default function ClubEdit() {
                   value={formData.logo_url || ''}
                   onChange={handleInputChange}
                   className="form-input"
-                  placeholder="https://ejemplo.com/logo.png"
+                  placeholder="https://ejemplo.com/logo.png — o sube una imagen arriba"
+                  style={{ marginTop: '0.75rem' }}
                 />
+                <small style={{ color: '#666', fontSize: '0.85rem' }}>
+                  Sube una imagen (PNG, JPG, GIF o WEBP) o pega una URL externa.
+                </small>
               </div>
             </section>
 

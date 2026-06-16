@@ -11,6 +11,7 @@ interface Club {
   nombre: string
   slug: string
   descripcion?: string
+  logo_url?: string
   fecha_creacion: string
 }
 
@@ -151,7 +152,24 @@ export default function Dashboard() {
                 {clubs.map(club => (
                   <div key={club.id} className="club-card">
                     <div className="club-header">
-                      <h3>{club.nombre}</h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0 }}>
+                        {club.logo_url && (
+                          <img
+                            src={club.logo_url}
+                            alt={club.nombre}
+                            style={{
+                              width: '40px',
+                              height: '40px',
+                              objectFit: 'contain',
+                              borderRadius: '8px',
+                              border: '1px solid #eee',
+                              background: '#fff',
+                              flexShrink: 0
+                            }}
+                          />
+                        )}
+                        <h3 style={{ margin: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{club.nombre}</h3>
+                      </div>
                       <span className="club-badge">{club.slug}</span>
                     </div>
                     {club.descripcion && (

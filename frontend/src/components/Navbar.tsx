@@ -10,12 +10,13 @@ import '../styles/Navbar.css'
 
 interface NavbarProps {
   clubName?: string
+  clubLogo?: string
   clubId?: string
   canEdit?: boolean
   totalAlertas?: number
 }
 
-export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: NavbarProps = {}) {
+export default function Navbar({ clubName, clubLogo, clubId, canEdit, totalAlertas }: NavbarProps = {}) {
   const [menuAbierto, setMenuAbierto] = React.useState(false)
   const [accionesAbiertas, setAccionesAbiertas] = React.useState(false)
   const navigate = useNavigate()
@@ -190,12 +191,29 @@ export default function Navbar({ clubName, clubId, canEdit, totalAlertas }: Navb
           {/* Nombre del club o logo PiarAPP */}
           {clubName ? (
             <span style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.6rem',
               fontSize: '1.25rem',
               fontWeight: '600',
               color: 'white',
               paddingLeft: clubId ? '0' : '1rem',
               borderLeft: clubId ? 'none' : '2px solid rgba(255, 255, 255, 0.3)'
             }}>
+              {clubLogo && (
+                <img
+                  src={clubLogo}
+                  alt={clubName}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    objectFit: 'contain',
+                    borderRadius: '6px',
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    padding: '2px'
+                  }}
+                />
+              )}
               {clubName}
             </span>
           ) : !clubId && (

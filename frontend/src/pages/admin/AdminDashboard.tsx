@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import Navbar from '../../components/Navbar'
-import { Building2, Mail, Bell, Database, Bot, Link2 } from 'lucide-react'
+import { Building2, Mail, Bell, Database, Bot, Link2, Users } from 'lucide-react'
 import '../../styles/Forms.css'
 import '../../styles/Admin.css'
 
@@ -32,6 +32,12 @@ const AdminDashboard = () => {
                             <div className="admin-card-icon"><Building2 size={22} /></div>
                             <h3 className="admin-card-title">Gestionar clubes</h3>
                             <p className="admin-card-text">Crear, editar y eliminar clubes del sistema.</p>
+                        </Link>
+
+                        <Link to="/admin/usuarios" className="admin-card">
+                            <div className="admin-card-icon"><Users size={22} /></div>
+                            <h3 className="admin-card-title">Gestionar usuarios</h3>
+                            <p className="admin-card-text">Ver todos los usuarios, sus clubes y activar/desactivar cuentas.</p>
                         </Link>
 
                         <Link to="/admin/email" className="admin-card">

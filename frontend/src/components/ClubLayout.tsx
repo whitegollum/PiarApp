@@ -12,6 +12,7 @@ import '../styles/ClubLayout.css'
 interface Club {
   id: number
   nombre: string
+  logo_url?: string
 }
 
 export default function ClubLayout() {
@@ -20,6 +21,7 @@ export default function ClubLayout() {
   const { role } = useClubRole(clubId)
 
   const [clubName, setClubName] = useState('')
+  const [clubLogo, setClubLogo] = useState<string | undefined>(undefined)
   const [totalAlertas, setTotalAlertas] = useState(0)
 
   const canEdit = !!(role === 'administrador' || role === 'propietario' || usuario?.es_superadmin)
@@ -27,7 +29,10 @@ export default function ClubLayout() {
   useEffect(() => {
     if (!clubId) return
     APIService.get<Club>(`/clubes/${clubId}`)
-      .then(c => setClubName(c.nombre))
+      .then(c => {
+        setClubName(c.nombre)
+        setClubLogo(c.logo_url || undefined)
+      })
       .catch(() => {})
   }, [clubId])
 
@@ -42,6 +47,7 @@ export default function ClubLayout() {
     <div className="club-layout">
       <Navbar
         clubName={clubName}
+        clubLogo={clubLogo}
         clubId={clubId}
         canEdit={canEdit}
         totalAlertas={totalAlertas}

@@ -39,6 +39,7 @@ import AdminAlertas from './pages/admin/AdminAlertas'
 import AdminDatabase from './pages/admin/AdminDatabase'
 import AdminAgentConfig from './pages/admin/AdminAgentConfig'
 import AdminAfiliacion from './pages/admin/AdminAfiliacion'
+import AdminUsuarios from './pages/admin/AdminUsuarios'
 import ClubDocumentacion from './pages/ClubDocumentacion'
 import ProductosCatalogo from './pages/ProductosCatalogo'
 import ProductosAdmin from './pages/ProductosAdmin'
@@ -87,6 +88,7 @@ function App() {
           <Route path="/admin/database" element={<ProtectedRoute><AdminDatabase /></ProtectedRoute>} />
           <Route path="/admin/agent" element={<ProtectedRoute><AdminAgentConfig /></ProtectedRoute>} />
           <Route path="/admin/afiliacion" element={<ProtectedRoute><AdminAfiliacion /></ProtectedRoute>} />
+          <Route path="/admin/usuarios" element={<ProtectedRoute><AdminUsuarios /></ProtectedRoute>} />
 
           {/* Ruta pública de invitados por QR (sin autenticación) */}
           <Route path="/invitado/:tokenQr" element={<ClubCanalesInvitado />} />

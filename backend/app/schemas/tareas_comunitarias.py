@@ -1,30 +1,30 @@
 """Schemas Pydantic para Tareas Comunitarias"""
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, Field, model_validator
+from typing import Optional, List, Literal
 from datetime import datetime
 
 
 # --- Tareas ---
 
 class TareaComunitariaCreate(BaseModel):
-    titulo: str
-    descripcion: Optional[str] = None
-    puntos: int = 0
-    categoria: Optional[str] = None
-    prioridad: str = "media"
+    titulo: str = Field(..., min_length=3, max_length=200)
+    descripcion: Optional[str] = Field(None, max_length=2000)
+    puntos: int = Field(0, ge=0, description="Puntos que otorga la tarea (≥ 0)")
+    categoria: Optional[str] = Field(None, max_length=100)
+    prioridad: Literal["alta", "media", "baja"] = "media"
     fecha_limite: Optional[datetime] = None
-    max_participantes: Optional[int] = None
+    max_participantes: Optional[int] = Field(None, gt=0, description="Plazas máximas (> 0)")
 
 
 class TareaComunitariaUpdate(BaseModel):
-    titulo: Optional[str] = None
-    descripcion: Optional[str] = None
-    puntos: Optional[int] = None
-    categoria: Optional[str] = None
-    prioridad: Optional[str] = None
+    titulo: Optional[str] = Field(None, min_length=3, max_length=200)
+    descripcion: Optional[str] = Field(None, max_length=2000)
+    puntos: Optional[int] = Field(None, ge=0)
+    categoria: Optional[str] = Field(None, max_length=100)
+    prioridad: Optional[Literal["alta", "media", "baja"]] = None
     fecha_limite: Optional[datetime] = None
-    max_participantes: Optional[int] = None
-    estado: Optional[str] = None
+    max_participantes: Optional[int] = Field(None, gt=0)
+    estado: Optional[Literal["abierta", "en_progreso", "completada", "rechazada", "expirada"]] = None
 
 
 class ParticipanteTareaResponse(BaseModel):
@@ -85,10 +85,16 @@ class RankingEntry(BaseModel):
 # --- Periodos y Premios ---
 
 class PeriodoPremiosCreate(BaseModel):
-    nombre: str
+    nombre: str = Field(..., min_length=3, max_length=100)
     fecha_inicio: datetime
     fecha_fin: datetime
-    tipo: str = "mensual"
+    tipo: Literal["mensual", "trimestral", "semestral", "anual"] = "mensual"
+
+    @model_validator(mode="after")
+    def validar_rango_fechas(self):
+        if self.fecha_fin <= self.fecha_inicio:
+            raise ValueError("fecha_fin debe ser posterior a fecha_inicio")
+        return self
 
 
 class PeriodoPremiosResponse(BaseModel):
@@ -107,9 +113,9 @@ class PeriodoPremiosResponse(BaseModel):
 
 
 class PremioCreate(BaseModel):
-    nombre: str
-    descripcion: Optional[str] = None
-    posicion: int
+    nombre: str = Field(..., min_length=3, max_length=100)
+    descripcion: Optional[str] = Field(None, max_length=500)
+    posicion: int = Field(..., gt=0, description="Posición del premio (1 = primero)")
 
 
 class PremioResponse(BaseModel):
@@ -135,4 +141,4 @@ PeriodoPremiosResponse.model_rebuild()
 # --- Rechazo ---
 
 class RechazoTareaRequest(BaseModel):
-    motivo: str
+    motivo: str = Field(..., min_length=3, max_length=500)

@@ -1,0 +1,114 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Docker Compose Up",
+      "type": "shell",
+      "command": "docker compose up --build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "docker-compose",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Starting.*$",
+          "endsPattern": "^.*Application startup complete.*$"
+        }
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Docker Compose Down",
+      "type": "shell",
+      "command": "docker compose down",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "group": "none"
+    },
+    {
+      "label": "Docker Compose Logs",
+      "type": "shell",
+      "command": "docker compose logs -f",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "group": "none"
+    },
+    {
+      "label": "Docker Compose Restart Backend",
+      "type": "shell",
+      "command": "docker compose restart backend",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "group": "none"
+    },
+    {
+      "label": "Local: Instalar dependencias Backend",
+      "type": "shell",
+      "command": "pip install -r requirements.txt",
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "group": "none"
+    },
+    {
+      "label": "Local: Instalar dependencias Frontend",
+      "type": "shell",
+      "command": "npm install",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "group": "none"
+    },
+    {
+      "label": "Local: Start Frontend",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "dependsOn": "Local: Instalar dependencias Frontend",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*VITE.*$",
+          "endsPattern": "^.*Local:.*http.*$"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": false
+      },
+      "group": "none"
+    }
+  ]
+}

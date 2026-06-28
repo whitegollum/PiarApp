@@ -1,0 +1,64 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "PiarApp - Todos los contenedores",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "docker compose up --build",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "PiarApp - Backend (attach debugger)",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/backend",
+          "remoteRoot": "/app"
+        }
+      ],
+      "justMyCode": true
+    },
+    {
+      "name": "Local: Backend (run & debug)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/run.py",
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "preLaunchTask": "Local: Instalar dependencias Backend"
+    },
+    {
+      "name": "Local: Frontend",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/frontend",
+      "preLaunchTask": "Local: Instalar dependencias Frontend"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "PiarApp - Run & Debug (Docker)",
+      "configurations": [
+        "PiarApp - Todos los contenedores",
+        "PiarApp - Backend (attach debugger)"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "PiarApp - Local (Backend + Frontend)",
+      "configurations": [
+        "Local: Backend (run & debug)",
+        "Local: Frontend"
+      ],
+      "stopAll": true
+    }
+  ]
+}

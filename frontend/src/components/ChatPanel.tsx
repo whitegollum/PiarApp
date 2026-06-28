@@ -23,6 +23,15 @@ export default function ChatPanel({ clubId, clubName, initialExpanded, onClose }
   const [debugMode, setDebugMode] = useState(false)
   const [debugLog, setDebugLog] = useState<string[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Auto-resize textarea as content grows
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`
+  }, [inputText])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -73,6 +82,7 @@ export default function ChatPanel({ clubId, clubName, initialExpanded, onClose }
 
     const userText = inputText.trim()
     setInputText('')
+    if (textareaRef.current) textareaRef.current.style.height = 'auto'
     setIsLoading(true)
 
     // Optimistic: show user message immediately
@@ -279,16 +289,18 @@ export default function ChatPanel({ clubId, clubName, initialExpanded, onClose }
       )}
 
       <form className="chat-input-area" onSubmit={handleSend}>
-        <input
-          type="text"
+        <textarea
+          ref={textareaRef}
           value={inputText}
           onChange={e => setInputText(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); handleSend(e as any) } }}
           onFocus={handleInputFocus}
-          placeholder={isExpanded ? 'Escribe tu mensaje...' : `Pregunta algo a Flybot sobre ${clubName}...`}
+          placeholder={isExpanded ? 'Escribe tu mensaje... (Ctrl+Enter para enviar)' : `Pregunta algo a Flybot sobre ${clubName}...`}
           disabled={isLoading}
+          rows={1}
         />
-        <button type="submit" disabled={isLoading || !inputText.trim()}>
-          <Send size={16} />
+        <button type="submit" disabled={isLoading || !inputText.trim()} title="Enviar">
+          <Send size={24} />
         </button>
       </form>
     </div>

@@ -114,10 +114,13 @@ TOOL_SCHEMAS = [
     # === TAREAS COMUNITARIAS ===
     _tool("list_tasks", "Lista las tareas comunitarias de un club.", _CLUB_ID, _CLUB_REQ),
     _tool("create_task", "Crea una tarea comunitaria en un club.",
-          {**_CLUB_ID, "titulo": {"type": "string", "description": "Título de la tarea"},
+          {**_CLUB_ID,
+           "titulo": {"type": "string", "description": "Título (mín. 3 caracteres)"},
            "descripcion": {"type": "string", "description": "Descripción de la tarea"},
-           "fecha_limite": {"type": "string", "description": "Fecha límite ISO (YYYY-MM-DD)"},
-           "max_participantes": {"type": "integer", "description": "Máximo de participantes"}},
+           "puntos": {"type": "integer", "description": "Puntos que otorga la tarea (≥ 0, default 0)"},
+           "prioridad": {"type": "string", "enum": ["alta", "media", "baja"], "description": "Prioridad (default: media)"},
+           "fecha_limite": {"type": "string", "description": "Fecha límite en formato ISO: YYYY-MM-DDTHH:MM:SS (ej: 2026-08-31T23:59:59)"},
+           "max_participantes": {"type": "integer", "description": "Máximo de participantes (> 0)"}},
           ["club_id", "titulo"]),
     _tool("get_task", "Obtiene una tarea comunitaria específica.",
           {**_CLUB_ID, "tarea_id": {"type": "integer", "description": "ID de la tarea"}},
@@ -139,6 +142,39 @@ TOOL_SCHEMAS = [
     # === DASHBOARD ===
     _tool("get_dashboard_recent", "Obtiene contenido reciente global del dashboard."),
 ]
+
+
+# ============================================================
+# ERROR FORMATTING
+# ============================================================
+
+def _format_api_error(r) -> str:
+    """Convierte la respuesta de error HTTP en un string legible para el LLM."""
+    try:
+        body = r.json()
+    except Exception:
+        text = (r.text or "").strip()
+        return text or f"HTTP {r.status_code} sin cuerpo de respuesta"
+
+    detail = body.get("detail")
+
+    # Pydantic v2 validation errors: lista de objetos {loc, msg, type}
+    if isinstance(detail, list):
+        msgs = []
+        for err in detail:
+            loc_parts = [str(x) for x in err.get("loc", []) if x not in ("body", "")]
+            loc = " → ".join(loc_parts) if loc_parts else None
+            msg = err.get("msg", "error desconocido")
+            msgs.append(f"Campo '{loc}': {msg}" if loc else msg)
+        return "; ".join(msgs) if msgs else f"HTTP {r.status_code}: error de validación sin detalle"
+
+    # String o None
+    if isinstance(detail, str) and detail.strip():
+        return detail.strip()
+
+    # Fallback: texto crudo
+    text = (r.text or "").strip()[:400]
+    return text or f"HTTP {r.status_code} sin detalle"
 
 
 # ============================================================
@@ -242,13 +278,11 @@ async def execute_tool(name: str, arguments: dict, user_id: int,
             elif r.status_code == 204:
                 return {"ok": True, "data": None}
             else:
-                log.warning("Tool %s returned %s: %s", name, r.status_code, r.text[:300])
-                try:
-                    detail = r.json().get("detail", r.text[:300])
-                except Exception:
-                    detail = r.text[:300]
+                log.warning("Tool %s returned %s: %s", name, r.status_code, r.text[:500])
+                detail = _format_api_error(r)
                 return {"ok": False, "status": r.status_code, "error": detail}
 
     except Exception as e:
         log.error("Tool %s execution error: %s", name, e)
-        return {"ok": False, "error": str(e)}
+        msg = str(e) or "Error de conexión desconocido"
+        return {"ok": False, "error": msg}

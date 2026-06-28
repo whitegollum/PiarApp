@@ -9,6 +9,45 @@ import APIService from '../services/api'
 import '../styles/Canales.css'
 import '../styles/ClubDetail.css'
 
+// ──────────────────────────────────────────────
+// Tabla de equivalencias FPV
+// ──────────────────────────────────────────────
+type FpvSystem = 'raceband' | 'dji' | 'o3'
+
+const FPV_SYSTEMS: { id: FpvSystem; label: string }[] = [
+  { id: 'raceband', label: 'Analógico / HDZero / Walksnail' },
+  { id: 'dji',      label: 'DJI Vista / Air Unit'           },
+  { id: 'o3',       label: 'O3 (20 MHz FCC)'                },
+]
+
+// Label que aparece en las gafas para cada canal canónico (índice 0 = canal 1)
+const GOGGLE_LABEL: Record<FpvSystem, (string | null)[]> = {
+  raceband: ['R1',  'R2',  'R3',  'R4',  'R5',  'R6',  'R7',  'R8' ],
+  dji:      ['CH1', 'CH2', 'CH3', 'CH4', 'CH5', 'CH8', 'CH6', 'CH7'],
+  o3:       ['CH1', 'CH2', 'CH3', 'CH4', 'CH5', 'CH6', 'CH7', null ],
+}
+
+// Frecuencia en MHz para cada canal canónico (índice 0 = canal 1)
+const FREQ_MHZ: Record<FpvSystem, (number | null)[]> = {
+  raceband: [5658, 5695, 5732, 5769, 5806, 5843, 5880, 5917],
+  dji:      [5660, 5695, 5735, 5770, 5805, 5839, 5878, 5914],
+  o3:       [5660, 5695, 5735, 5770, 5805, 5839, 5878, null ],
+}
+
+// Orden de visualización: canales canónicos ordenados según el número de canal en las gafas
+const DISPLAY_ORDER: Record<FpvSystem, number[]> = {
+  raceband: [1, 2, 3, 4, 5, 6, 7, 8],
+  dji:      [1, 2, 3, 4, 5, 7, 8, 6], // DJI CH1→C1, CH2→C2, …, CH6→C7, CH7→C8, CH8→C6
+  o3:       [1, 2, 3, 4, 5, 6, 7, 8], // CH1–CH7, C8 no disponible
+}
+
+function getGoggleLabel(canonicalNum: number, system: FpvSystem): string | null {
+  return GOGGLE_LABEL[system][canonicalNum - 1] ?? null
+}
+function getFreq(canonicalNum: number, system: FpvSystem): number | null {
+  return FREQ_MHZ[system][canonicalNum - 1] ?? null
+}
+
 interface Club {
   id: number
   nombre: string
@@ -27,6 +66,19 @@ export default function ClubCanales() {
   const [error, setError] = useState('')
   const [notificacion, setNotificacion] = useState<string | null>(null)
   const [mostrarQR, setMostrarQR] = useState(false)
+  const [fpvSystem, setFpvSystem] = useState<FpvSystem>(
+    () => (localStorage.getItem('piar_fpv_system') as FpvSystem) || 'raceband'
+  )
+
+  const handleSystemChange = (sys: FpvSystem) => {
+    setFpvSystem(sys)
+    localStorage.setItem('piar_fpv_system', sys)
+  }
+
+  // Canales ordenados según el sistema FPV seleccionado
+  const sortedCanales = panel
+    ? DISPLAY_ORDER[fpvSystem].map(n => panel.canales.find(c => c.canal_numero === n)!)
+    : []
 
   const cargarCanales = useCallback(async () => {
     if (!clubId) return
@@ -132,6 +184,28 @@ export default function ClubCanales() {
         </div>
         <p className="canales-desc">Coordina el uso de frecuencias con otros pilotos del club</p>
 
+        {/* Aviso RaceMode */}
+        <div className="canales-aviso-racemode">
+          <AlertTriangle size={15} />
+          <span>Recuerda configurar tus gafas (DJI, Walksnail o Analógicas) en <strong>RaceMode</strong>, dado que si no es así las correspondencias de canales cambian.</span>
+        </div>
+
+        {/* Selector de sistema FPV */}
+        <div className="fpv-system-selector">
+          <span className="fpv-system-label">Tu sistema FPV:</span>
+          <div className="fpv-system-tabs">
+            {FPV_SYSTEMS.map(sys => (
+              <button
+                key={sys.id}
+                className={`fpv-tab${fpvSystem === sys.id ? ' fpv-tab-active' : ''}`}
+                onClick={() => handleSystemChange(sys.id)}
+              >
+                {sys.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Toast de notificación */}
         {notificacion && (
           <div className="canales-notificacion">
@@ -153,10 +227,11 @@ export default function ClubCanales() {
           <div className="canales-loading">Cargando canales...</div>
         ) : panel && (
           <div className="canales-grid">
-            {panel.canales.map(canal => (
+            {sortedCanales.map(canal => (
               <CanalCard
                 key={canal.canal_numero}
                 canal={canal}
+                fpvSystem={fpvSystem}
                 estoyEnCanal={estoyEnCanal(canal)}
                 estoyVolando={estoyVolando(canal)}
                 onOcupar={() => handleOcupar(canal.canal_numero)}
@@ -173,6 +248,7 @@ export default function ClubCanales() {
 
 interface CanalCardProps {
   canal: CanalEstado
+  fpvSystem: FpvSystem
   estoyEnCanal: boolean
   estoyVolando: boolean
   onOcupar: () => void
@@ -180,14 +256,20 @@ interface CanalCardProps {
   onToggleVuelo: () => void
 }
 
-function CanalCard({ canal, estoyEnCanal, estoyVolando, onOcupar, onLiberar, onToggleVuelo }: CanalCardProps) {
+function CanalCard({ canal, fpvSystem, estoyEnCanal, estoyVolando, onOcupar, onLiberar, onToggleVuelo }: CanalCardProps) {
   const tieneMultiplesUsuarios = canal.usuarios.length >= 2
+  const goggleLabel = getGoggleLabel(canal.canal_numero, fpvSystem)
+  const freq = getFreq(canal.canal_numero, fpvSystem)
+  const noDisponible = goggleLabel === null
 
   return (
-    <div className={`canal-card${canal.en_vuelo ? ' canal-en-vuelo' : ''}${estoyEnCanal ? ' canal-activo' : ''}`}>
+    <div className={`canal-card${canal.en_vuelo ? ' canal-en-vuelo' : ''}${estoyEnCanal ? ' canal-activo' : ''}${noDisponible ? ' canal-no-disponible' : ''}`}>
 
       <div className="canal-card-header">
-        <span className="canal-numero">Canal {canal.canal_numero}</span>
+        <div className="canal-header-info">
+          <span className="canal-numero">{goggleLabel ?? 'N/D'}</span>
+          {freq && <span className="canal-freq">{freq} MHz</span>}
+        </div>
         {canal.en_vuelo && (
           <span className="canal-badge-vuelo">EN VUELO</span>
         )}
@@ -214,8 +296,13 @@ function CanalCard({ canal, estoyEnCanal, estoyVolando, onOcupar, onLiberar, onT
 
       <div className="canal-acciones">
         {!estoyEnCanal ? (
-          <button className="btn btn-primary btn-sm canal-btn-full" onClick={onOcupar}>
-            Entrar en canal
+          <button
+            className="btn btn-primary btn-sm canal-btn-full"
+            onClick={onOcupar}
+            disabled={noDisponible}
+            title={noDisponible ? 'Canal no disponible en este sistema' : undefined}
+          >
+            {noDisponible ? 'No disponible' : 'Entrar en canal'}
           </button>
         ) : (
           <>

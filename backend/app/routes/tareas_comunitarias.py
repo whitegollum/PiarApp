@@ -17,6 +17,15 @@ from app.services.tareas_comunitarias_service import TareasComunitariasService
 
 router = APIRouter()
 
+_ERRORES_NOT_FOUND = {"Tarea no encontrada", "Periodo no encontrado"}
+
+
+def _http_desde_error_servicio(result: dict) -> None:
+    error = result.get("error", "Error desconocido")
+    if error in _ERRORES_NOT_FOUND:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error)
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
+
 
 def verificar_es_admin(db: Session, usuario_id: int, club_id: int) -> bool:
     miembro = db.query(MiembroClub).filter(
@@ -124,7 +133,7 @@ async def inscribirse(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
     result = TareasComunitariasService.inscribir_usuario(db, tarea_id, current_user.id)
     if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
+        _http_desde_error_servicio(result)
     return {"detail": "Inscripción exitosa"}
 
 
@@ -139,7 +148,7 @@ async def desinscribirse(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
     result = TareasComunitariasService.desinscribir_usuario(db, tarea_id, current_user.id)
     if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
+        _http_desde_error_servicio(result)
     return {"detail": "Desinscripción exitosa"}
 
 
@@ -154,7 +163,7 @@ async def aprobar_tarea(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo administradores pueden aprobar tareas")
     result = TareasComunitariasService.aprobar_tarea(db, tarea_id)
     if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
+        _http_desde_error_servicio(result)
     return result
 
 
@@ -170,7 +179,7 @@ async def rechazar_tarea(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo administradores pueden rechazar tareas")
     result = TareasComunitariasService.rechazar_tarea(db, tarea_id, data.motivo)
     if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
+        _http_desde_error_servicio(result)
     return result
 
 
@@ -252,7 +261,7 @@ async def cerrar_periodo(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo administradores")
     result = TareasComunitariasService.cerrar_periodo(db, periodo_id)
     if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
+        _http_desde_error_servicio(result)
     return result
 
 
@@ -267,7 +276,7 @@ async def confirmar_premios(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo administradores")
     result = TareasComunitariasService.confirmar_premios(db, periodo_id)
     if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
+        _http_desde_error_servicio(result)
     return result
 
 

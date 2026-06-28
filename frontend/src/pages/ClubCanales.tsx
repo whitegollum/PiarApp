@@ -15,9 +15,9 @@ import '../styles/ClubDetail.css'
 type FpvSystem = 'raceband' | 'dji' | 'o3'
 
 const FPV_SYSTEMS: { id: FpvSystem; label: string }[] = [
-  { id: 'raceband', label: 'Analógico / HDZero / Walksnail' },
-  { id: 'dji',      label: 'DJI Vista / Air Unit'           },
-  { id: 'o3',       label: 'O3 (20 MHz FCC)'                },
+  { id: 'raceband', label: 'Analógico / HDZero / Walksnail / DJI O4 Race' },
+  { id: 'dji',      label: 'DJI Vista / Air Unit'                          },
+  { id: 'o3',       label: 'DJI O3 (20 MHz FCC)'                           },
 ]
 
 // Label que aparece en las gafas para cada canal canónico (índice 0 = canal 1)

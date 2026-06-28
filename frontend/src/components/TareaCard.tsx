@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Star, Calendar, MoreVertical, CheckCircle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Star, Calendar, MoreVertical, CheckCircle, Pencil } from 'lucide-react'
 import { TareaComunitaria } from '../services/tareasComunitariasService'
 
 interface TareaCardProps {
@@ -48,6 +49,7 @@ function formatFechaLimite(fecha: string): { text: string; level: 'normal' | 'wa
 export const TareaCard: React.FC<TareaCardProps> = ({
   tarea, usuarioId, esAdmin, onInscribirse, onDesinscribirse, onAprobar
 }) => {
+  const navigate = useNavigate()
   const estaInscrito = tarea.participantes.some(p => p.usuario_id === usuarioId)
   const plazasOcupadas = tarea.num_participantes
   const totalPlazas = tarea.max_participantes
@@ -88,6 +90,15 @@ export const TareaCard: React.FC<TareaCardProps> = ({
               </button>
               {showKebab && (
                 <div className="tarea-card-kebab-menu">
+                  <button
+                    className="tarea-card-kebab-item"
+                    onClick={() => {
+                      setShowKebab(false)
+                      navigate(`/clubes/${tarea.club_id}/tareas/${tarea.id}/editar`)
+                    }}
+                  >
+                    <Pencil size={14} /> Editar tarea
+                  </button>
                   <button
                     className="tarea-card-kebab-item"
                     onClick={() => {

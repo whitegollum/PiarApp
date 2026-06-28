@@ -49,9 +49,3 @@ python run.py
 ### Frontend (en otra terminal)
 cd frontend && npm install
 npm run dev
-
-
-# Tareas realizadas
-Run&Debug
-Errores añadidos al API TareasComunitarias
-analisis de errores en tools calls por parte del Bot

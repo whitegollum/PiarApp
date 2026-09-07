@@ -14,6 +14,8 @@ class InvitadoSesion(Base):
     club_id = Column(Integer, ForeignKey("clubes.id"), nullable=False, index=True)
     nombre = Column(String(100), nullable=False)  # "Cerdo Curioso" o "Cerdo {nombre_usuario}"
     canal_numero = Column(Integer, nullable=True)  # Canal actual, null si no está en ninguno
+    # Subfrecuencia dentro del canal (ver CanalOcupacion.sub_canal)
+    sub_canal = Column(String(10), nullable=True)
     en_vuelo = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
     last_active = Column(DateTime, server_default=func.now())

@@ -1,4 +1,5 @@
 """Endpoints de Canales - Coordinación de frecuencias entre pilotos"""
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 
@@ -6,7 +7,7 @@ from app.database.db import get_db
 from app.models.usuario import Usuario
 from app.models.miembro_club import MiembroClub
 from app.routes.auth import get_current_user
-from app.schemas.canal import CanalesPanel, CanalOcupacionResponse
+from app.schemas.canal import CanalesPanel, CanalOcupacionResponse, OcuparCanalRequest
 from app.services.canal_service import CanalService, TOTAL_CANALES
 
 router = APIRouter()
@@ -38,10 +39,11 @@ async def obtener_panel_canales(
 async def ocupar_canal(
     club_id: int,
     canal_numero: int,
+    body: Optional[OcuparCanalRequest] = None,
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Ocupar un canal"""
+    """Ocupar un canal (opcionalmente una subfrecuencia, p.ej. 'O4-5'/'O4-6')"""
     if canal_numero < 1 or canal_numero > TOTAL_CANALES:
         raise HTTPException(status_code=400, detail=f"Canal debe estar entre 1 y {TOTAL_CANALES}")
 
@@ -49,7 +51,7 @@ async def ocupar_canal(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No eres miembro de este club")
 
     try:
-        CanalService.ocupar_canal(db, club_id, canal_numero, current_user.id)
+        CanalService.ocupar_canal(db, club_id, canal_numero, current_user.id, sub_canal=body.sub_canal if body else None)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     return CanalService.obtener_panel(db, club_id)

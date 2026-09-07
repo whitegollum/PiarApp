@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams } from 'react-router-dom'
-import { Radio, Plane, PlaneLanding, AlertTriangle, User, UserPlus, Pencil, Check, X } from 'lucide-react'
+import { Radio, Plane, PlaneLanding, AlertTriangle, User, UserPlus, Pencil, Check, X, RefreshCw } from 'lucide-react'
 import { InvitadosService, CanalesPanelInvitado } from '../services/invitadosService'
-import { CanalEstado } from '../services/canalesService'
+import { FpvSystem, FPV_SYSTEMS, buildSlotViews, FpvSlotView } from '../utils/fpvSystems'
+import TablaFrecuenciasModal from '../components/TablaFrecuenciasModal'
 import '../styles/Canales.css'
 
 type Paso = 'bienvenida' | 'panel'
@@ -18,15 +19,38 @@ export default function ClubCanalesInvitado() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [notificacion, setNotificacion] = useState<string | null>(null)
+  const [refrescando, setRefrescando] = useState(false)
+  const [mostrarTablaFreq, setMostrarTablaFreq] = useState(false)
+  const [fpvSystem, setFpvSystem] = useState<FpvSystem>(
+    () => (localStorage.getItem('piar_fpv_system') as FpvSystem) || 'raceband'
+  )
 
   // Estado de edición de nombre
   const [editandoNombre, setEditandoNombre] = useState(false)
   const [nombreEdicion, setNombreEdicion] = useState('')
   const inputEdicionRef = useRef<HTMLInputElement>(null)
 
+  const handleSystemChange = (sys: FpvSystem) => {
+    setFpvSystem(sys)
+    localStorage.setItem('piar_fpv_system', sys)
+  }
+
+  // Tarjetas de canal (una por canal canónico, salvo O4-5/O4-6 que son dos)
+  const slots = panel ? buildSlotViews(panel.canales, fpvSystem) : []
+
   const mostrarNotificacion = (msg: string) => {
     setNotificacion(msg)
     setTimeout(() => setNotificacion(null), 4000)
+  }
+
+  const handleRefrescar = async () => {
+    if (!sesionToken || !clubId) return
+    setRefrescando(true)
+    try {
+      await cargarPanel(sesionToken, clubId)
+    } finally {
+      setRefrescando(false)
+    }
   }
 
   const cargarPanel = useCallback(async (token: string, cid: number) => {
@@ -71,10 +95,10 @@ export default function ClubCanalesInvitado() {
     }
   }
 
-  const handleOcupar = async (canalNumero: number) => {
+  const handleOcupar = async (canalNumero: number, subCanal: string | null) => {
     if (!sesionToken || !clubId) return
     try {
-      const data = await InvitadosService.ocuparCanal(sesionToken, clubId, canalNumero)
+      const data = await InvitadosService.ocuparCanal(sesionToken, clubId, canalNumero, subCanal)
       setPanel(data)
     } catch (err: any) {
       alert(err.message || 'Error al ocupar canal')
@@ -96,10 +120,14 @@ export default function ClubCanalesInvitado() {
     try {
       const data = await InvitadosService.toggleVuelo(sesionToken, clubId)
       setPanel(data)
+      const miSlot = buildSlotViews(data.canales, fpvSystem).find(
+        s => s.canalNumero === data.mi_canal && s.subCanal === data.mi_sub_canal
+      )
+      const etiqueta = miSlot?.label ?? `Canal ${data.mi_canal}`
       if (data.en_vuelo) {
-        mostrarNotificacion(`${data.mi_nombre} está volando en Canal ${data.mi_canal}`)
+        mostrarNotificacion(`${data.mi_nombre} está volando en ${etiqueta}`)
       } else {
-        mostrarNotificacion(`Canal ${data.mi_canal} — has aterrizado`)
+        mostrarNotificacion(`${etiqueta} — has aterrizado`)
       }
     } catch (err: any) {
       alert(err.message || 'Error al cambiar estado de vuelo')
@@ -185,13 +213,40 @@ export default function ClubCanalesInvitado() {
       <div className="canales-page">
 
         <div className="header-actions">
-          <div style={{ width: 32 }} />
+          <button
+            className="btn-back"
+            onClick={handleRefrescar}
+            disabled={refrescando}
+            title="Refrescar estado de los canales"
+            aria-label="Refrescar estado de los canales"
+          >
+            <RefreshCw size={18} className={refrescando ? 'icon-spin' : undefined} />
+          </button>
           <h1>
             <Radio size={20} style={{ verticalAlign: 'middle', marginRight: '0.4rem' }} />
             Canal de Vuelo
           </h1>
           <span className="canales-live-indicator" title="Actualización automática" />
         </div>
+
+        {/* Aviso RaceMode */}
+        <div className="canales-aviso-racemode">
+          <AlertTriangle size={15} />
+          <span>
+            Recuerda configurar tus gafas siempre que sea posible en <strong>RaceMode</strong>, para maximizar la compatibilidad de frecuencias.{' '}
+            <button
+              type="button"
+              className="canales-aviso-racemode-link"
+              onClick={() => setMostrarTablaFreq(true)}
+            >
+              Ver tabla de frecuencias
+            </button>
+          </span>
+        </div>
+
+        {mostrarTablaFreq && (
+          <TablaFrecuenciasModal onClose={() => setMostrarTablaFreq(false)} />
+        )}
 
         {/* Badge de nombre editable */}
         {panel && (
@@ -232,6 +287,22 @@ export default function ClubCanalesInvitado() {
           </div>
         )}
 
+        {/* Selector de sistema FPV */}
+        <div className="fpv-system-selector">
+          <span className="fpv-system-label">Tu sistema FPV:</span>
+          <div className="fpv-system-tabs">
+            {FPV_SYSTEMS.map(sys => (
+              <button
+                key={sys.id}
+                className={`fpv-tab${fpvSystem === sys.id ? ' fpv-tab-active' : ''}`}
+                onClick={() => handleSystemChange(sys.id)}
+              >
+                {sys.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {notificacion && (
           <div className="canales-notificacion">
             <Plane size={14} />
@@ -241,13 +312,13 @@ export default function ClubCanalesInvitado() {
 
         {panel && (
           <div className="canales-grid">
-            {panel.canales.map((canal) => (
+            {slots.map((slot) => (
               <CanalCardInvitado
-                key={canal.canal_numero}
-                canal={canal}
-                miCanal={panel.mi_canal}
+                key={slot.key}
+                slot={slot}
+                estoyAqui={slot.canalNumero === panel.mi_canal && slot.subCanal === panel.mi_sub_canal}
                 enVuelo={panel.en_vuelo}
-                onOcupar={() => handleOcupar(canal.canal_numero)}
+                onOcupar={() => handleOcupar(slot.canalNumero, slot.subCanal)}
                 onLiberar={handleLiberar}
                 onToggleVuelo={handleToggleVuelo}
               />
@@ -260,8 +331,8 @@ export default function ClubCanalesInvitado() {
 }
 
 interface CanalCardInvitadoProps {
-  canal: CanalEstado
-  miCanal: number | null
+  slot: FpvSlotView
+  estoyAqui: boolean
   enVuelo: boolean
   onOcupar: () => void
   onLiberar: () => void
@@ -269,30 +340,33 @@ interface CanalCardInvitadoProps {
 }
 
 function CanalCardInvitado({
-  canal,
-  miCanal,
+  slot,
+  estoyAqui,
   enVuelo,
   onOcupar,
   onLiberar,
   onToggleVuelo,
 }: CanalCardInvitadoProps) {
-  const estoyAqui = canal.canal_numero === miCanal
+  const noDisponible = slot.label === null
 
   return (
     <div
-      className={`canal-card${canal.en_vuelo ? ' canal-en-vuelo' : ''}${estoyAqui ? ' canal-activo' : ''}`}
+      className={`canal-card${slot.enVuelo ? ' canal-en-vuelo' : ''}${estoyAqui ? ' canal-activo' : ''}${noDisponible ? ' canal-no-disponible' : ''}`}
     >
       <div className="canal-card-header">
-        <span className="canal-numero">Canal {canal.canal_numero}</span>
-        {canal.en_vuelo && <span className="canal-badge-vuelo">EN VUELO</span>}
+        <div className="canal-header-info">
+          <span className="canal-numero">{slot.label ?? 'N/D'}</span>
+          {slot.freq && <span className="canal-freq">{slot.freq} MHz</span>}
+        </div>
+        {slot.enVuelo && <span className="canal-badge-vuelo">EN VUELO</span>}
       </div>
 
       <div className="canal-pilotos">
-        {canal.usuarios.length === 0 ? (
+        {slot.usuarios.length === 0 ? (
           <p className="canal-vacio">Sin pilotos — canal libre</p>
         ) : (
           <ul className="canal-lista-pilotos">
-            {canal.usuarios.map((u, i) => (
+            {slot.usuarios.map((u, i) => (
               <li key={i} className={u.en_vuelo ? 'piloto-en-vuelo' : ''}>
                 {u.en_vuelo ? <Plane size={13} /> : <User size={13} />}
                 {u.es_invitado
@@ -308,8 +382,13 @@ function CanalCardInvitado({
 
       <div className="canal-acciones">
         {!estoyAqui ? (
-          <button className="btn btn-primary btn-sm canal-btn-full" onClick={onOcupar}>
-            Entrar en canal
+          <button
+            className="btn btn-primary btn-sm canal-btn-full"
+            onClick={onOcupar}
+            disabled={noDisponible}
+            title={noDisponible ? 'Canal no disponible en este sistema' : undefined}
+          >
+            {noDisponible ? 'No disponible' : 'Entrar en canal'}
           </button>
         ) : (
           <>
@@ -319,7 +398,7 @@ function CanalCardInvitado({
             <button
               className={`btn btn-sm canal-btn-vuelo${enVuelo ? ' canal-btn-aterrizar' : ''}`}
               onClick={onToggleVuelo}
-              disabled={canal.en_vuelo && !enVuelo}
+              disabled={slot.enVuelo && !enVuelo}
             >
               {enVuelo
                 ? <><PlaneLanding size={14} /> Aterrizar</>
@@ -330,10 +409,10 @@ function CanalCardInvitado({
         )}
       </div>
 
-      {canal.en_vuelo && canal.piloto_volando && !enVuelo && estoyAqui && (
+      {slot.enVuelo && slot.pilotoVolando && !enVuelo && estoyAqui && (
         <div className="canal-aviso-vuelo">
           <AlertTriangle size={14} />
-          {canal.piloto_volando} está volando en esta frecuencia
+          {slot.pilotoVolando} está volando en esta frecuencia
         </div>
       )}
     </div>

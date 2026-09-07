@@ -17,12 +17,14 @@ class InvitadoSesionResponse(BaseModel):
     club_id: int
     nombre: str
     canal_numero: Optional[int] = None
+    sub_canal: Optional[str] = None
     en_vuelo: bool
 
 
 class CanalesPanelInvitado(CanalesPanel):
     """Panel de canales enriquecido con el estado del invitado actual"""
     mi_canal: Optional[int] = None
+    mi_sub_canal: Optional[str] = None
     en_vuelo: bool = False
     mi_nombre: str = ""
 

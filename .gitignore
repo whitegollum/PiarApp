@@ -29,6 +29,7 @@ openclaw/data/.openclaw/agents/main/sessions/
 **/.github/
 **/.pytest_cache/
 **/.venv/
+**/.vscode/
 **/.claude/
 **/.pytest_cache/
 emoji_matches.txt

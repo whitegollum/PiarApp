@@ -2,51 +2,14 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useClubRole } from '../hooks/useClubRole'
-import { ArrowLeft, Radio, Plane, PlaneLanding, AlertTriangle, User, QrCode } from 'lucide-react'
-import { CanalesService, CanalesPanel, CanalEstado } from '../services/canalesService'
+import { ArrowLeft, Radio, Plane, PlaneLanding, AlertTriangle, User, QrCode, RefreshCw } from 'lucide-react'
+import { CanalesService, CanalesPanel } from '../services/canalesService'
 import QRInvitadoModal from '../components/QRInvitadoModal'
+import TablaFrecuenciasModal from '../components/TablaFrecuenciasModal'
 import APIService from '../services/api'
+import { FpvSystem, FPV_SYSTEMS, buildSlotViews, FpvSlotView } from '../utils/fpvSystems'
 import '../styles/Canales.css'
 import '../styles/ClubDetail.css'
-
-// ──────────────────────────────────────────────
-// Tabla de equivalencias FPV
-// ──────────────────────────────────────────────
-type FpvSystem = 'raceband' | 'dji' | 'o3'
-
-const FPV_SYSTEMS: { id: FpvSystem; label: string }[] = [
-  { id: 'raceband', label: 'Analógico / HDZero / Walksnail / DJI O4 Race' },
-  { id: 'dji',      label: 'DJI Vista / Air Unit'                          },
-  { id: 'o3',       label: 'DJI O3 (20 MHz FCC)'                           },
-]
-
-// Label que aparece en las gafas para cada canal canónico (índice 0 = canal 1)
-const GOGGLE_LABEL: Record<FpvSystem, (string | null)[]> = {
-  raceband: ['R1',  'R2',  'R3',  'R4',  'R5',  'R6',  'R7',  'R8' ],
-  dji:      ['CH1', 'CH2', 'CH3', 'CH4', 'CH5', 'CH8', 'CH6', 'CH7'],
-  o3:       ['CH1', 'CH2', 'CH3', 'CH4', 'CH5', 'CH6', 'CH7', null ],
-}
-
-// Frecuencia en MHz para cada canal canónico (índice 0 = canal 1)
-const FREQ_MHZ: Record<FpvSystem, (number | null)[]> = {
-  raceband: [5658, 5695, 5732, 5769, 5806, 5843, 5880, 5917],
-  dji:      [5660, 5695, 5735, 5770, 5805, 5839, 5878, 5914],
-  o3:       [5660, 5695, 5735, 5770, 5805, 5839, 5878, null ],
-}
-
-// Orden de visualización: canales canónicos ordenados según el número de canal en las gafas
-const DISPLAY_ORDER: Record<FpvSystem, number[]> = {
-  raceband: [1, 2, 3, 4, 5, 6, 7, 8],
-  dji:      [1, 2, 3, 4, 5, 7, 8, 6], // DJI CH1→C1, CH2→C2, …, CH6→C7, CH7→C8, CH8→C6
-  o3:       [1, 2, 3, 4, 5, 6, 7, 8], // CH1–CH7, C8 no disponible
-}
-
-function getGoggleLabel(canonicalNum: number, system: FpvSystem): string | null {
-  return GOGGLE_LABEL[system][canonicalNum - 1] ?? null
-}
-function getFreq(canonicalNum: number, system: FpvSystem): number | null {
-  return FREQ_MHZ[system][canonicalNum - 1] ?? null
-}
 
 interface Club {
   id: number
@@ -66,6 +29,8 @@ export default function ClubCanales() {
   const [error, setError] = useState('')
   const [notificacion, setNotificacion] = useState<string | null>(null)
   const [mostrarQR, setMostrarQR] = useState(false)
+  const [mostrarTablaFreq, setMostrarTablaFreq] = useState(false)
+  const [refrescando, setRefrescando] = useState(false)
   const [fpvSystem, setFpvSystem] = useState<FpvSystem>(
     () => (localStorage.getItem('piar_fpv_system') as FpvSystem) || 'raceband'
   )
@@ -75,10 +40,8 @@ export default function ClubCanales() {
     localStorage.setItem('piar_fpv_system', sys)
   }
 
-  // Canales ordenados según el sistema FPV seleccionado
-  const sortedCanales = panel
-    ? DISPLAY_ORDER[fpvSystem].map(n => panel.canales.find(c => c.canal_numero === n)!)
-    : []
+  // Tarjetas de canal (una por canal canónico, salvo O4-5/O4-6 que son dos)
+  const slots = panel ? buildSlotViews(panel.canales, fpvSystem) : []
 
   const cargarCanales = useCallback(async () => {
     if (!clubId) return
@@ -111,10 +74,19 @@ export default function ClubCanales() {
     setTimeout(() => setNotificacion(null), 4000)
   }
 
-  const handleOcupar = async (canalNumero: number) => {
+  const handleRefrescar = async () => {
+    setRefrescando(true)
+    try {
+      await cargarCanales()
+    } finally {
+      setRefrescando(false)
+    }
+  }
+
+  const handleOcupar = async (canalNumero: number, subCanal: string | null) => {
     if (!clubId) return
     try {
-      const data = await CanalesService.ocuparCanal(parseInt(clubId), canalNumero)
+      const data = await CanalesService.ocuparCanal(parseInt(clubId), canalNumero, subCanal)
       setPanel(data)
     } catch (err: any) {
       alert(err.message || 'Error al ocupar canal')
@@ -131,16 +103,17 @@ export default function ClubCanales() {
     }
   }
 
-  const handleToggleVuelo = async (canalNumero: number) => {
+  const handleToggleVuelo = async (canalNumero: number, etiqueta: string) => {
     if (!clubId) return
     try {
       const data = await CanalesService.toggleVuelo(parseInt(clubId), canalNumero)
       setPanel(data)
       const canalActualizado = data.canales.find(c => c.canal_numero === canalNumero)
-      if (canalActualizado?.en_vuelo) {
-        mostrarNotificacion(`${canalActualizado.piloto_volando} está volando en Canal ${canalNumero}`)
+      const yoVolando = canalActualizado?.usuarios.some(u => u.usuario_id === usuario?.id && u.en_vuelo)
+      if (yoVolando) {
+        mostrarNotificacion(`Estás volando en ${etiqueta}`)
       } else {
-        mostrarNotificacion(`Canal ${canalNumero} está libre`)
+        mostrarNotificacion(`${etiqueta} — has aterrizado`)
       }
     } catch (err: any) {
       if (err.message?.includes('409')) {
@@ -151,11 +124,11 @@ export default function ClubCanales() {
     }
   }
 
-  const estoyEnCanal = (canal: CanalEstado): boolean =>
-    canal.usuarios.some(u => u.usuario_id === usuario?.id)
+  const estoyEnSlot = (slot: FpvSlotView): boolean =>
+    slot.usuarios.some(u => u.usuario_id === usuario?.id)
 
-  const estoyVolando = (canal: CanalEstado): boolean =>
-    canal.usuarios.some(u => u.usuario_id === usuario?.id && u.en_vuelo)
+  const estoyVolandoEnSlot = (slot: FpvSlotView): boolean =>
+    slot.usuarios.some(u => u.usuario_id === usuario?.id && u.en_vuelo)
 
   return (
     <main className="form-main">
@@ -173,6 +146,15 @@ export default function ClubCanales() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button
               className="btn-back"
+              onClick={handleRefrescar}
+              disabled={refrescando}
+              title="Refrescar estado de los canales"
+              aria-label="Refrescar estado de los canales"
+            >
+              <RefreshCw size={18} className={refrescando ? 'icon-spin' : undefined} />
+            </button>
+            <button
+              className="btn-back"
               onClick={() => setMostrarQR(true)}
               title="Mostrar QR para invitar a un piloto"
               aria-label="Mostrar QR para invitado"
@@ -187,7 +169,16 @@ export default function ClubCanales() {
         {/* Aviso RaceMode */}
         <div className="canales-aviso-racemode">
           <AlertTriangle size={15} />
-          <span>Recuerda configurar tus gafas (DJI, Walksnail o Analógicas) en <strong>RaceMode</strong>, dado que si no es así las correspondencias de canales cambian.</span>
+          <span>
+            Recuerda configurar tus gafas siempre que sea posible en <strong>RaceMode</strong>, para maximizar la compatibilidad de frecuencias.{' '}
+            <button
+              type="button"
+              className="canales-aviso-racemode-link"
+              onClick={() => setMostrarTablaFreq(true)}
+            >
+              Ver tabla de frecuencias
+            </button>
+          </span>
         </div>
 
         {/* Selector de sistema FPV */}
@@ -223,20 +214,23 @@ export default function ClubCanales() {
           />
         )}
 
+        {mostrarTablaFreq && (
+          <TablaFrecuenciasModal onClose={() => setMostrarTablaFreq(false)} />
+        )}
+
         {loading ? (
           <div className="canales-loading">Cargando canales...</div>
         ) : panel && (
           <div className="canales-grid">
-            {sortedCanales.map(canal => (
+            {slots.map(slot => (
               <CanalCard
-                key={canal.canal_numero}
-                canal={canal}
-                fpvSystem={fpvSystem}
-                estoyEnCanal={estoyEnCanal(canal)}
-                estoyVolando={estoyVolando(canal)}
-                onOcupar={() => handleOcupar(canal.canal_numero)}
-                onLiberar={() => handleLiberar(canal.canal_numero)}
-                onToggleVuelo={() => handleToggleVuelo(canal.canal_numero)}
+                key={slot.key}
+                slot={slot}
+                estoyEnCanal={estoyEnSlot(slot)}
+                estoyVolando={estoyVolandoEnSlot(slot)}
+                onOcupar={() => handleOcupar(slot.canalNumero, slot.subCanal)}
+                onLiberar={() => handleLiberar(slot.canalNumero)}
+                onToggleVuelo={() => handleToggleVuelo(slot.canalNumero, slot.label ?? `Canal ${slot.canalNumero}`)}
               />
             ))}
           </div>
@@ -247,8 +241,7 @@ export default function ClubCanales() {
 }
 
 interface CanalCardProps {
-  canal: CanalEstado
-  fpvSystem: FpvSystem
+  slot: FpvSlotView
   estoyEnCanal: boolean
   estoyVolando: boolean
   onOcupar: () => void
@@ -256,31 +249,28 @@ interface CanalCardProps {
   onToggleVuelo: () => void
 }
 
-function CanalCard({ canal, fpvSystem, estoyEnCanal, estoyVolando, onOcupar, onLiberar, onToggleVuelo }: CanalCardProps) {
-  const tieneMultiplesUsuarios = canal.usuarios.length >= 2
-  const goggleLabel = getGoggleLabel(canal.canal_numero, fpvSystem)
-  const freq = getFreq(canal.canal_numero, fpvSystem)
-  const noDisponible = goggleLabel === null
+function CanalCard({ slot, estoyEnCanal, estoyVolando, onOcupar, onLiberar, onToggleVuelo }: CanalCardProps) {
+  const noDisponible = slot.label === null
 
   return (
-    <div className={`canal-card${canal.en_vuelo ? ' canal-en-vuelo' : ''}${estoyEnCanal ? ' canal-activo' : ''}${noDisponible ? ' canal-no-disponible' : ''}`}>
+    <div className={`canal-card${slot.enVuelo ? ' canal-en-vuelo' : ''}${estoyEnCanal ? ' canal-activo' : ''}${noDisponible ? ' canal-no-disponible' : ''}`}>
 
       <div className="canal-card-header">
         <div className="canal-header-info">
-          <span className="canal-numero">{goggleLabel ?? 'N/D'}</span>
-          {freq && <span className="canal-freq">{freq} MHz</span>}
+          <span className="canal-numero">{slot.label ?? 'N/D'}</span>
+          {slot.freq && <span className="canal-freq">{slot.freq} MHz</span>}
         </div>
-        {canal.en_vuelo && (
+        {slot.enVuelo && (
           <span className="canal-badge-vuelo">EN VUELO</span>
         )}
       </div>
 
       <div className="canal-pilotos">
-        {canal.usuarios.length === 0 ? (
+        {slot.usuarios.length === 0 ? (
           <p className="canal-vacio">Sin pilotos — canal libre</p>
         ) : (
           <ul className="canal-lista-pilotos">
-            {canal.usuarios.map((u, i) => (
+            {slot.usuarios.map((u, i) => (
               <li key={u.es_invitado ? `inv-${i}` : u.usuario_id} className={u.en_vuelo ? 'piloto-en-vuelo' : ''}>
                 {u.en_vuelo ? <Plane size={13} /> : <User size={13} />}
                 {u.es_invitado
@@ -309,26 +299,24 @@ function CanalCard({ canal, fpvSystem, estoyEnCanal, estoyVolando, onOcupar, onL
             <button className="btn btn-secondary btn-sm" onClick={onLiberar}>
               Salir
             </button>
-            {tieneMultiplesUsuarios && (
-              <button
-                className={`btn btn-sm canal-btn-vuelo${estoyVolando ? ' canal-btn-aterrizar' : ''}`}
-                onClick={onToggleVuelo}
-                disabled={canal.en_vuelo && !estoyVolando}
-              >
-                {estoyVolando
-                  ? <><PlaneLanding size={14} /> Aterrizar</>
-                  : <><Plane size={14} /> A volar</>
-                }
-              </button>
-            )}
+            <button
+              className={`btn btn-sm canal-btn-vuelo${estoyVolando ? ' canal-btn-aterrizar' : ''}`}
+              onClick={onToggleVuelo}
+              disabled={slot.enVuelo && !estoyVolando}
+            >
+              {estoyVolando
+                ? <><PlaneLanding size={14} /> Aterrizar</>
+                : <><Plane size={14} /> A volar</>
+              }
+            </button>
           </>
         )}
       </div>
 
-      {canal.en_vuelo && canal.piloto_volando && !estoyVolando && estoyEnCanal && (
+      {slot.enVuelo && slot.pilotoVolando && !estoyVolando && estoyEnCanal && (
         <div className="canal-aviso-vuelo">
           <AlertTriangle size={14} />
-          {canal.piloto_volando} está volando en esta frecuencia
+          {slot.pilotoVolando} está volando en esta frecuencia
         </div>
       )}
     </div>

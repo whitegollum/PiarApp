@@ -8,6 +8,7 @@ export interface CanalUsuario {
   nombre: string
   en_vuelo: boolean
   es_invitado: boolean
+  sub_canal: string | null
 }
 
 export interface CanalEstado {
@@ -25,8 +26,11 @@ export const CanalesService = {
   obtenerPanel: (clubId: number): Promise<CanalesPanel> =>
     APIService.get<CanalesPanel>(`/clubes/${clubId}/canales`),
 
-  ocuparCanal: (clubId: number, canalNumero: number): Promise<CanalesPanel> =>
-    APIService.post<CanalesPanel>(`/clubes/${clubId}/canales/${canalNumero}/ocupar`),
+  ocuparCanal: (clubId: number, canalNumero: number, subCanal?: string | null): Promise<CanalesPanel> =>
+    APIService.post<CanalesPanel>(
+      `/clubes/${clubId}/canales/${canalNumero}/ocupar`,
+      subCanal ? { sub_canal: subCanal } : undefined,
+    ),
 
   liberarCanal: (clubId: number, canalNumero: number): Promise<CanalesPanel> =>
     APIService.post<CanalesPanel>(`/clubes/${clubId}/canales/${canalNumero}/liberar`),

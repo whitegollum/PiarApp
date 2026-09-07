@@ -23,6 +23,12 @@ class CanalUsuario(BaseModel):
     nombre: str
     en_vuelo: bool
     es_invitado: bool = False
+    sub_canal: Optional[str] = None
+
+
+class OcuparCanalRequest(BaseModel):
+    """Body opcional al ocupar un canal (subfrecuencia, p.ej. 'O4-5'/'O4-6')"""
+    sub_canal: Optional[str] = None
 
 
 class CanalEstado(BaseModel):

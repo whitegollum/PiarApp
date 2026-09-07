@@ -1,6 +1,7 @@
 """Endpoints de Invitados - Acceso por QR sin autenticación"""
 import uuid
 from datetime import datetime
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 
@@ -12,6 +13,7 @@ from app.routes.auth import get_current_user
 from app.services.nombre_generator import generar_nombre_cerdo
 from app.services.canal_service import CanalService, TOTAL_CANALES
 from app.services.invitado_service import InvitadoService
+from app.schemas.canal import OcuparCanalRequest
 from app.schemas.invitado import (
     InvitadoUnirseRequest,
     InvitadoSesionResponse,
@@ -89,6 +91,7 @@ async def unirse_como_invitado(
         club_id=sesion.club_id,
         nombre=sesion.nombre,
         canal_numero=sesion.canal_numero,
+        sub_canal=sesion.sub_canal,
         en_vuelo=sesion.en_vuelo,
     )
 
@@ -105,6 +108,7 @@ async def panel_canales_invitado(
     return CanalesPanelInvitado(
         canales=panel.canales,
         mi_canal=sesion.canal_numero,
+        mi_sub_canal=sesion.sub_canal,
         en_vuelo=sesion.en_vuelo,
         mi_nombre=sesion.nombre,
     )
@@ -115,6 +119,7 @@ async def ocupar_canal_invitado(
     token: str,
     club_id: int,
     canal_numero: int,
+    body: Optional[OcuparCanalRequest] = None,
     db: Session = Depends(get_db),
 ):
     """El invitado ocupa un canal (libera el anterior automáticamente)."""
@@ -122,11 +127,15 @@ async def ocupar_canal_invitado(
         raise HTTPException(status_code=400, detail=f"Canal debe estar entre 1 y {TOTAL_CANALES}")
 
     sesion = _get_sesion_o_404(db, token, club_id)
-    sesion = InvitadoService.ocupar_canal(db, sesion, canal_numero)
+    try:
+        sesion = InvitadoService.ocupar_canal(db, sesion, canal_numero, sub_canal=body.sub_canal if body else None)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     panel = CanalService.obtener_panel(db, club_id)
     return CanalesPanelInvitado(
         canales=panel.canales,
         mi_canal=sesion.canal_numero,
+        mi_sub_canal=sesion.sub_canal,
         en_vuelo=sesion.en_vuelo,
         mi_nombre=sesion.nombre,
     )
@@ -145,6 +154,7 @@ async def liberar_canal_invitado(
     return CanalesPanelInvitado(
         canales=panel.canales,
         mi_canal=sesion.canal_numero,
+        mi_sub_canal=sesion.sub_canal,
         en_vuelo=sesion.en_vuelo,
         mi_nombre=sesion.nombre,
     )
@@ -175,6 +185,7 @@ async def cambiar_nombre_invitado(
         club_id=sesion.club_id,
         nombre=sesion.nombre,
         canal_numero=sesion.canal_numero,
+        sub_canal=sesion.sub_canal,
         en_vuelo=sesion.en_vuelo,
     )
 
@@ -196,6 +207,7 @@ async def toggle_vuelo_invitado(
     return CanalesPanelInvitado(
         canales=panel.canales,
         mi_canal=sesion.canal_numero,
+        mi_sub_canal=sesion.sub_canal,
         en_vuelo=sesion.en_vuelo,
         mi_nombre=sesion.nombre,
     )

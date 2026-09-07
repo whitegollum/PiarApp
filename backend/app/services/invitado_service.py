@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
 from app.models.invitado import InvitadoSesion
-from app.models.canal import CanalOcupacion
 from app.models.club import Club
+from app.services.canal_service import CanalService, _es_sub_canal_valido
 from app.services.nombre_generator import generar_nombre_cerdo
 
 logger = logging.getLogger(__name__)
@@ -73,9 +73,18 @@ class InvitadoService:
         db.commit()
 
     @staticmethod
-    def ocupar_canal(db: Session, sesion: InvitadoSesion, canal_numero: int) -> InvitadoSesion:
-        """Ocupa un canal, liberando automáticamente el anterior si lo hubiera."""
+    def ocupar_canal(
+        db: Session,
+        sesion: InvitadoSesion,
+        canal_numero: int,
+        sub_canal: str | None = None,
+    ) -> InvitadoSesion:
+        """Ocupa un canal (opcionalmente una subfrecuencia), liberando automáticamente el anterior si lo hubiera."""
+        if not _es_sub_canal_valido(canal_numero, sub_canal):
+            raise ValueError(f"Subfrecuencia '{sub_canal}' no válida para el Canal {canal_numero}")
+
         sesion.canal_numero = canal_numero
+        sesion.sub_canal = sub_canal
         sesion.en_vuelo = False
         sesion.last_active = datetime.utcnow()
         db.commit()
@@ -85,6 +94,7 @@ class InvitadoService:
     @staticmethod
     def liberar_canal(db: Session, sesion: InvitadoSesion) -> InvitadoSesion:
         sesion.canal_numero = None
+        sesion.sub_canal = None
         sesion.en_vuelo = False
         sesion.last_active = datetime.utcnow()
         db.commit()
@@ -99,20 +109,14 @@ class InvitadoService:
         if sesion.en_vuelo:
             sesion.en_vuelo = False
         else:
-            # Verificar que no haya otro piloto volando (socio o invitado) en el mismo canal
-            otro_socio = db.query(CanalOcupacion).filter(
-                CanalOcupacion.club_id == sesion.club_id,
-                CanalOcupacion.canal_numero == sesion.canal_numero,
-                CanalOcupacion.en_vuelo == True,
-            ).first()
-            otro_invitado = db.query(InvitadoSesion).filter(
-                InvitadoSesion.club_id == sesion.club_id,
-                InvitadoSesion.canal_numero == sesion.canal_numero,
-                InvitadoSesion.en_vuelo == True,
-                InvitadoSesion.token != sesion.token,
-            ).first()
-
-            if otro_socio or otro_invitado:
+            if CanalService.hay_otro_volando(
+                db,
+                sesion.club_id,
+                sesion.canal_numero,
+                excluir_usuario_id=None,
+                mi_sub_canal=sesion.sub_canal,
+                excluir_invitado_token=sesion.token,
+            ):
                 raise ValueError("Hay otro piloto volando en este canal")
 
             sesion.en_vuelo = True

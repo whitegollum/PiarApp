@@ -22,11 +22,13 @@ export interface InvitadoSesion {
   club_id: number
   nombre: string
   canal_numero: number | null
+  sub_canal: string | null
   en_vuelo: boolean
 }
 
 export interface CanalesPanelInvitado extends CanalesPanel {
   mi_canal: number | null
+  mi_sub_canal: string | null
   en_vuelo: boolean
   mi_nombre: string
 }
@@ -73,10 +75,13 @@ export const InvitadosService = {
   obtenerPanel: (token: string, clubId: number): Promise<CanalesPanelInvitado> =>
     apiFetch<CanalesPanelInvitado>(`/invitados/${token}/clubes/${clubId}/canales`),
 
-  ocuparCanal: (token: string, clubId: number, canalNumero: number): Promise<CanalesPanelInvitado> =>
+  ocuparCanal: (token: string, clubId: number, canalNumero: number, subCanal?: string | null): Promise<CanalesPanelInvitado> =>
     apiFetch<CanalesPanelInvitado>(
       `/invitados/${token}/clubes/${clubId}/canales/${canalNumero}/ocupar`,
-      { method: 'POST' },
+      {
+        method: 'POST',
+        body: subCanal ? JSON.stringify({ sub_canal: subCanal }) : undefined,
+      },
     ),
 
   liberarCanal: (token: string, clubId: number): Promise<CanalesPanelInvitado> =>
